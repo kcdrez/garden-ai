@@ -12,7 +12,7 @@ export default function App() {
     setGardens(res.data);
   };
 
-  const unused = 1234;
+  const x: string = 123;
 
   useEffect(() => {
     if (loggedIn) {
