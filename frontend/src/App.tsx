@@ -12,7 +12,7 @@ export default function App() {
     setGardens(res.data);
   };
 
-  const x: string = 1234;
+  const x: string = 12345;
 
   useEffect(() => {
     if (loggedIn) {
