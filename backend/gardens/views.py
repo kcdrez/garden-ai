@@ -9,7 +9,5 @@ class GardenViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Garden.objects.filter(owner=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        # return only gardens owned by the requesting user, newest first
+        return Garden.objects.filter(owner=self.request.user).order_by("-created_at")
