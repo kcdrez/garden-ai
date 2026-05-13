@@ -1,26 +1,43 @@
-import { useState } from "react";
-import { login } from "./api/auth";
+import { useEffect, useState } from "react";
+import Login from "./pages/Login";
+import { auth } from "./auth/auth";
 import { api } from "./api/client";
 
-function App() {
-  const [data, setData] = useState<any>(null);
+export default function App() {
+  const [loggedIn, setLoggedIn] = useState(auth.isLoggedIn());
+  const [gardens, setGardens] = useState<any[]>([]);
 
-  const handleLogin = async () => {
-    await login("kcdrez", "Password123!");
-
+  const fetchGardens = async () => {
     const res = await api.get("/gardens/");
-    setData(res.data);
+    setGardens(res.data);
   };
+
+  useEffect(() => {
+    if (loggedIn) {
+      fetchGardens();
+    }
+  }, [loggedIn]);
+
+  if (!loggedIn) {
+    return <Login onLogin={() => setLoggedIn(true)} />;
+  }
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Garden AI</h1>
 
-      <button onClick={handleLogin}>Login + Fetch Gardens</button>
+      <button
+        onClick={() => {
+          localStorage.clear();
+          setLoggedIn(false);
+        }}
+      >
+        Logout
+      </button>
 
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <h2>Your Gardens</h2>
+
+      <pre>{JSON.stringify(gardens, null, 2)}</pre>
     </div>
   );
 }
-
-export default App;
