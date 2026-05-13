@@ -12,6 +12,8 @@ export default function App() {
     setGardens(res.data);
   };
 
+  const debug = "meow";
+  
   useEffect(() => {
     if (loggedIn) {
       fetchGardens();
