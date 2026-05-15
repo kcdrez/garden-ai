@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { api } from '../api/client';
-import type { Garden } from '../types/gardens';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchGardens, createGarden } from '../api/gardens';
 import { getErrorMessage } from '../lib/errors';
 import GardenItem from '../components/GardenItem';
 import { Button } from '@/components/ui/button';
@@ -26,43 +25,31 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function Gardens() {
-  const [gardens, setGardens] = useState<Garden[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: gardens = [], isLoading, error } = useQuery({
+    queryKey: ['gardens'],
+    queryFn: fetchGardens,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', description: '' },
   });
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await api.get('/gardens/');
-        if (mounted) setGardens(res.data ?? []);
-      } catch (err: unknown) {
-        if (mounted) setError(getErrorMessage(err));
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  async function onSubmit(values: FormValues) {
-    try {
-      const res = await api.post('/gardens/', {
-        name: values.name.trim(),
-        description: values.description ?? '',
-      });
-      setGardens((prev) => [res.data, ...prev]);
+  const createMutation = useMutation({
+    mutationFn: createGarden,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gardens'] });
       form.reset();
-    } catch (err: unknown) {
+    },
+    onError: (err) => {
       form.setError('root', { message: getErrorMessage(err) });
-    }
+    },
+  });
+
+  function onSubmit(values: FormValues) {
+    createMutation.mutate({ name: values.name.trim(), description: values.description });
   }
 
   return (
@@ -103,24 +90,19 @@ export default function Gardens() {
             <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
           )}
 
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Creating…' : 'Create Garden'}
+          <Button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Creating…' : 'Create Garden'}
           </Button>
         </Form>
       </div>
 
-      {loading && <div>Loading gardens...</div>}
-      {error && <div className="text-destructive">Error: {error}</div>}
-      {!loading && !error && gardens.length === 0 && <div>No gardens yet.</div>}
-      {!loading && !error && gardens.length > 0 && (
+      {isLoading && <div>Loading gardens...</div>}
+      {error && <div className="text-destructive">Error: {getErrorMessage(error)}</div>}
+      {!isLoading && !error && gardens.length === 0 && <div>No gardens yet.</div>}
+      {!isLoading && !error && gardens.length > 0 && (
         <ul>
-          {gardens.map((g: Garden) => (
-            <GardenItem
-              key={g.id}
-              garden={g}
-              onDeleted={(id) => setGardens((prev) => prev.filter((x) => x.id !== id))}
-              onError={setError}
-            />
+          {gardens.map((g) => (
+            <GardenItem key={g.id} garden={g} />
           ))}
         </ul>
       )}
