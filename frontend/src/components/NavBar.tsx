@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export default function NavBar() {
   const [dark, setDark] = useState(
@@ -14,53 +15,20 @@ export default function NavBar() {
   }
 
   return (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        padding: "8px 16px",
-        borderBottom: "1px solid #eee",
-      }}
-    >
-      <Link
-        to="/"
-        style={{
-          fontWeight: 700,
-          marginRight: "auto",
-          textDecoration: "none",
-          color: "inherit",
-        }}
-      >
+    <nav className="flex items-center px-4 py-2 border-b border-border">
+      <Link to="/" className="font-bold mr-auto text-foreground no-underline">
         Garden AI
       </Link>
-      <ul
-        style={{
-          display: "flex",
-          gap: 12,
-          listStyle: "none",
-          margin: 0,
-          padding: 0,
-          alignItems: "center",
-        }}
-      >
-        <li>
-          <Link
-            to="/gardens"
-            style={{ textDecoration: "none", color: "#0366d6" }}
-          >
-            View Gardens
-          </Link>
-        </li>
-        <li>
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18 }}
-          >
-            {dark ? "☀️" : "🌙"}
-          </button>
-        </li>
-      </ul>
+
+      <div className="flex items-center gap-2">
+        <Link to="/gardens" className={buttonVariants({ variant: "ghost" })}>
+          View Gardens
+        </Link>
+
+        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle dark mode">
+          {dark ? "☀️" : "🌙"}
+        </Button>
+      </div>
     </nav>
   );
 }
