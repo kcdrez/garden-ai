@@ -1,4 +1,4 @@
-import { createBrowserRouter, redirect, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, redirect } from 'react-router-dom';
 import App from './App';
 import Gardens from './pages/Gardens';
 import Login from './pages/Login';
@@ -10,14 +10,11 @@ function requireAuth() {
 }
 
 function Home() {
-  const navigate = useNavigate();
   return (
-    <>
-      <h1>Garden AI</h1>
-      <button onClick={() => { auth.clearTokens(); navigate('/login'); }}>
-        Logout
-      </button>
-    </>
+    <div className="text-center py-12">
+      <h1>Welcome to Garden AI</h1>
+      <p className="text-muted-foreground">Manage and visualize your home garden layouts.</p>
+    </div>
   );
 }
 
