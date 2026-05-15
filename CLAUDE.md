@@ -176,6 +176,7 @@ These are explicitly out of scope, at least initially:
 - User authentication (login/logout, JWT tokens, protected routes)
 - Dark mode toggle (persisted to localStorage, synced with OS preference)
 - Create, delete, and view multiple gardens
+- Edit existing gardens (name and description, via inline dialog)
 - Garden list as responsive card grid
 - Field-level server error mapping on forms
 
@@ -186,7 +187,6 @@ These are explicitly out of scope, at least initially:
 - User profile (timezone, locale settings)
 
 ### Garden Organization (core)
-- Edit existing gardens
 - Visual garden layout management
 - Customizable garden dimensions and grids
 - Raised bed and container planning
