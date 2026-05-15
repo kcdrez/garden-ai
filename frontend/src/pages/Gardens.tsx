@@ -1,20 +1,39 @@
 import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '../api/client';
 import type { Garden } from '../types/gardens';
 import { getErrorMessage } from '../lib/errors';
 import GardenItem from '../components/GardenItem';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+const schema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function Gardens() {
   const [gardens, setGardens] = useState<Garden[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // new form state
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', description: '' },
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -33,27 +52,16 @@ export default function Gardens() {
     };
   }, []);
 
-  async function handleCreate(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!name.trim()) {
-      setCreateError('Name is required');
-      return;
-    }
-    setCreating(true);
-    setCreateError(null);
+  async function onSubmit(values: FormValues) {
     try {
       const res = await api.post('/gardens/', {
-        name: name.trim(),
-        description,
+        name: values.name.trim(),
+        description: values.description ?? '',
       });
-      // prepend new garden to the list
       setGardens((prev) => [res.data, ...prev]);
-      setName('');
-      setDescription('');
+      form.reset();
     } catch (err: unknown) {
-      setCreateError(getErrorMessage(err));
-    } finally {
-      setCreating(false);
+      form.setError('root', { message: getErrorMessage(err) });
     }
   }
 
@@ -61,49 +69,48 @@ export default function Gardens() {
     <div className="p-5">
       <h2>Your Gardens</h2>
 
-      {/* Create garden form */}
-      <form onSubmit={handleCreate} className="mb-5 grid gap-2 max-w-xl">
-        <label>
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="My Garden"
-            required
-            className="block w-full p-2 mt-1 border rounded"
+      <div className="mb-5 max-w-xl">
+        <Form form={form} onSubmit={onSubmit}>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="My Garden" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </label>
 
-        <label>
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional description"
-            className="block w-full p-2 mt-1 border rounded"
-            rows={3}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Optional description" rows={3} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </label>
 
-        {createError && (
-          <div className="text-red-500">
-            Error creating garden: {createError}
-          </div>
-        )}
+          {form.formState.errors.root && (
+            <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
+          )}
 
-        <div>
-          <button
-            type="submit"
-            disabled={creating}
-            className="px-3 py-2 bg-slate-900 text-white rounded disabled:opacity-50"
-          >
-            {creating ? 'Creating…' : 'Create Garden'}
-          </button>
-        </div>
-      </form>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Creating…' : 'Create Garden'}
+          </Button>
+        </Form>
+      </div>
 
       {loading && <div>Loading gardens...</div>}
-      {error && <div className="text-red-500">Error: {error}</div>}
+      {error && <div className="text-destructive">Error: {error}</div>}
       {!loading && !error && gardens.length === 0 && <div>No gardens yet.</div>}
       {!loading && !error && gardens.length > 0 && (
         <ul>
@@ -111,9 +118,7 @@ export default function Gardens() {
             <GardenItem
               key={g.id}
               garden={g}
-              onDeleted={(id) =>
-                setGardens((prev) => prev.filter((x) => x.id !== id))
-              }
+              onDeleted={(id) => setGardens((prev) => prev.filter((x) => x.id !== id))}
               onError={setError}
             />
           ))}
