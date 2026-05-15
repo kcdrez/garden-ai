@@ -69,7 +69,7 @@ export default function Gardens() {
     <div className="p-5">
       <h2>Your Gardens</h2>
 
-      <div className="mb-5 max-w-xl">
+      <div className="mb-5 max-w-xl mx-auto">
         <Form form={form} onSubmit={onSubmit}>
           <FormField
             control={form.control}
