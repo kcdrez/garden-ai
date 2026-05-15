@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function Login({ onLogin }: { onLogin: () => void }) {
+export default function Login() {
+  const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { username: '', password: '' },
@@ -29,7 +31,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.username, values.password);
-      onLogin();
+      navigate('/gardens');
     } catch {
       form.setError('root', { message: 'Invalid credentials' });
     }
