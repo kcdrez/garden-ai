@@ -1,7 +1,18 @@
-import React from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function NavBar() {
+  const [dark, setDark] = useState(
+    document.documentElement.classList.contains("dark"),
+  );
+
+  function toggleTheme() {
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+    setDark(next);
+  }
+
   return (
     <nav
       style={{
@@ -29,6 +40,7 @@ export default function NavBar() {
           listStyle: "none",
           margin: 0,
           padding: 0,
+          alignItems: "center",
         }}
       >
         <li>
@@ -38,6 +50,15 @@ export default function NavBar() {
           >
             View Gardens
           </Link>
+        </li>
+        <li>
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18 }}
+          >
+            {dark ? "☀️" : "🌙"}
+          </button>
         </li>
       </ul>
     </nav>
