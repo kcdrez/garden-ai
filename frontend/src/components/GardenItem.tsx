@@ -1,9 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontalIcon, LeafIcon, Trash2Icon } from 'lucide-react';
-import type { Garden } from '../types/gardens';
-import { deleteGarden } from '../api/gardens';
+import type { Garden } from '@/types/gardens';
+import { deleteGarden } from '@/api/gardens';
 import { buttonVariants } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardFooter } from '@/components/ui/card';
+import { formatDate } from '@/lib/dates';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardAction,
+  CardFooter,
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,14 +22,6 @@ import {
 type Props = {
   garden: Garden;
 };
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
 
 export default function GardenItem({ garden }: Props) {
   const queryClient = useQueryClient();
@@ -39,7 +39,9 @@ export default function GardenItem({ garden }: Props) {
           {garden.name}
         </CardTitle>
         {garden.description && (
-          <CardDescription className="line-clamp-2">{garden.description}</CardDescription>
+          <CardDescription className="line-clamp-2">
+            {garden.description}
+          </CardDescription>
         )}
         <CardAction>
           <DropdownMenu>
@@ -63,7 +65,9 @@ export default function GardenItem({ garden }: Props) {
         </CardAction>
       </CardHeader>
       <CardFooter className="mt-auto">
-        <span className="text-xs text-muted-foreground">Created {formatDate(garden.created_at)}</span>
+        <span className="text-xs text-muted-foreground">
+          Created {formatDate(garden.created_at)}
+        </span>
       </CardFooter>
     </Card>
   );

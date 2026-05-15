@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/auth';
+import { login } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,6 +26,7 @@ export default function Login() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { username: '', password: '' },
+    mode: 'onChange',
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -71,7 +72,7 @@ export default function Login() {
               )}
             />
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!form.formState.isValid || form.formState.isSubmitting}>
               Login
             </Button>
 

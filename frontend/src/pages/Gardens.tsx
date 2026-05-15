@@ -2,9 +2,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchGardens, createGarden } from '../api/gardens';
-import { getErrorMessage, getDRFFieldErrors } from '../lib/errors';
-import GardenItem from '../components/GardenItem';
+import { fetchGardens, createGarden } from '@/api/gardens';
+import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
+import GardenItem from '@/components/GardenItem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +35,7 @@ export default function Gardens() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', description: '' },
+    mode: 'onChange',
   });
 
   const createMutation = useMutation({
@@ -99,7 +100,7 @@ export default function Gardens() {
             <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
           )}
 
-          <Button type="submit" disabled={createMutation.isPending}>
+          <Button type="submit" disabled={!form.formState.isValid || createMutation.isPending}>
             {createMutation.isPending ? 'Creating…' : 'Create Garden'}
           </Button>
         </Form>
