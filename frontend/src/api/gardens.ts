@@ -14,6 +14,14 @@ export async function createGarden(data: {
   return res.data;
 }
 
+export async function updateGarden(
+  id: string,
+  data: { name?: string; description?: string },
+): Promise<Garden> {
+  const res = await api.patch(`/gardens/${id}/`, data);
+  return res.data;
+}
+
 export async function deleteGarden(id: string): Promise<void> {
   await api.delete(`/gardens/${id}/`);
 }

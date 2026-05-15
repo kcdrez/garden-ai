@@ -1,5 +1,11 @@
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontalIcon, LeafIcon, Trash2Icon } from 'lucide-react';
+import {
+  MoreHorizontalIcon,
+  LeafIcon,
+  Trash2Icon,
+  PencilIcon,
+} from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
 import { buttonVariants } from '@/components/ui/button';
@@ -18,6 +24,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import EditGardenDialog from '@/components/EditGardenDialog';
 
 type Props = {
   garden: Garden;
@@ -25,6 +32,7 @@ type Props = {
 
 export default function GardenItem({ garden }: Props) {
   const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteGarden(garden.id),
@@ -52,6 +60,10 @@ export default function GardenItem({ garden }: Props) {
               <MoreHorizontalIcon />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <PencilIcon />
+                Edit
+              </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 disabled={deleteMutation.isPending}
@@ -69,6 +81,11 @@ export default function GardenItem({ garden }: Props) {
           Created {formatDate(garden.created_at)}
         </span>
       </CardFooter>
+      <EditGardenDialog
+        garden={garden}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Card>
   );
 }
