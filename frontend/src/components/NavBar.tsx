@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { auth } from "../auth/auth";
+import { auth } from "@/auth/auth";
 
 export default function NavBar() {
   const [dark, setDark] = useState(

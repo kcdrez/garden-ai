@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Garden } from '../types/gardens';
+import type { Garden } from '@/types/gardens';
 
 export async function fetchGardens(): Promise<Garden[]> {
   const res = await api.get('/gardens/');
