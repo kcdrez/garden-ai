@@ -4,6 +4,8 @@ This file provides structured context for AI agents working in this repository.
 
 It defines architecture, conventions, and expected behavior so AI tools can safely contribute without breaking project patterns.
 
+Review /docs/project-plan.md
+
 ---
 
 # 🧠 Project Overview
