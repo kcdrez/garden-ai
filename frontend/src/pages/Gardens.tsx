@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchGardens, createGarden } from '../api/gardens';
-import { getErrorMessage } from '../lib/errors';
+import { getErrorMessage, getDRFFieldErrors } from '../lib/errors';
 import GardenItem from '../components/GardenItem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,16 @@ export default function Gardens() {
       form.reset();
     },
     onError: (err) => {
-      form.setError('root', { message: getErrorMessage(err) });
+      const fieldErrors = getDRFFieldErrors(err);
+      if (fieldErrors) {
+        if (fieldErrors.name) form.setError('name', { message: fieldErrors.name[0] });
+        if (fieldErrors.description) form.setError('description', { message: fieldErrors.description[0] });
+        if (!fieldErrors.name && !fieldErrors.description) {
+          form.setError('root', { message: getErrorMessage(err) });
+        }
+      } else {
+        form.setError('root', { message: getErrorMessage(err) });
+      }
     },
   });
 
@@ -100,11 +109,11 @@ export default function Gardens() {
       {error && <div className="text-destructive">Error: {getErrorMessage(error)}</div>}
       {!isLoading && !error && gardens.length === 0 && <div>No gardens yet.</div>}
       {!isLoading && !error && gardens.length > 0 && (
-        <ul>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {gardens.map((g) => (
             <GardenItem key={g.id} garden={g} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
