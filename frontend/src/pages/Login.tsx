@@ -1,49 +1,85 @@
-import { useState } from "react";
-import { login } from "../api/auth";
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { login } from '../api/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+const schema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { username: '', password: '' },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
+  const onSubmit = async (values: FormValues) => {
     try {
-      await login(username, password);
+      await login(values.username, values.password);
       onLogin();
-    } catch (err) {
-      setError("Invalid credentials");
+    } catch {
+      form.setError('root', { message: 'Invalid credentials' });
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Garden AI Login</h1>
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-sm space-y-6 p-8">
+        <h1 className="text-2xl font-semibold">Garden AI Login</h1>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <Form form={form} onSubmit={onSubmit}>
+          <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <br />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <input
-          placeholder="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+            <Button type="submit" className="w-full">
+              Login
+            </Button>
 
-        <br />
-
-        <button type="submit">Login</button>
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
+            {form.formState.errors.root && (
+              <p className="text-destructive text-sm">
+                {form.formState.errors.root.message}
+              </p>
+            )}
+        </Form>
+      </div>
     </div>
   );
 }
