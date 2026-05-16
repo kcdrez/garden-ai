@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
+import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { createBed, updateBed } from '@/api/beds';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
@@ -33,36 +33,6 @@ const selectClass = cn(
   'dark:bg-input/30',
 );
 
-const posInt = z
-  .string()
-  .min(1, 'Required')
-  .refine((v) => /^\d+$/.test(v) && parseInt(v, 10) >= 1, 'Must be at least 1');
-
-const optPosInt = z
-  .string()
-  .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) >= 1), 'Must be at least 1');
-
-const optSunlight = z
-  .string()
-  .refine(
-    (v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) <= 24),
-    'Must be 0–24',
-  );
-
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  length: posInt,
-  width: posInt,
-  depth: optPosInt,
-  unit: z.enum(['in', 'ft', 'cm', 'm']),
-  facing: z.enum(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']).optional(),
-  avg_sunlight_hours: optSunlight,
-  soil_type: z.string(),
-  notes: z.string(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 type Props = {
   gardenId: string;
   bed?: GardenBed;
@@ -70,24 +40,30 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) {
+export default function BedDialog({
+  gardenId,
+  bed,
+  open,
+  onOpenChange,
+}: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!bed;
 
-  const defaultValues = (): FormValues => ({
+  const defaultValues = (): BedFormValues => ({
     name: bed?.name ?? '',
     length: bed != null ? String(bed.length) : '',
     width: bed != null ? String(bed.width) : '',
     depth: bed?.depth != null ? String(bed.depth) : '',
     unit: bed?.unit ?? 'ft',
     facing: bed?.facing ?? undefined,
-    avg_sunlight_hours: bed?.avg_sunlight_hours != null ? String(bed.avg_sunlight_hours) : '',
+    avg_sunlight_hours:
+      bed?.avg_sunlight_hours != null ? String(bed.avg_sunlight_hours) : '',
     soil_type: bed?.soil_type ?? '',
     notes: bed?.notes ?? '',
   });
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<BedFormValues>({
+    resolver: zodResolver(bedSchema),
     defaultValues: defaultValues(),
     mode: 'onChange',
   });
@@ -97,7 +73,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
   }, [open, bed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) => {
+    mutationFn: (values: BedFormValues) => {
       const payload = {
         name: values.name.trim(),
         length: parseInt(values.length, 10),
@@ -105,13 +81,16 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
         depth: values.depth !== '' ? parseInt(values.depth, 10) : undefined,
         unit: values.unit,
         facing: values.facing,
-        avg_sunlight_hours: values.avg_sunlight_hours !== ''
-          ? parseInt(values.avg_sunlight_hours, 10)
-          : undefined,
+        avg_sunlight_hours:
+          values.avg_sunlight_hours !== ''
+            ? parseInt(values.avg_sunlight_hours, 10)
+            : undefined,
         soil_type: values.soil_type || undefined,
         notes: values.notes || undefined,
       };
-      return isEditing ? updateBed(gardenId, bed.id, payload) : createBed(gardenId, payload);
+      return isEditing
+        ? updateBed(gardenId, bed.id, payload)
+        : createBed(gardenId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds', gardenId] });
@@ -121,8 +100,15 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
       const fieldErrors = getDRFFieldErrors(err);
       if (fieldErrors) {
         const knownFields = [
-          'name', 'length', 'width', 'depth', 'unit',
-          'facing', 'avg_sunlight_hours', 'soil_type', 'notes',
+          'name',
+          'length',
+          'width',
+          'depth',
+          'unit',
+          'facing',
+          'avg_sunlight_hours',
+          'soil_type',
+          'notes',
         ] as const;
         knownFields.forEach((f) => {
           if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
@@ -230,7 +216,9 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
                   <FormControl>
                     <select
                       value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value || undefined)}
+                      onChange={(e) =>
+                        field.onChange(e.target.value || undefined)
+                      }
                       className={selectClass}
                     >
                       <option value="">— None —</option>
@@ -267,7 +255,10 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
               <FormItem>
                 <FormLabel>Soil Type</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. loamy clay with amendments" {...field} />
+                  <Input
+                    placeholder="e.g. loamy clay with amendments"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -281,7 +272,11 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
               <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Textarea rows={3} placeholder="Any additional details…" {...field} />
+                  <Textarea
+                    rows={3}
+                    placeholder="Any additional details…"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -289,11 +284,16 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
           />
 
           {form.formState.errors.root && (
-            <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
+            <p className="text-destructive text-sm">
+              {form.formState.errors.root.message}
+            </p>
           )}
 
           <DialogFooter>
-            <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
+            <Button
+              type="submit"
+              disabled={!form.formState.isValid || mutation.isPending}
+            >
               {mutation.isPending ? 'Saving…' : isEditing ? 'Save' : 'Add Bed'}
             </Button>
           </DialogFooter>
