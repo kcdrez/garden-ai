@@ -225,6 +225,8 @@ These are explicitly out of scope, at least initially:
 - Garden detail page (`/gardens/:id`) — dedicated page per garden
 - Garden bed CRUD — create, edit, delete beds nested under a garden; beds display name, dimensions, facing, sunlight, soil type, and notes on the card
 - Abstract `BaseModel` in `core/` app — all models inherit `id` (UUID), `created_at`, `updated_at`
+- Plant catalog (`GET /api/plants/`) — global seeded catalog of 41 common plants across vegetable, herb, fruit, flower, and other categories; read-only via API
+- UserPlant CRUD — add, edit, delete plants within a garden bed (`/api/gardens/:id/beds/:bedId/plants/`); supports variety, planted date, status, and notes; displayed inline on each bed card
 
 ## 📋 Planned
 
@@ -240,7 +242,7 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
-- Plant catalog and searchable plant database
+- Searchable/filterable plant catalog UI
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   MoreHorizontalIcon,
   Trash2Icon,
@@ -8,11 +8,15 @@ import {
   CompassIcon,
   ShovelIcon,
   NotebookPenIcon,
+  PlusIcon,
+  LeafIcon,
 } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
 import { BED_FACINGS } from '@/types/gardens';
+import type { UserPlant } from '@/types/plants';
 import { deleteBed } from '@/api/beds';
-import { buttonVariants } from '@/components/ui/button';
+import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardHeader,
@@ -28,6 +32,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import BedDialog from '@/components/BedDialog';
+import UserPlantDialog from '@/components/UserPlantDialog';
 
 type Props = {
   gardenId: string;
@@ -47,10 +52,22 @@ function facingLabel(value: string): string {
 export default function BedItem({ gardenId, bed }: Props) {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [addPlantOpen, setAddPlantOpen] = useState(false);
+  const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
+
+  const { data: userPlants = [] } = useQuery({
+    queryKey: ['user-plants', bed.id],
+    queryFn: () => fetchUserPlants(gardenId, bed.id),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteBed(gardenId, bed.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds', gardenId] }),
+  });
+
+  const deleteUserPlantMutation = useMutation({
+    mutationFn: (plantId: string) => deleteUserPlant(gardenId, bed.id, plantId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user-plants', bed.id] }),
   });
 
   const hasDetails = bed.facing || bed.avg_sunlight_hours != null || bed.soil_type || bed.notes;
@@ -115,13 +132,69 @@ export default function BedItem({ gardenId, bed }: Props) {
             )}
           </CardContent>
         )}
+
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Plants</span>
+            <Button variant="ghost" size="sm" onClick={() => setAddPlantOpen(true)}>
+              <PlusIcon className="size-3.5" />
+              Add Plant
+            </Button>
+          </div>
+
+          {userPlants.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No plants yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {userPlants.map((up) => (
+                <li key={up.id} className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      {up.plant_name}
+                      {up.variety && <span className="text-muted-foreground"> — {up.variety}</span>}
+                    </span>
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
+                      aria-label="Plant actions"
+                    >
+                      <MoreHorizontalIcon />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingPlant(up); setAddPlantOpen(true); }}>
+                        <PencilIcon />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        disabled={deleteUserPlantMutation.isPending}
+                        onClick={() => deleteUserPlantMutation.mutate(up.id)}
+                      >
+                        <Trash2Icon />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
       </Card>
 
-      <BedDialog
+      <BedDialog gardenId={gardenId} bed={bed} open={editOpen} onOpenChange={setEditOpen} />
+
+      <UserPlantDialog
         gardenId={gardenId}
-        bed={bed}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        bedId={bed.id}
+        userPlant={editingPlant}
+        open={addPlantOpen}
+        onOpenChange={(open) => {
+          setAddPlantOpen(open);
+          if (!open) setEditingPlant(undefined);
+        }}
       />
     </>
   );
