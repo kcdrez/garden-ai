@@ -28,13 +28,13 @@
 # 📁 Structure
 
 /src
-  /api          → API layer (client.ts, auth.ts, gardens.ts, ...)
+  /api          → API layer (client.ts, auth.ts, gardens.ts, beds.ts)
   /auth         → Token storage and auth utilities
-  /components   → Shared components (NavBar, GardenItem, etc.)
+  /components   → Shared components (NavBar, GardenItem, BedItem, BedDialog, EditGardenDialog, ...)
     /ui         → shadcn UI primitives (button, card, form, dropdown-menu, etc.)
   /lib          → Utilities (utils.ts, errors.ts, dates.ts)
-  /pages        → Page-level components (Login, Gardens, ...)
-  /types        → TypeScript types
+  /pages        → Page-level components (Login, Gardens, GardenDetail)
+  /types        → TypeScript types (gardens.ts — Garden, GardenBed, BedUnit, BedFacing, BED_UNITS, BED_FACINGS)
   router.tsx    → Route definitions (createBrowserRouter)
   main.tsx      → App entry point (QueryClientProvider, RouterProvider, dark mode init)
 
@@ -56,8 +56,12 @@ Testing is a planned learning goal. As features mature, add:
 - API calls go through the `api/` layer — never call Axios directly from components
 - Server state (API data) is managed via TanStack Query — do not use `useState` + `useEffect` for fetching
 - Mutations call `queryClient.invalidateQueries` on success rather than manually updating local state
+- `QueryClient` is configured with `staleTime: Infinity` — data is never considered stale automatically; mutations are the only trigger for refetch via `invalidateQueries`
 - Route protection is handled by loader functions in `router.tsx`, not component-level auth checks
 - Dark mode is controlled via the `.dark` class on `<html>`, persisted in `localStorage` under the key `theme`
 - Form validation uses React Hook Form + Zod with `mode: 'onChange'` so submit buttons disable until the form is valid
+- Optional number fields in forms use `z.number().optional()` (not `z.coerce`) with controlled inputs: `value={field.value ?? ''}` and `onChange` converting `valueAsNumber` to `undefined` when `NaN`
+- Optional enum selects use an empty string as the "none" state and `onChange` converts `''` → `undefined` before calling `field.onChange`
+- A single dialog component handles both create and edit when the form shape is identical (e.g. `BedDialog` — `bed` prop present = edit mode, absent = create mode)
 - Feature-based structure preferred over type-based structure
 - UI should assume backend may return empty arrays or partial data
