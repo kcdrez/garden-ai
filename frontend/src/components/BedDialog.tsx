@@ -8,8 +8,6 @@ import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { createBed, updateBed } from '@/api/beds';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -17,21 +15,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { cn } from '@/lib/utils';
-
-const selectClass = cn(
-  'h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none',
-  'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-  'dark:bg-input/30',
-);
+import { Form } from '@/components/ui/form';
+import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 
 type Props = {
   gardenId: string;
@@ -124,164 +109,55 @@ export default function BedDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Bed' : 'Add Bed'}</DialogTitle>
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Raised Bed 1" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
 
           <div className="grid grid-cols-3 gap-3">
-            <FormField
-              control={form.control}
-              name="length"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Length</FormLabel>
-                  <FormControl>
-                    <Input inputMode="numeric" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="width"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Width</FormLabel>
-                  <FormControl>
-                    <Input inputMode="numeric" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="depth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Depth</FormLabel>
-                  <FormControl>
-                    <Input inputMode="numeric" placeholder="–" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <TextField control={form.control} name="length" label="Length" inputMode="numeric" />
+            <TextField control={form.control} name="width" label="Width" inputMode="numeric" />
+            <TextField control={form.control} name="depth" label="Depth" inputMode="numeric" placeholder="–" />
           </div>
 
-          <FormField
-            control={form.control}
-            name="unit"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unit</FormLabel>
-                <FormControl>
-                  <select {...field} className={selectClass}>
-                    {BED_UNITS.map((u) => (
-                      <option key={u.value} value={u.value}>
-                        {u.label}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <NativeSelectField control={form.control} name="unit" label="Unit">
+            {BED_UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))}
+          </NativeSelectField>
 
           <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="facing"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facing</FormLabel>
-                  <FormControl>
-                    <select
-                      value={field.value ?? ''}
-                      onChange={(e) =>
-                        field.onChange(e.target.value || undefined)
-                      }
-                      className={selectClass}
-                    >
-                      <option value="">— None —</option>
-                      {BED_FACINGS.map((f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
+            <NativeSelectField control={form.control} name="facing" label="Facing" optional>
+              <option value="">— None —</option>
+              {BED_FACINGS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </NativeSelectField>
+
+            <TextField
               control={form.control}
               name="avg_sunlight_hours"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avg. Sunlight (hrs/day)</FormLabel>
-                  <FormControl>
-                    <Input inputMode="numeric" placeholder="–" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Avg. Sunlight (hrs/day)"
+              inputMode="numeric"
+              placeholder="–"
             />
           </div>
 
-          <FormField
+          <TextField
             control={form.control}
             name="soil_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Soil Type</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. loamy clay with amendments"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Soil Type"
+            placeholder="e.g. loamy clay with amendments"
           />
 
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    rows={3}
-                    placeholder="Any additional details…"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
 
           {form.formState.errors.root && (
             <p className="text-destructive text-sm">

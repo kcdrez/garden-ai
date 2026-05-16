@@ -4,15 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth';
 import { login } from '@/api/auth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
+import { TextField } from '@/components/ui/form-fields';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,43 +30,18 @@ export default function Login() {
         <h1 className="text-2xl font-semibold">Garden AI Login</h1>
 
         <Form form={form} onSubmit={onSubmit}>
-          <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="username" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <TextField control={form.control} name="username" label="Username" placeholder="username" />
+          <TextField control={form.control} name="password" label="Password" placeholder="password" type="password" />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Button type="submit" className="w-full" disabled={!form.formState.isValid || form.formState.isSubmitting}>
+            Login
+          </Button>
 
-            <Button type="submit" className="w-full" disabled={!form.formState.isValid || form.formState.isSubmitting}>
-              Login
-            </Button>
-
-            {form.formState.errors.root && (
-              <p className="text-destructive text-sm">
-                {form.formState.errors.root.message}
-              </p>
-            )}
+          {form.formState.errors.root && (
+            <p className="text-destructive text-sm">
+              {form.formState.errors.root.message}
+            </p>
+          )}
         </Form>
       </div>
     </div>

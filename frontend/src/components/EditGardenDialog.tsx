@@ -6,8 +6,6 @@ import type { Garden } from '@/types/gardens';
 import { updateGarden } from '@/api/gardens';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -15,14 +13,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
+import { TextField, TextAreaField } from '@/components/ui/form-fields';
 
 type Props = {
   garden: Garden;
@@ -72,33 +64,8 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
         </DialogHeader>
 
         <Form form={form} onSubmit={onSubmit}>
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea rows={3} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="name" label="Name" />
+          <TextAreaField control={form.control} name="description" label="Description" rows={3} />
 
           {form.formState.errors.root && (
             <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
