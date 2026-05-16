@@ -216,6 +216,7 @@ These are explicitly out of scope, at least initially:
 ## ✅ Completed
 
 - User authentication (login/logout, JWT tokens, protected routes)
+- User registration (`POST /api/auth/register/` — creates user and returns JWT tokens; frontend at `/register` with link from login page)
 - Dark mode toggle (persisted to localStorage, synced with OS preference)
 - Create, delete, and view multiple gardens
 - Edit existing gardens (name and description, via inline dialog)
@@ -223,12 +224,13 @@ These are explicitly out of scope, at least initially:
 - Field-level server error mapping on forms
 - Garden detail page (`/gardens/:id`) — dedicated page per garden
 - Garden bed CRUD — create, edit, delete beds nested under a garden; beds display name, dimensions, facing, sunlight, soil type, and notes on the card
+- Abstract `BaseModel` in `core/` app — all models inherit `id` (UUID), `created_at`, `updated_at`
 
 ## 📋 Planned
 
 ### Authentication & Accounts
-- User registration (create account)
-- User profile (timezone, locale settings)
+- User profile (timezone, locale settings, first/last name)
+- Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
 - Visual garden layout management
