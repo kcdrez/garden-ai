@@ -6,16 +6,9 @@ import { fetchGardens, createGarden } from '@/api/gardens';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
 import GardenItem from '@/components/GardenItem';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
+import { TextField, TextAreaField } from '@/components/ui/form-fields';
+import { QueryState } from '@/components/ui/query-state';
 
 export default function Gardens() {
   const queryClient = useQueryClient();
@@ -61,33 +54,8 @@ export default function Gardens() {
 
       <div className="mb-5 max-w-xl mx-auto">
         <Form form={form} onSubmit={onSubmit}>
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="My Garden" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Optional description" rows={3} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="name" label="Name" placeholder="My Garden" />
+          <TextAreaField control={form.control} name="description" label="Description" placeholder="Optional description" rows={3} />
 
           {form.formState.errors.root && (
             <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
@@ -99,16 +67,13 @@ export default function Gardens() {
         </Form>
       </div>
 
-      {isLoading && <div>Loading gardens...</div>}
-      {error && <div className="text-destructive">Error: {getErrorMessage(error)}</div>}
-      {!isLoading && !error && gardens.length === 0 && <div>No gardens yet.</div>}
-      {!isLoading && !error && gardens.length > 0 && (
+      <QueryState isLoading={isLoading} error={error} isEmpty={gardens.length === 0} emptyMessage="No gardens yet.">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {gardens.map((g) => (
             <GardenItem key={g.id} garden={g} />
           ))}
         </div>
-      )}
+      </QueryState>
     </div>
   );
 }
