@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
+import { loginSchema, type LoginFormValues } from '@/schemas/auth';
 import { login } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,22 +14,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-const schema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 export default function Login() {
   const navigate = useNavigate();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { username: '', password: '' },
     mode: 'onChange',
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: LoginFormValues) => {
     try {
       await login(values.username, values.password);
       navigate('/gardens');

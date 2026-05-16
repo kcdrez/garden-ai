@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import type { Garden } from '@/types/gardens';
 import { updateGarden } from '@/api/gardens';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
@@ -24,13 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 type Props = {
   garden: Garden;
   open: boolean;
@@ -40,14 +33,14 @@ type Props = {
 export default function EditGardenDialog({ garden, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<GardenFormValues>({
+    resolver: zodResolver(gardenSchema),
     defaultValues: { name: garden.name, description: garden.description ?? '' },
     mode: 'onChange',
   });
 
   const updateMutation = useMutation({
-    mutationFn: (values: FormValues) =>
+    mutationFn: (values: GardenFormValues) =>
       updateGarden(garden.id, { name: values.name.trim(), description: values.description }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gardens'] });
@@ -67,7 +60,7 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
     },
   });
 
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: GardenFormValues) {
     updateMutation.mutate(values);
   }
 
