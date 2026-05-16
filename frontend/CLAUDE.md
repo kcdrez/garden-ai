@@ -31,7 +31,9 @@
   /api          → API layer (client.ts, auth.ts, gardens.ts, beds.ts)
   /auth         → Token storage and auth utilities
   /components   → Shared components (NavBar, GardenItem, BedItem, BedDialog, EditGardenDialog, ...)
-    /ui         → shadcn UI primitives (button, card, form, dropdown-menu, etc.)
+    /ui         → shadcn UI primitives (button, card, form, dropdown-menu, etc.) plus custom utilities:
+                  form-fields.tsx — TextField, TextAreaField, NativeSelectField wrappers
+                  query-state.tsx — QueryState, LoadingSpinner
   /lib          → Utilities (utils.ts, errors.ts, dates.ts)
   /pages        → Page-level components (Login, Gardens, GardenDetail)
   /schemas      → Zod form schemas (auth.ts, gardens.ts, beds.ts) — one file per domain
@@ -69,3 +71,11 @@ Testing is a planned learning goal. As features mature, add:
 - A single dialog component handles both create and edit when the form shape is identical (e.g. `BedDialog` — `bed` prop present = edit mode, absent = create mode)
 - Feature-based structure preferred over type-based structure
 - UI should assume backend may return empty arrays or partial data
+- Use `QueryState` from `@/components/ui/query-state` to handle loading/error/empty states inline — avoids repeating the four-branch conditional render pattern. `LoadingSpinner` is also exported for page-level early returns.
+- Custom CSS animations: add `@keyframes` to `index.css`, then register via `--animate-<name>: <keyframe-name> <duration> <easing> <iteration>` inside the `@theme inline` block — this exposes it as an `animate-<name>` Tailwind utility class.
+
+---
+
+# 🔮 Planned UI Improvements
+
+- **Skeleton cards** — replace the `LoadingSpinner` inside `QueryState` with per-entity skeleton placeholders (pulsing gray card shapes) for list/grid loading states. Use a generic skeleton (title bar + 2–3 lines, `animate-pulse`) rather than an exact match of the real card — avoids needing to update the skeleton every time card fields change. Revisit once card structures stabilise.

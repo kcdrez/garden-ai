@@ -4,6 +4,7 @@ import Gardens from './pages/Gardens';
 import GardenDetail from './pages/GardenDetail';
 import Login from './pages/Login';
 import { auth } from './auth/auth';
+import { LoadingSpinner } from './components/ui/query-state';
 
 function requireAuth() {
   if (!auth.isLoggedIn()) return redirect('/login');
@@ -15,6 +16,7 @@ function Home() {
     <div className="text-center py-12">
       <h1>Welcome to Garden AI</h1>
       <p className="text-muted-foreground">Manage and visualize your home garden layouts.</p>
+      <LoadingSpinner />
     </div>
   );
 }
