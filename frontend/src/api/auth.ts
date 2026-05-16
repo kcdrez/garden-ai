@@ -11,3 +11,16 @@ export async function login(username: string, password: string) {
 
   return res.data;
 }
+
+export async function register(username: string, password: string, password_confirm: string, email?: string) {
+  const res = await api.post("/auth/register/", {
+    username,
+    password,
+    password_confirm,
+    email: email || undefined,
+  });
+
+  auth.setTokens(res.data.access, res.data.refresh);
+
+  return res.data;
+}

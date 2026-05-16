@@ -3,6 +3,7 @@ import App from './App';
 import Gardens from './pages/Gardens';
 import GardenDetail from './pages/GardenDetail';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import { auth } from './auth/auth';
 import { LoadingSpinner } from './components/ui/query-state';
 
@@ -25,6 +26,11 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+    loader: () => (auth.isLoggedIn() ? redirect('/gardens') : null),
+  },
+  {
+    path: '/register',
+    element: <Register />,
     loader: () => (auth.isLoggedIn() ? redirect('/gardens') : null),
   },
   {

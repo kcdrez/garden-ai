@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth';
 import { login } from '@/api/auth';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,13 @@ export default function Login() {
             </p>
           )}
         </Form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don't have an account?{' '}
+          <Link to="/register" className="underline">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );
