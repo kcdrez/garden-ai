@@ -1,6 +1,7 @@
 import { createBrowserRouter, redirect } from 'react-router-dom';
 import App from './App';
 import Gardens from './pages/Gardens';
+import GardenDetail from './pages/GardenDetail';
 import Login from './pages/Login';
 import { auth } from './auth/auth';
 
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'gardens', element: <Gardens /> },
+      { path: 'gardens/:id', element: <GardenDetail /> },
     ],
   },
 ]);

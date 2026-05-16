@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   MoreHorizontalIcon,
@@ -44,7 +45,9 @@ export default function GardenItem({ garden }: Props) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LeafIcon className="size-4 text-primary" />
-          {garden.name}
+          <Link to={`/gardens/${garden.id}`} className="hover:underline">
+            {garden.name}
+          </Link>
         </CardTitle>
         {garden.description && (
           <CardDescription className="line-clamp-2">

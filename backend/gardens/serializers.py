@@ -1,6 +1,17 @@
 from rest_framework import serializers
 
-from .models import Garden
+from .models import Garden, GardenBed
+
+
+class GardenBedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GardenBed
+        fields = [
+            "id", "garden", "name", "length", "width", "depth", "unit",
+            "facing", "avg_sunlight_hours", "soil_type", "notes",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "garden", "created_at", "updated_at"]
 
 
 class GardenSerializer(serializers.ModelSerializer):

@@ -6,6 +6,11 @@ export async function fetchGardens(): Promise<Garden[]> {
   return res.data ?? [];
 }
 
+export async function fetchGarden(id: string): Promise<Garden> {
+  const res = await api.get(`/gardens/${id}/`);
+  return res.data;
+}
+
 export async function createGarden(data: {
   name: string;
   description?: string;

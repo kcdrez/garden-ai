@@ -5,7 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import { router } from './router.tsx'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: Infinity,
+    },
+  },
+})
 
 const saved = localStorage.getItem('theme')
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
