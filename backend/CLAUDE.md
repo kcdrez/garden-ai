@@ -42,6 +42,8 @@ Django monolith with modular apps:
 - Keep business logic out of views when possible
 - Avoid fat models early — keep domain simple until complexity demands it
 - All queryset filtering should scope to `request.user` to enforce ownership
+- Nested resources (e.g. beds under a garden) use manual URL patterns with `ViewSet.as_view({...})` rather than `drf-nested-routers` — keeps the dependency list lean; see `gardens/urls.py` for the pattern
+- Nested ViewSets enforce ownership by looking up the parent via `request.user` in a `_get_parent()` helper and raising `NotFound` if it doesn't belong to the user
 - Timestamps returned in ISO 8601 format
 
 ---

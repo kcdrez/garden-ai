@@ -74,11 +74,20 @@ Django's default User plus:
 - updated_at: datetime (auto)
 - owner: ForeignKey(User)
 
-### GardenBed *(planned)*
+### GardenBed
+- id: UUID
 - garden: ForeignKey(Garden)
-- sunlight_type: string
-- soil_type: string
-- dimensions: string or structured field
+- name: string (required)
+- length: positive integer (required)
+- width: positive integer (required)
+- depth: positive integer (optional — wall height for raised beds)
+- unit: enum — `in`, `ft`, `cm`, `m` (default: ft)
+- facing: enum — `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (optional)
+- avg_sunlight_hours: positive integer 0–24 (optional)
+- soil_type: string (optional — freeform, e.g. "loamy clay with amendments")
+- notes: text (optional)
+- created_at: datetime (auto)
+- updated_at: datetime (auto)
 
 ### Plant *(planned)*
 - common_name: string
@@ -125,11 +134,21 @@ Ownership is enforced at the queryset level — users only see and modify their 
 
 ### Garden API contract
 
-- `GET    /api/gardens/`      → 200 `[{ id, name, description, created_at, updated_at, owner }]`
-- `POST   /api/gardens/`      → 201 `{ id, name, description, created_at, updated_at, owner }`
-- `GET    /api/gardens/:id/`  → 200 `{ id, ... }`
-- `PATCH  /api/gardens/:id/`  → 200 `{ id, ... }`
-- `DELETE /api/gardens/:id/`  → 204
+- `GET    /api/gardens/`                    → 200 `[{ id, name, description, created_at, updated_at, owner }]`
+- `POST   /api/gardens/`                    → 201 `{ id, name, description, created_at, updated_at, owner }`
+- `GET    /api/gardens/:id/`               → 200 `{ id, ... }`
+- `PATCH  /api/gardens/:id/`               → 200 `{ id, ... }`
+- `DELETE /api/gardens/:id/`               → 204
+
+### GardenBed API contract
+
+Nested under a garden — ownership enforced via the parent garden's owner check.
+
+- `GET    /api/gardens/:id/beds/`          → 200 `[{ id, garden, name, length, width, depth, unit, facing, avg_sunlight_hours, soil_type, notes, created_at, updated_at }]`
+- `POST   /api/gardens/:id/beds/`          → 201 `{ id, ... }`
+- `GET    /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
+- `PATCH  /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
+- `DELETE /api/gardens/:id/beds/:bedId/`   → 204
 
 ---
 
@@ -202,6 +221,8 @@ These are explicitly out of scope, at least initially:
 - Edit existing gardens (name and description, via inline dialog)
 - Garden list as responsive card grid
 - Field-level server error mapping on forms
+- Garden detail page (`/gardens/:id`) — dedicated page per garden
+- Garden bed CRUD — create, edit, delete beds nested under a garden; beds display name, dimensions, facing, sunlight, soil type, and notes on the card
 
 ## 📋 Planned
 
@@ -212,7 +233,6 @@ These are explicitly out of scope, at least initially:
 ### Garden Organization (core)
 - Visual garden layout management
 - Customizable garden dimensions and grids
-- Raised bed and container planning
 - Drag-and-drop garden design interface
 - Garden templates and presets
 - Export/import garden plans

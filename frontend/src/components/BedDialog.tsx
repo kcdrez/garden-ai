@@ -33,16 +33,32 @@ const selectClass = cn(
   'dark:bg-input/30',
 );
 
+const posInt = z
+  .string()
+  .min(1, 'Required')
+  .refine((v) => /^\d+$/.test(v) && parseInt(v, 10) >= 1, 'Must be at least 1');
+
+const optPosInt = z
+  .string()
+  .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) >= 1), 'Must be at least 1');
+
+const optSunlight = z
+  .string()
+  .refine(
+    (v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) <= 24),
+    'Must be 0–24',
+  );
+
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
-  length: z.number({ error: 'Required' }).int().min(1, 'Must be at least 1'),
-  width: z.number({ error: 'Required' }).int().min(1, 'Must be at least 1'),
-  depth: z.number().int().min(1, 'Must be at least 1').optional(),
+  length: posInt,
+  width: posInt,
+  depth: optPosInt,
   unit: z.enum(['in', 'ft', 'cm', 'm']),
   facing: z.enum(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']).optional(),
-  avg_sunlight_hours: z.number().int().min(0).max(24).optional(),
-  soil_type: z.string().optional(),
-  notes: z.string().optional(),
+  avg_sunlight_hours: optSunlight,
+  soil_type: z.string(),
+  notes: z.string(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -54,29 +70,18 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-function toNum(v: number | null | undefined): number | undefined {
-  return v == null ? undefined : v;
-}
-
-function numInput(field: { onChange: (v: number | undefined) => void }) {
-  return (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.valueAsNumber;
-    field.onChange(isNaN(val) ? undefined : val);
-  };
-}
-
 export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!bed;
 
   const defaultValues = (): FormValues => ({
     name: bed?.name ?? '',
-    length: bed?.length ?? (undefined as unknown as number),
-    width: bed?.width ?? (undefined as unknown as number),
-    depth: toNum(bed?.depth),
+    length: bed != null ? String(bed.length) : '',
+    width: bed != null ? String(bed.width) : '',
+    depth: bed?.depth != null ? String(bed.depth) : '',
     unit: bed?.unit ?? 'ft',
     facing: bed?.facing ?? undefined,
-    avg_sunlight_hours: toNum(bed?.avg_sunlight_hours),
+    avg_sunlight_hours: bed?.avg_sunlight_hours != null ? String(bed.avg_sunlight_hours) : '',
     soil_type: bed?.soil_type ?? '',
     notes: bed?.notes ?? '',
   });
@@ -95,12 +100,14 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
     mutationFn: (values: FormValues) => {
       const payload = {
         name: values.name.trim(),
-        length: values.length,
-        width: values.width,
-        depth: values.depth,
+        length: parseInt(values.length, 10),
+        width: parseInt(values.width, 10),
+        depth: values.depth !== '' ? parseInt(values.depth, 10) : undefined,
         unit: values.unit,
         facing: values.facing,
-        avg_sunlight_hours: values.avg_sunlight_hours,
+        avg_sunlight_hours: values.avg_sunlight_hours !== ''
+          ? parseInt(values.avg_sunlight_hours, 10)
+          : undefined,
         soil_type: values.soil_type || undefined,
         notes: values.notes || undefined,
       };
@@ -113,7 +120,10 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
     onError: (err) => {
       const fieldErrors = getDRFFieldErrors(err);
       if (fieldErrors) {
-        const knownFields = ['name', 'length', 'width', 'depth', 'unit', 'facing', 'avg_sunlight_hours', 'soil_type', 'notes'] as const;
+        const knownFields = [
+          'name', 'length', 'width', 'depth', 'unit',
+          'facing', 'avg_sunlight_hours', 'soil_type', 'notes',
+        ] as const;
         knownFields.forEach((f) => {
           if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
         });
@@ -156,12 +166,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
                 <FormItem>
                   <FormLabel>Length</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={field.value ?? ''}
-                      onChange={numInput(field)}
-                    />
+                    <Input inputMode="numeric" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,12 +179,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
                 <FormItem>
                   <FormLabel>Width</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={field.value ?? ''}
-                      onChange={numInput(field)}
-                    />
+                    <Input inputMode="numeric" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -192,13 +192,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
                 <FormItem>
                   <FormLabel>Depth</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      placeholder="–"
-                      value={field.value ?? ''}
-                      onChange={numInput(field)}
-                    />
+                    <Input inputMode="numeric" placeholder="–" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -258,14 +252,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
                 <FormItem>
                   <FormLabel>Avg. Sunlight (hrs/day)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={24}
-                      placeholder="–"
-                      value={field.value ?? ''}
-                      onChange={numInput(field)}
-                    />
+                    <Input inputMode="numeric" placeholder="–" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
