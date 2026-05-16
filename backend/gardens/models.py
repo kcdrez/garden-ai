@@ -1,15 +1,12 @@
-import uuid
-
 from django.contrib.auth.models import User
 from django.db import models
 
+from core.models import BaseModel
 
-class Garden(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+class Garden(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     owner = models.ForeignKey(User, related_name="gardens", on_delete=models.CASCADE)
 
@@ -17,7 +14,7 @@ class Garden(models.Model):
         return self.name
 
 
-class GardenBed(models.Model):
+class GardenBed(BaseModel):
     UNIT_CHOICES = [
         ("in", "Inches"),
         ("ft", "Feet"),
@@ -36,7 +33,6 @@ class GardenBed(models.Model):
         ("NW", "Northwest"),
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     garden = models.ForeignKey(Garden, related_name="beds", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     length = models.PositiveIntegerField()
@@ -47,8 +43,6 @@ class GardenBed(models.Model):
     avg_sunlight_hours = models.PositiveSmallIntegerField(null=True, blank=True)
     soil_type = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.name} ({self.garden.name})"
