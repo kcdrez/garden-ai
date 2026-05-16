@@ -3,8 +3,8 @@ import { getErrorMessage } from '@/lib/errors'
 
 function LoadingSpinner() {
   return (
-    <div className="flex items-center gap-2 py-2 text-muted-foreground">
-      <Leaf className="size-4 animate-spin text-green-500" />
+    <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground">
+      <Leaf className="size-8 animate-leaf-fall text-green-500" />
       <span className="text-sm">Loading…</span>
     </div>
   )
