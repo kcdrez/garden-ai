@@ -18,6 +18,11 @@ export async function fetchBeds(gardenId: string): Promise<GardenBed[]> {
   return res.data ?? [];
 }
 
+export async function fetchBed(gardenId: string, bedId: string): Promise<GardenBed> {
+  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/`);
+  return res.data;
+}
+
 export async function createBed(gardenId: string, data: BedPayload): Promise<GardenBed> {
   const res = await api.post(`/gardens/${gardenId}/beds/`, data);
   return res.data;
