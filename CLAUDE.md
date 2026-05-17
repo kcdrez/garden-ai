@@ -89,16 +89,23 @@ Django's default User plus:
 - created_at: datetime (auto)
 - updated_at: datetime (auto)
 
-### Plant *(planned)*
+### Plant
+- id: UUID
 - common_name: string
 - scientific_name: string
-- requirements: text/JSON
+- category: enum — `vegetable`, `herb`, `fruit`, `flower`, `other`
+- description: text
+- Global seeded catalog (41 plants); read-only via API (`GET /api/plants/`)
 
-### UserPlant *(planned)* — plant placement in a bed
+### UserPlant — plant placement in a bed
+- id: UUID
 - bed: ForeignKey(GardenBed)
 - plant: ForeignKey(Plant)
-- planted_date: date
-- status: string
+- variety: string (optional — e.g. "Cherry Tomato")
+- planted_date: date (optional)
+- status: enum — `planned`, `planted`, `growing`, `harvested`, `removed`
+- notes: text (optional)
+- created_at / updated_at: datetime (auto)
 
 ### Season *(planned)*
 Groups planting activity by growing year/season. Enables crop rotation tracking and year-over-year comparisons. Without this, all UserPlants are a flat list scoped only by date, making rotation logic very difficult. Likely owned by a Garden.
@@ -226,7 +233,10 @@ These are explicitly out of scope, at least initially:
 - Garden bed CRUD — create, edit, delete beds nested under a garden; beds display name, dimensions, facing, sunlight, soil type, and notes on the card
 - Abstract `BaseModel` in `core/` app — all models inherit `id` (UUID), `created_at`, `updated_at`
 - Plant catalog (`GET /api/plants/`) — global seeded catalog of 41 common plants across vegetable, herb, fruit, flower, and other categories; read-only via API
-- UserPlant CRUD — add, edit, delete plants within a garden bed (`/api/gardens/:id/beds/:bedId/plants/`); supports variety, planted date, status, and notes; displayed inline on each bed card
+- UserPlant CRUD — add, edit, delete plants within a garden bed (`/api/gardens/:id/beds/:bedId/plants/`); supports variety, planted date, status, and notes
+- Garden bed detail page (`/gardens/:id/beds/:bedId`) — dedicated bookmarkable page per bed; shows full metadata (facing, sunlight, soil type, notes) and plant list with full CRUD; bed metadata editable via modal
+- Plant catalog picker UI — replaces native select in the add/edit plant flow; searchable by name, filterable by category pills; selected plant shown as a persistent chip so context is clear when switching filters
+- Bed cards on the garden detail page simplified to summary view — clicking the card navigates to the bed detail page; edit/delete still accessible from the card's dropdown
 
 ## 📋 Planned
 
@@ -242,7 +252,6 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
-- Searchable/filterable plant catalog UI
 - Move a plant from one bed to another (PATCH `bed` field on UserPlant — enforce target bed ownership)
 - Add plants to garden layouts
 - Plant spacing guidance
