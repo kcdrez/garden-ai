@@ -55,7 +55,7 @@ export default function BedItem({ gardenId, bed }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds', gardenId] }),
   });
 
-  const hasDetails = bed.facing || bed.avg_sunlight_hours != null || bed.soil_type || bed.notes;
+  const hasDetails = bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes;
 
   function handleCardClick(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
@@ -102,16 +102,16 @@ export default function BedItem({ gardenId, bed }: Props) {
                 Faces {facingLabel(bed.facing)}
               </span>
             )}
-            {bed.avg_sunlight_hours != null && (
+            {bed.avgSunlightHours != null && (
               <span className="flex items-center gap-2">
                 <SunIcon className="size-3.5 shrink-0" />
-                {bed.avg_sunlight_hours} hrs/day avg. sunlight
+                {bed.avgSunlightHours} hrs/day avg. sunlight
               </span>
             )}
-            {bed.soil_type && (
+            {bed.soilType && (
               <span className="flex items-center gap-2">
                 <ShovelIcon className="size-3.5 shrink-0" />
-                {bed.soil_type}
+                {bed.soilType}
               </span>
             )}
             {bed.notes && (

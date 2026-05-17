@@ -23,8 +23,8 @@ export const bedSchema = z.object({
   depth: optPosInt,
   unit: z.enum(['in', 'ft', 'cm', 'm']),
   facing: z.enum(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']).optional(),
-  avg_sunlight_hours: optSunlight,
-  soil_type: z.string(),
+  avgSunlightHours: optSunlight,
+  soilType: z.string(),
   notes: z.string(),
 });
 

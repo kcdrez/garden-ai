@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const userPlantSchema = z.object({
   plant: z.string().min(1, 'Plant is required'),
   variety: z.string().optional(),
-  planted_date: z.string().optional(),
+  plantedDate: z.string().optional(),
   status: z.enum(["planned", "planted", "growing", "harvested", "removed"]),
   notes: z.string().optional(),
 });

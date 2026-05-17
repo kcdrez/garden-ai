@@ -8,8 +8,8 @@ type BedPayload = {
   depth?: number;
   unit: string;
   facing?: string;
-  avg_sunlight_hours?: number;
-  soil_type?: string;
+  avgSunlightHours?: number;
+  soilType?: string;
   notes?: string;
 };
 

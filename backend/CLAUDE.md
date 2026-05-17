@@ -8,6 +8,7 @@
 - Python 3.x
 - Django
 - Django REST Framework (DRF)
+- djangorestframework-camel-case — converts all API responses to camelCase and parses camelCase request bodies back to snake_case automatically; no changes needed in serializers or views
 - SQLite (dev)
 
 **Planned:**
@@ -45,6 +46,7 @@ Django monolith with modular apps:
 - Nested resources (e.g. beds under a garden) use manual URL patterns with `ViewSet.as_view({...})` rather than `drf-nested-routers` — keeps the dependency list lean; see `gardens/urls.py` for the pattern
 - Nested ViewSets enforce ownership by looking up the parent via `request.user` in a `_get_parent()` helper and raising `NotFound` if it doesn't belong to the user
 - Timestamps returned in ISO 8601 format
+- All JSON field names are returned as camelCase (handled by `djangorestframework-camel-case`) — serializer fields stay snake_case as normal; the renderer/parser handles conversion at the HTTP boundary
 
 ---
 

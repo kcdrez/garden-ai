@@ -41,9 +41,9 @@ export default function BedDialog({
     depth: bed?.depth != null ? String(bed.depth) : '',
     unit: bed?.unit ?? 'ft',
     facing: bed?.facing ?? undefined,
-    avg_sunlight_hours:
-      bed?.avg_sunlight_hours != null ? String(bed.avg_sunlight_hours) : '',
-    soil_type: bed?.soil_type ?? '',
+    avgSunlightHours:
+      bed?.avgSunlightHours != null ? String(bed.avgSunlightHours) : '',
+    soilType: bed?.soilType ?? '',
     notes: bed?.notes ?? '',
   });
 
@@ -66,11 +66,11 @@ export default function BedDialog({
         depth: values.depth !== '' ? parseInt(values.depth, 10) : undefined,
         unit: values.unit,
         facing: values.facing,
-        avg_sunlight_hours:
-          values.avg_sunlight_hours !== ''
-            ? parseInt(values.avg_sunlight_hours, 10)
+        avgSunlightHours:
+          values.avgSunlightHours !== ''
+            ? parseInt(values.avgSunlightHours, 10)
             : undefined,
-        soil_type: values.soil_type || undefined,
+        soilType: values.soilType || undefined,
         notes: values.notes || undefined,
       };
       return isEditing
@@ -91,8 +91,8 @@ export default function BedDialog({
           'depth',
           'unit',
           'facing',
-          'avg_sunlight_hours',
-          'soil_type',
+          'avgSunlightHours',
+          'soilType',
           'notes',
         ] as const;
         knownFields.forEach((f) => {
@@ -143,7 +143,7 @@ export default function BedDialog({
 
             <TextField
               control={form.control}
-              name="avg_sunlight_hours"
+              name="avgSunlightHours"
               label="Avg. Sunlight (hrs/day)"
               inputMode="numeric"
               placeholder="–"
@@ -152,7 +152,7 @@ export default function BedDialog({
 
           <TextField
             control={form.control}
-            name="soil_type"
+            name="soilType"
             label="Soil Type"
             placeholder="e.g. loamy clay with amendments"
           />

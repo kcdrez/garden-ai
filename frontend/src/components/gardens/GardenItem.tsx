@@ -81,7 +81,7 @@ export default function GardenItem({ garden }: Props) {
       </CardHeader>
       <CardFooter className="mt-auto">
         <span className="text-xs text-muted-foreground">
-          Created {formatDate(garden.created_at)}
+          Created {formatDate(garden.createdAt)}
         </span>
       </CardFooter>
       <EditGardenDialog
