@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userPlantSchema, type UserPlantFormValues } from '@/schemas/plants';
-import { PLANT_CATEGORIES, USER_PLANT_STATUSES } from '@/types/plants';
+import { USER_PLANT_STATUSES } from '@/types/plants';
 import type { UserPlant } from '@/types/plants';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import PlantPicker from '@/components/PlantPicker';
 
 type Props = {
   gardenId: string;
@@ -86,11 +87,6 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     },
   });
 
-  const byCategory = PLANT_CATEGORIES.map((cat) => ({
-    ...cat,
-    plants: plants.filter((p) => p.category === cat.value),
-  })).filter((cat) => cat.plants.length > 0);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -99,20 +95,9 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          <NativeSelectField control={form.control} name="plant" label="Plant">
-            <option value="">— Select a plant —</option>
-            {byCategory.map((cat) => (
-              <optgroup key={cat.value} label={cat.label}>
-                {cat.plants.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.common_name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </NativeSelectField>
+          <PlantPicker control={form.control} name="plant" plants={plants} />
 
-          <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherokee Purple" />
+          <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
 
           <div className="grid grid-cols-2 gap-3">
             <TextField control={form.control} name="planted_date" label="Planted Date" type="date" />
