@@ -1,131 +1,87 @@
-# Garden AI - Backend
+# Garden AI — Backend
 
-This is the Django backend for the Garden AI project.
+Django REST API for the Garden AI project.
 
-It provides:
-
-- REST API for garden management
-- User authentication (future)
-- AI integration endpoints (future)
-- Data storage for gardens, plants, and user configurations
+**Stack:** Python 3.12 · Django · Django REST Framework · PostgreSQL · SimpleJWT
 
 ---
 
-# Tech Stack
+## Running with Docker (recommended)
 
-- Python 3.x
-- Django
-- Django REST Framework
-- SQLite (local dev default)
-- PostgreSQL (future)
-- Redis (future)
-- Celery (future)
+See the [root README](../README.md) for Docker setup. The backend starts automatically as part of `docker compose up -d` — migrations run on every container start via `entrypoint.sh`.
 
 ---
 
-# Setup Instructions
+## Running without Docker
 
-## 1. Create virtual environment
+### 1. Create and activate a virtual environment
 
-From /backend:
-
+```bash
 python3 -m venv venv
-
----
-
-## 2. Activate virtual environment
-
-macOS / Linux:
 source venv/bin/activate
+```
 
-Windows:
-venv\Scripts\activate
+### 2. Install dependencies
 
----
+```bash
+pip install -r requirements.txt
+```
 
-## 3. Install dependencies
+### 3. Configure environment variables
 
-pip install django djangorestframework django-cors-headers
+Copy `.env.docker` to `.env` and update `DB_HOST=localhost` (and DB credentials to match your local Postgres instance).
 
-Optional:
-pip freeze > requirements.txt
+### 4. Run migrations
 
----
-
-## 4. Run migrations
-
+```bash
 python manage.py migrate
+```
 
----
+### 5. Start the dev server
 
-## 5. Create admin user
-
-python manage.py createsuperuser
-
----
-
-## 6. Run development server
-
+```bash
 python manage.py runserver
-
-Backend:
-http://127.0.0.1:8000/
-
-Admin:
-http://127.0.0.1:8000/admin
+# or
+make dev
+```
 
 ---
 
-# Project Structure
+## Useful commands
 
-backend/
-config/ Django project settings
-gardens/ Core app (garden domain)
-manage.py
-venv/
+```bash
+make dev          # run dev server
+make migrate      # apply migrations
+make migrations   # create new migrations
+make shell        # open Django shell
+```
 
----
+Or via Docker:
 
-# Useful Commands
-
-Create app:
-python manage.py startapp <app_name>
-
-Create migrations:
-python manage.py makemigrations
-
-Apply migrations:
-python manage.py migrate
-
-Run server:
-python manage.py runserver
+```bash
+docker compose exec backend python manage.py <command>
+```
 
 ---
 
-# Environment Notes
+## Environment variables
 
-- Default DB: SQLite
-- CORS enabled for http://localhost:5173
-- Debug mode ON for local dev
+Managed via `python-decouple`. Two env files exist:
 
----
-
-# Next Steps
-
-- Build REST API with DRF
-- Add JWT authentication
-- Connect React frontend
-- Add AI service layer
-- Add Celery + Redis (background tasks)
+| File | Used when |
+|------|-----------|
+| `.env` | Running Django directly on your machine |
+| `.env.docker` | Running inside Docker (DB_HOST=db) |
 
 ---
 
-# Notes
+## Tech stack
 
-This backend is designed for learning full-stack architecture:
-
-- API design
-- database modeling
-- authentication systems
-- AI integration
-- cloud deployment (AWS)
+- Django 6
+- Django REST Framework
+- `djangorestframework-simplejwt` — JWT authentication
+- `djangorestframework-camel-case` — converts snake_case responses to camelCase at the HTTP boundary
+- `django-cors-headers` — CORS support
+- `psycopg2-binary` — PostgreSQL driver
+- `python-decouple` — environment variable management
+- Celery + Redis — planned (background tasks)
