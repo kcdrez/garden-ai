@@ -279,6 +279,9 @@ These are explicitly out of scope, at least initially:
 - JWT silent refresh — on 401, frontend retries the original request with a fresh token; redirects to login if refresh fails
 - Feature-based folder structure for `/components` and `/pages` — organized by domain (gardens, plants, shared, etc.)
 - PostgreSQL (local) — replaced SQLite with PostgreSQL; environment variables managed via `python-decouple`
+- Docker + Docker Compose — full local dev stack (frontend, backend, PostgreSQL) runs with `docker compose up -d`; hot reload via volume mounts; DB healthcheck ensures startup order
+- Vercel deployment — frontend live at `https://garden-ai-gamma.vercel.app`; auto-deploys on push to `main`; `VITE_API_URL` env var for backend URL; `vercel.json` rewrite rule for React Router SPA routing
+- Railway deployment — Django backend live at `https://garden-ai-production-6a57.up.railway.app`; managed PostgreSQL on Railway; gunicorn + whitenoise for production serving; `dj-database-url` parses `DATABASE_URL`
 
 ## 📋 Planned
 
@@ -304,15 +307,9 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Deployment & Infrastructure
-- Dockerize local development (Docker + Docker Compose for frontend, backend, PostgreSQL, Redis)
-- Swap SQLite for PostgreSQL in production (RDS or hosted Postgres)
-- Deploy frontend to Vercel (connect git repo for automatic deploys)
-- Deploy Django backend to AWS EC2 + Gunicorn + Nginx
-- Serve static/media files via S3
-- Configure environment variables and secrets management for production
-- Set up CORS and allowed hosts for production domains
 - CI/CD pipeline (GitHub Actions) for automated deploy on merge
 - Playwright e2e tests running in CI against the full stack
+- Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
 
 ### Tracking & Journaling
