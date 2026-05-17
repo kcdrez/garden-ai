@@ -6,6 +6,42 @@ This file provides project-wide context. Stack, conventions, and tooling details
 
 ---
 
+# 📓 Dev Log
+
+The dev log lives at `/docs/devlog.md`. It is the canonical record of what was built and what's next.
+
+## Intention
+
+A lightweight session journal — one entry per work session, focused on what shipped. Not a design doc or a bug tracker; just enough signal for an AI agent (or the developer) to orient quickly at the start of the next session.
+
+## Format
+
+```
+## YYYY-MM-DD — ~N hours
+
+**Completed:**
+- Short bullet describing what shipped
+
+**Next up:** One-line summary of what to tackle next
+```
+
+## Consumption (start of session)
+
+At the start of every session, read the most recent devlog entry before doing anything else. Use it to:
+- Understand what was just finished so you don't re-explain or redo it
+- Pick up the **Next up** item as the default starting point if the user hasn't given a specific direction
+- Cross-reference against the ✅ Completed list below if something seems missing
+
+## Adding a new entry (end of session)
+
+At the end of a session — or when the user asks — append a new dated entry to `/docs/devlog.md`. Rules:
+- One entry per session, appended at the top (newest first)
+- **Completed** bullets are high-level; skip internal refactors and tooling noise unless they unblock something
+- **Next up** is a single line, not a list — the most important thing to tackle next
+- After appending, cross-check the ✅ Completed list in this file and update it if anything is missing or stale
+
+---
+
 # 🧠 Project Overview
 
 Garden AI is a full-stack web application for managing and visualizing home garden layouts and plant data.
@@ -239,6 +275,10 @@ These are explicitly out of scope, at least initially:
 - Garden bed detail page (`/gardens/:id/beds/:bedId`) — dedicated bookmarkable page per bed; shows full metadata (facing, sunlight, soil type, notes) and plant list with full CRUD; bed metadata editable via modal
 - Plant catalog picker UI — replaces native select in the add/edit plant flow; searchable by name, filterable by category pills; selected plant shown as a persistent chip so context is clear when switching filters
 - Bed cards on the garden detail page simplified to summary view — clicking the card navigates to the bed detail page; edit/delete still accessible from the card's dropdown
+- camelCase API responses — `djangorestframework-camel-case` converts snake_case at the HTTP boundary; frontend types and Zod schemas updated to match
+- JWT silent refresh — on 401, frontend retries the original request with a fresh token; redirects to login if refresh fails
+- Feature-based folder structure for `/components` and `/pages` — organized by domain (gardens, plants, shared, etc.)
+- PostgreSQL (local) — replaced SQLite with PostgreSQL; environment variables managed via `python-decouple`
 
 ## 📋 Planned
 
@@ -255,6 +295,8 @@ These are explicitly out of scope, at least initially:
 
 ### Plants
 - Move a plant from one bed to another (PATCH `bed` field on UserPlant — enforce target bed ownership)
+- View all beds across all gardens — flat list or grouped by garden; useful for planning and cross-garden comparisons (build alongside or after move-plant so the view is actionable)
+- View all plants (UserPlants) across all gardens/beds — useful for seeing everything currently growing, especially during planning phases; pairs naturally with move-plant
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
@@ -263,7 +305,7 @@ These are explicitly out of scope, at least initially:
 
 ### Deployment & Infrastructure
 - Dockerize local development (Docker + Docker Compose for frontend, backend, PostgreSQL, Redis)
-- Swap SQLite for PostgreSQL (required before any deployment)
+- Swap SQLite for PostgreSQL in production (RDS or hosted Postgres)
 - Deploy frontend to Vercel (connect git repo for automatic deploys)
 - Deploy Django backend to AWS EC2 + Gunicorn + Nginx
 - Serve static/media files via S3
