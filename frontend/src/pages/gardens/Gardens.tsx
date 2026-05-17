@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import { fetchGardens, createGarden } from '@/api/gardens';
 import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
-import GardenItem from '@/components/GardenItem';
+import GardenItem from '@/components/gardens/GardenItem';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField } from '@/components/ui/form-fields';

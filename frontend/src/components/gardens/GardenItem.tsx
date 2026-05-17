@@ -25,7 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import EditGardenDialog from '@/components/EditGardenDialog';
+import EditGardenDialog from '@/components/gardens/EditGardenDialog';
 
 type Props = {
   garden: Garden;

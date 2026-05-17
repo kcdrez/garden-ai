@@ -28,8 +28,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import BedDialog from '@/components/BedDialog';
-import UserPlantDialog from '@/components/UserPlantDialog';
+import BedDialog from '@/components/beds/BedDialog';
+import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 function formatDimensions(bed: GardenBed): string {
