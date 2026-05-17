@@ -243,6 +243,7 @@ These are explicitly out of scope, at least initially:
 
 ### Plants
 - Searchable/filterable plant catalog UI
+- Move a plant from one bed to another (PATCH `bed` field on UserPlant — enforce target bed ownership)
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
