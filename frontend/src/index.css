@@ -7,6 +7,10 @@
 
 /* add global styles below if needed */
 
+button {
+  cursor: pointer;
+}
+
 @keyframes leaf-fall {
   0%   { transform: translateY(-20px) rotate(-20deg) translateX(0px);   opacity: 0; }
   10%  { opacity: 1; }

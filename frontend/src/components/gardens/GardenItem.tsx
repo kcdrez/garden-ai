@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   MoreHorizontalIcon,
@@ -32,6 +32,7 @@ type Props = {
 };
 
 export default function GardenItem({ garden }: Props) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -41,13 +42,17 @@ export default function GardenItem({ garden }: Props) {
   });
 
   return (
-    <Card>
+    <Card
+      className="cursor-pointer hover:bg-muted/40 transition-colors"
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
+        navigate(`/gardens/${garden.id}`);
+      }}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LeafIcon className="size-4 text-primary" />
-          <Link to={`/gardens/${garden.id}`} className="hover:underline">
-            {garden.name}
-          </Link>
+          {garden.name}
         </CardTitle>
         {garden.description && (
           <CardDescription className="line-clamp-2">
