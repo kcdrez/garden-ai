@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-05-17 — ~2 hours
+
+**Completed:**
+- Docker + Docker Compose — frontend, backend, and PostgreSQL all run with `docker compose up -d`; hot reload works in both services via volume mounts; DB healthcheck ensures backend waits for Postgres before starting
+- Fixed `requirements.txt` — `djangorestframework-simplejwt` was missing
+- Updated all three READMEs with Docker workflow and accurate stack info
+- Vercel deployment — frontend live with auto-deploy on push to `main`; `VITE_API_URL` env var replaces hardcoded localhost; `vercel.json` rewrite rule prevents React Router 404s on refresh
+- Railway deployment — Django backend live at `garden-ai-production-6a57.up.railway.app`; managed Postgres on Railway; gunicorn + whitenoise for production serving; `dj-database-url` parses `DATABASE_URL` from Railway
+
+**Next up:** User-facing features — move plant between beds, view all plants/beds across gardens
+
+---
+
 ## 2026-05-16 — ~4 hours
 
 **Completed:**
