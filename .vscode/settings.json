@@ -1,3 +1,5 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python"
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
+  "css.validate": false,
+  "scss.validate": false
 }
