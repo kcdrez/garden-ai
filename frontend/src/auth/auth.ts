@@ -3,6 +3,7 @@ const REFRESH_KEY = "refresh_token";
 
 export const auth = {
   getAccessToken: () => localStorage.getItem(ACCESS_KEY),
+  getRefreshToken: () => localStorage.getItem(REFRESH_KEY),
 
   setTokens: (access: string, refresh: string) => {
     localStorage.setItem(ACCESS_KEY, access);
