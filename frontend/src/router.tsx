@@ -1,10 +1,10 @@
 import { createBrowserRouter, redirect } from 'react-router-dom';
 import App from './App';
-import Gardens from './pages/Gardens';
-import GardenDetail from './pages/GardenDetail';
-import BedDetail from './pages/BedDetail';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Gardens from './pages/gardens/Gardens';
+import GardenDetail from './pages/gardens/GardenDetail';
+import BedDetail from './pages/beds/BedDetail';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import { auth } from './auth/auth';
 import { LoadingSpinner } from './components/ui/query-state';
 

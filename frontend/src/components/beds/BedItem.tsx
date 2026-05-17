@@ -28,7 +28,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import BedDialog from '@/components/BedDialog';
+import BedDialog from '@/components/beds/BedDialog';
 
 type Props = {
   gardenId: string;

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
-import PlantPicker from '@/components/PlantPicker';
+import PlantPicker from '@/components/plants/PlantPicker';
 
 type Props = {
   gardenId: string;

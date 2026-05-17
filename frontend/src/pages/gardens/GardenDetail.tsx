@@ -7,7 +7,7 @@ import { fetchBeds } from '@/api/beds';
 import { getErrorMessage } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
-import BedDialog from '@/components/BedDialog';
+import BedDialog from '@/components/beds/BedDialog';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 export default function GardenDetail() {
@@ -34,18 +34,8 @@ export default function GardenDetail() {
     enabled: !!id,
   });
 
-  if (gardenLoading)
-    return (
-      <div className="p-5">
-        <LoadingSpinner />
-      </div>
-    );
-  if (gardenError)
-    return (
-      <div className="p-5 text-sm text-destructive">
-        {getErrorMessage(gardenError)}
-      </div>
-    );
+  if (gardenLoading) return <div className="p-5"><LoadingSpinner /></div>;
+  if (gardenError) return <div className="p-5 text-sm text-destructive">{getErrorMessage(gardenError)}</div>;
   if (!garden) return null;
 
   return (
@@ -74,12 +64,7 @@ export default function GardenDetail() {
 
       <h3 className="mb-3">Garden Beds</h3>
 
-      <QueryState
-        isLoading={bedsLoading}
-        error={bedsError}
-        isEmpty={beds.length === 0}
-        emptyMessage="No beds yet. Add one to get started."
-      >
+      <QueryState isLoading={bedsLoading} error={bedsError} isEmpty={beds.length === 0} emptyMessage="No beds yet. Add one to get started.">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {beds.map((bed) => (
             <BedItem key={bed.id} gardenId={id!} bed={bed} />
