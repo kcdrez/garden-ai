@@ -28,7 +28,7 @@ function PlantPicker<
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return plants.filter((p) => {
-      const matchesSearch = !q || p.common_name.toLowerCase().includes(q);
+      const matchesSearch = !q || p.commonName.toLowerCase().includes(q);
       const matchesCategory = !activeCategory || p.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
@@ -82,7 +82,7 @@ function PlantPicker<
         {selectedPlant ? (
           <div className="flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-primary/10 text-primary w-fit">
             <LeafIcon className="size-3 shrink-0" />
-            <span className="font-medium">{selectedPlant.common_name}</span>
+            <span className="font-medium">{selectedPlant.commonName}</span>
             <span className="text-primary/60 capitalize">{selectedPlant.category}</span>
           </div>
         ) : (
@@ -106,7 +106,7 @@ function PlantPicker<
                         isSelected ? 'bg-primary/10 font-medium' : 'hover:bg-muted',
                       )}
                     >
-                      <span>{plant.common_name}</span>
+                      <span>{plant.commonName}</span>
                       <span className="flex items-center gap-2 shrink-0">
                         <span className="text-xs text-muted-foreground capitalize">
                           {plant.category}

@@ -4,8 +4,8 @@ export type UserPlantStatus = "planned" | "planted" | "growing" | "harvested" | 
 
 export interface Plant {
   id: string;
-  common_name: string;
-  scientific_name: string;
+  commonName: string;
+  scientificName: string;
   category: PlantCategory;
   description: string;
 }
@@ -14,14 +14,14 @@ export interface UserPlant {
   id: string;
   bed: string;
   plant: string;
-  plant_name: string;
-  plant_category: PlantCategory;
+  plantName: string;
+  plantCategory: PlantCategory;
   variety: string;
-  planted_date: string | null;
+  plantedDate: string | null;
   status: UserPlantStatus;
   notes: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const PLANT_CATEGORIES: { value: PlantCategory; label: string }[] = [

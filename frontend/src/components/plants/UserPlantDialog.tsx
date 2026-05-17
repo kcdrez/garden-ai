@@ -39,7 +39,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   const defaultValues = (): UserPlantFormValues => ({
     plant: userPlant?.plant ?? '',
     variety: userPlant?.variety ?? '',
-    planted_date: userPlant?.planted_date ?? '',
+    plantedDate: userPlant?.plantedDate ?? '',
     status: userPlant?.status ?? 'planned',
     notes: userPlant?.notes ?? '',
   });
@@ -59,7 +59,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
       const payload = {
         plant: values.plant,
         variety: values.variety || undefined,
-        planted_date: values.planted_date || undefined,
+        plantedDate: values.plantedDate || undefined,
         status: values.status,
         notes: values.notes || undefined,
       };
@@ -74,7 +74,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     onError: (err) => {
       const fieldErrors = getDRFFieldErrors(err);
       if (fieldErrors) {
-        const knownFields = ['plant', 'variety', 'planted_date', 'status', 'notes'] as const;
+        const knownFields = ['plant', 'variety', 'plantedDate', 'status', 'notes'] as const;
         knownFields.forEach((f) => {
           if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
         });
@@ -100,7 +100,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
           <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
 
           <div className="grid grid-cols-2 gap-3">
-            <TextField control={form.control} name="planted_date" label="Planted Date" type="date" />
+            <TextField control={form.control} name="plantedDate" label="Planted Date" type="date" />
             <NativeSelectField control={form.control} name="status" label="Status">
               {USER_PLANT_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>

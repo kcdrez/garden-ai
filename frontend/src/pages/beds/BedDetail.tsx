@@ -93,7 +93,7 @@ export default function BedDetail() {
   if (bedError) return <div className="p-5 text-sm text-destructive">{getErrorMessage(bedError)}</div>;
   if (!bed) return null;
 
-  const hasDetails = bed.facing || bed.avg_sunlight_hours != null || bed.soil_type || bed.notes;
+  const hasDetails = bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes;
 
   return (
     <div className="p-5">
@@ -138,16 +138,16 @@ export default function BedDetail() {
                 Faces {facingLabel(bed.facing)}
               </span>
             )}
-            {bed.avg_sunlight_hours != null && (
+            {bed.avgSunlightHours != null && (
               <span className="flex items-center gap-2">
                 <SunIcon className="size-3.5 shrink-0" />
-                {bed.avg_sunlight_hours} hrs/day avg. sunlight
+                {bed.avgSunlightHours} hrs/day avg. sunlight
               </span>
             )}
-            {bed.soil_type && (
+            {bed.soilType && (
               <span className="flex items-center gap-2">
                 <ShovelIcon className="size-3.5 shrink-0" />
-                {bed.soil_type}
+                {bed.soilType}
               </span>
             )}
             {bed.notes && (
@@ -180,7 +180,7 @@ export default function BedDetail() {
               <span className="flex items-center gap-2">
                 <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
                 <span>
-                  {up.plant_name}
+                  {up.plantName}
                   {up.variety && <span className="text-muted-foreground"> — {up.variety}</span>}
                 </span>
               </span>

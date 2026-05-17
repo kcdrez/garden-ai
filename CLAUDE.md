@@ -165,6 +165,8 @@ Nested under a garden — ownership enforced via the parent garden's owner check
 - Auth endpoints: `/api/auth/*`
 - Responses are JSON
 - Timestamps in ISO 8601 format
+- All JSON field names are camelCase (e.g. `avgSunlightHours`, `createdAt`) — converted automatically by `djangorestframework-camel-case`. Django serializers and models remain snake_case; the conversion happens at the HTTP boundary.
+- JWT access tokens expire in 5 minutes (SimpleJWT default). The frontend client silently refreshes using the stored refresh token on 401 and retries the original request.
 
 ---
 
