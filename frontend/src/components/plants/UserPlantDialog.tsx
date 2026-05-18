@@ -32,8 +32,9 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   const isEditing = !!userPlant;
 
   const { data: plants = [] } = useQuery({
-    queryKey: ['plants'],
+    queryKey: ['plants', 'catalog'],
     queryFn: fetchPlants,
+    enabled: open,
   });
 
   const defaultValues = (): UserPlantFormValues => ({
@@ -68,7 +69,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
         : createUserPlant(gardenId, bedId, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-plants', bedId] });
+      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
       onOpenChange(false);
     },
     onError: (err) => {

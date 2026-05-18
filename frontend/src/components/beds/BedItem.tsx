@@ -1,17 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import {
-  MoreHorizontalIcon,
-  Trash2Icon,
-  PencilIcon,
-  SunIcon,
-  CompassIcon,
-  ShovelIcon,
-  NotebookPenIcon,
-} from 'lucide-react';
+import { MoreHorizontalIcon, Trash2Icon, PencilIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
-import { BED_FACINGS } from '@/types/gardens';
+import { formatDimensions } from '@/lib/beds';
+import BedMeta from '@/components/beds/BedMeta';
 import { deleteBed } from '@/api/beds';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -35,15 +28,6 @@ type Props = {
   bed: GardenBed;
 };
 
-function formatDimensions(bed: GardenBed): string {
-  const parts = [bed.length, bed.width];
-  if (bed.depth) parts.push(bed.depth);
-  return `${parts.join(' × ')} ${bed.unit}`;
-}
-
-function facingLabel(value: string): string {
-  return BED_FACINGS.find((f) => f.value === value)?.label ?? value;
-}
 
 export default function BedItem({ gardenId, bed }: Props) {
   const navigate = useNavigate();
@@ -52,10 +36,8 @@ export default function BedItem({ gardenId, bed }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteBed(gardenId, bed.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds', gardenId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds'] }),
   });
-
-  const hasDetails = bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes;
 
   function handleCardClick(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
@@ -94,32 +76,9 @@ export default function BedItem({ gardenId, bed }: Props) {
           </CardAction>
         </CardHeader>
 
-        {hasDetails && (
-          <CardContent className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-            {bed.facing && (
-              <span className="flex items-center gap-2">
-                <CompassIcon className="size-3.5 shrink-0" />
-                Faces {facingLabel(bed.facing)}
-              </span>
-            )}
-            {bed.avgSunlightHours != null && (
-              <span className="flex items-center gap-2">
-                <SunIcon className="size-3.5 shrink-0" />
-                {bed.avgSunlightHours} hrs/day avg. sunlight
-              </span>
-            )}
-            {bed.soilType && (
-              <span className="flex items-center gap-2">
-                <ShovelIcon className="size-3.5 shrink-0" />
-                {bed.soilType}
-              </span>
-            )}
-            {bed.notes && (
-              <span className="flex items-start gap-2">
-                <NotebookPenIcon className="size-3.5 shrink-0 mt-0.5" />
-                <span className="line-clamp-2">{bed.notes}</span>
-              </span>
-            )}
+        {(bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes) && (
+          <CardContent>
+            <BedMeta bed={bed} />
           </CardContent>
         )}
       </Card>
