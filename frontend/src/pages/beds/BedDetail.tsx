@@ -6,24 +6,19 @@ import {
   PlusIcon,
   PencilIcon,
   Trash2Icon,
-  MoreHorizontalIcon,
   LeafIcon,
 } from 'lucide-react';
 import { fetchBeds, deleteBed } from '@/api/beds';
 import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
+import { routes } from '@/lib/routes';
 import type { GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import BedDetails from '@/components/beds/BedDetails';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import CardActionsMenu from '@/components/ui/card-actions-menu';
 import BedDialog from '@/components/beds/BedDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
@@ -74,7 +69,7 @@ export default function BedDetail() {
     mutationFn: () => deleteBed(id!, bedId!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
-      navigate(`/gardens/${id}`);
+      navigate(routes.gardenDetail(id!));
     },
   });
 
@@ -93,7 +88,7 @@ export default function BedDetail() {
     <div className="p-5">
       <div className="mb-6">
         <Link
-          to={`/gardens/${id}`}
+          to={routes.gardenDetail(id!)}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeftIcon className="size-4" />
@@ -146,42 +141,21 @@ export default function BedDetail() {
         emptyMessage="No plants yet. Add one to get started."
       >
         <ul className="flex flex-col gap-2">
-          {userPlants.map((up) => (
-            <li key={up.id} className="flex items-center justify-between text-sm py-1">
+          {userPlants.map((plant) => (
+            <li key={plant.id} className="flex items-center justify-between text-sm py-1">
               <span className="flex items-center gap-2">
                 <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
                 <span>
-                  {up.plantName}
-                  {up.variety && <span className="text-muted-foreground"> — {up.variety}</span>}
+                  {plant.plantName}
+                  {plant.variety && <span className="text-muted-foreground"> — {plant.variety}</span>}
                 </span>
               </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
-                  aria-label="Plant actions"
-                >
-                  <MoreHorizontalIcon />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setEditingPlant(up);
-                      setAddPlantOpen(true);
-                    }}
-                  >
-                    <PencilIcon />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    variant="destructive"
-                    disabled={deleteUserPlantMutation.isPending}
-                    onClick={() => deleteUserPlantMutation.mutate(up.id)}
-                  >
-                    <Trash2Icon />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <CardActionsMenu
+                label="Plant actions"
+                onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
+                onDelete={() => deleteUserPlantMutation.mutate(plant.id)}
+                isDeleting={deleteUserPlantMutation.isPending}
+              />
             </li>
           ))}
         </ul>

@@ -6,6 +6,7 @@ import { fetchGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
 import type { Garden, GardenBed } from '@/types/gardens';
 import { getErrorMessage } from '@/lib/errors';
+import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
@@ -55,7 +56,7 @@ export default function GardenDetail() {
     <div className="p-5">
       <div className="mb-6">
         <Link
-          to="/gardens"
+          to={routes.gardens()}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeftIcon className="size-4" />

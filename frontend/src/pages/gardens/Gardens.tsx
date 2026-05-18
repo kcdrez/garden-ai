@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import { fetchGardens, createGarden } from '@/api/gardens';
-import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
+import { applyServerErrors } from '@/lib/errors';
 import GardenItem from '@/components/gardens/GardenItem';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -31,16 +31,7 @@ export default function Gardens() {
       form.reset();
     },
     onError: (err) => {
-      const fieldErrors = getDRFFieldErrors(err);
-      if (fieldErrors) {
-        if (fieldErrors.name) form.setError('name', { message: fieldErrors.name[0] });
-        if (fieldErrors.description) form.setError('description', { message: fieldErrors.description[0] });
-        if (!fieldErrors.name && !fieldErrors.description) {
-          form.setError('root', { message: getErrorMessage(err) });
-        }
-      } else {
-        form.setError('root', { message: getErrorMessage(err) });
-      }
+      applyServerErrors(err, form, ['name', 'description']);
     },
   });
 
