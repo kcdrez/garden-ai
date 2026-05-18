@@ -286,7 +286,10 @@ These are explicitly out of scope, at least initially:
 - View all plants page (`/plants`) — flat list with status badges and links to bed/garden; `GET /api/userplants/` flat-list endpoint; `bedName`, `gardenId`, `gardenName` added to user plant serializer
 - `BedDetails` shared component — facing, sunlight, soil, notes icon rows; `showNotes` prop; `formatDimensions`/`facingLabel`/`bedHasDetails` extracted to `src/lib/beds.ts`
 - TanStack Query cache optimization — prefix-based invalidation, `initialData` seeding across list→detail navigation; zero redundant API calls when navigating between all-beds, garden detail, and bed detail pages
-- `CardActionsMenu` shared component in `components/ui/` — edit/delete dropdown used by `GardenItem` and `BedItem`; accepts `onEdit`, `onDelete`, `isDeleting`, `label` props
+- `CardActionsMenu` shared component in `components/ui/` — edit/delete/move dropdown; accepts `onEdit`, `onDelete`, `onMove` (optional), `isDeleting`, `label` props; used by `GardenItem`, `BedItem`, and plant lists
+- Move plant between beds — PATCH `bed` field on `UserPlant`; `validate_bed` in serializer enforces target bed ownership; `MovePlantDialog` two-step wizard (pick bed or create a new one inline without stacking dialogs); wired into `BedDetail` and `AllPlants`
+- Full edit/delete/move actions on `AllPlants` page — `UserPlantDialog` and `MovePlantDialog` both accessible from the list
+- `NativeSelectField` custom chevron — `appearance-none` removes browser arrow; custom `ChevronDownIcon` absolutely positioned in a wrapper div; `pr-7` reserves space
 
 ## 📋 Planned
 
@@ -302,7 +305,6 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
-- Move a plant from one bed to another (PATCH `bed` field on UserPlant — enforce target bed ownership)
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking

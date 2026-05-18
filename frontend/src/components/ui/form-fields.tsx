@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { ChevronDownIcon } from 'lucide-react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
 import { cn } from '@/lib/utils'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -64,7 +65,7 @@ function TextAreaField<
 }
 
 const selectClass = cn(
-  'h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none',
+  'h-8 w-full appearance-none rounded-lg border border-input bg-transparent pl-2.5 pr-7 py-1 text-sm outline-none',
   'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
   'dark:bg-input/30',
 )
@@ -96,22 +97,25 @@ function NativeSelectField<
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <select
-              value={optional ? (field.value ?? '') : field.value}
-              onChange={(e) =>
-                optional
-                  ? field.onChange(e.target.value || undefined)
-                  : field.onChange(e.target.value)
-              }
-              onBlur={field.onBlur}
-              name={field.name}
-              ref={field.ref}
-              className={cn(selectClass, className)}
-            >
-              {children}
-            </select>
-          </FormControl>
+          <div className="relative">
+            <FormControl>
+              <select
+                value={optional ? (field.value ?? '') : field.value}
+                onChange={(e) =>
+                  optional
+                    ? field.onChange(e.target.value || undefined)
+                    : field.onChange(e.target.value)
+                }
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
+                className={cn(selectClass, className)}
+              >
+                {children}
+              </select>
+            </FormControl>
+            <ChevronDownIcon className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          </div>
           <FormMessage />
         </FormItem>
       )}

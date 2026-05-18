@@ -36,6 +36,16 @@ export async function updateUserPlant(
   return res.data;
 }
 
+export async function moveUserPlant(
+  gardenId: string,
+  bedId: string,
+  plantId: string,
+  targetBedId: string,
+): Promise<UserPlant> {
+  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`, { bed: targetBedId });
+  return res.data;
+}
+
 export async function deleteUserPlant(
   gardenId: string,
   bedId: string,
