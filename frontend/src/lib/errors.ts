@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { FieldValues, UseFormReturn, Path } from 'react-hook-form';
 
 type DRFErrors = Record<string, string[]>;
 
@@ -29,4 +30,22 @@ export function getDRFFieldErrors(err: unknown): DRFErrors | null {
     }
   }
   return null;
+}
+
+export function applyServerErrors<T extends FieldValues>(
+  err: unknown,
+  form: UseFormReturn<T>,
+  fields: readonly Path<T>[],
+): void {
+  const fieldErrors = getDRFFieldErrors(err);
+  if (fieldErrors) {
+    fields.forEach((f) => {
+      if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
+    });
+    if (!fields.some((f) => fieldErrors[f])) {
+      form.setError('root', { message: getErrorMessage(err) });
+    }
+  } else {
+    form.setError('root', { message: getErrorMessage(err) });
+  }
 }

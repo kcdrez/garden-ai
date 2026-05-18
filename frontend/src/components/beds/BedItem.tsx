@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { GardenBed } from '@/types/gardens';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
+import { routes } from '@/lib/routes';
 import BedDetails from '@/components/beds/BedDetails';
 import { deleteBed } from '@/api/beds';
 import {
@@ -34,7 +35,7 @@ export default function BedItem({ gardenId, bed }: Props) {
 
   function handleCardClick(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
-    navigate(`/gardens/${gardenId}/beds/${bed.id}`);
+    navigate(routes.bedDetail(gardenId, bed.id));
   }
 
   return (

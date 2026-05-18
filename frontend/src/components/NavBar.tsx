@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/auth/auth";
+import { routes } from "@/lib/routes";
 
 export default function NavBar() {
   const [dark, setDark] = useState(
@@ -26,22 +27,22 @@ export default function NavBar() {
 
   function logout() {
     auth.clearTokens();
-    navigate("/login");
+    navigate(routes.login());
   }
 
   return (
     <nav className="flex items-center px-4 py-2 border-b border-border">
       <div className="flex items-center gap-2 mr-auto">
-        <Link to="/" className="font-bold text-foreground no-underline">
+        <Link to={routes.home()} className="font-bold text-foreground no-underline">
           Garden AI
         </Link>
-        <Link to="/gardens" className={buttonVariants({ variant: "ghost" })}>
+        <Link to={routes.gardens()} className={buttonVariants({ variant: "ghost" })}>
           Gardens
         </Link>
-        <Link to="/beds" className={buttonVariants({ variant: "ghost" })}>
+        <Link to={routes.allBeds()} className={buttonVariants({ variant: "ghost" })}>
           Beds
         </Link>
-        <Link to="/plants" className={buttonVariants({ variant: "ghost" })}>
+        <Link to={routes.allPlants()} className={buttonVariants({ variant: "ghost" })}>
           Plants
         </Link>
       </div>

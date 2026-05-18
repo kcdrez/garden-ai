@@ -5,6 +5,7 @@ import { LeafIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
 import { formatDate } from '@/lib/dates';
+import { routes } from '@/lib/routes';
 import {
   Card,
   CardHeader,
@@ -35,7 +36,7 @@ export default function GardenItem({ garden }: Props) {
       className="cursor-pointer hover:bg-muted/40 transition-colors"
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
-        navigate(`/gardens/${garden.id}`);
+        navigate(routes.gardenDetail(garden.id));
       }}
     >
       <CardHeader>
