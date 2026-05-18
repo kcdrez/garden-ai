@@ -36,7 +36,13 @@ export default function NavBar() {
           Garden AI
         </Link>
         <Link to="/gardens" className={buttonVariants({ variant: "ghost" })}>
-          View Gardens
+          Gardens
+        </Link>
+        <Link to="/beds" className={buttonVariants({ variant: "ghost" })}>
+          Beds
+        </Link>
+        <Link to="/plants" className={buttonVariants({ variant: "ghost" })}>
+          Plants
         </Link>
       </div>
 

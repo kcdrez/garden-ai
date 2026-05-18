@@ -1,4 +1,4 @@
-from rest_framework import permissions, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.exceptions import NotFound
 
 from .models import Garden, GardenBed
@@ -30,3 +30,13 @@ class GardenBedViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         garden = self._get_garden()
         serializer.save(garden=garden)
+
+
+class AllGardenBedsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = GardenBedSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return GardenBed.objects.filter(
+            garden__owner=self.request.user
+        ).order_by("garden__name", "created_at")

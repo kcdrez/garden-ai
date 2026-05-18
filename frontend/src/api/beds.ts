@@ -13,6 +13,11 @@ type BedPayload = {
   notes?: string;
 };
 
+export async function fetchAllBeds(): Promise<GardenBed[]> {
+  const res = await api.get('/beds/');
+  return res.data ?? [];
+}
+
 export async function fetchBeds(gardenId: string): Promise<GardenBed[]> {
   const res = await api.get(`/gardens/${gardenId}/beds/`);
   return res.data ?? [];

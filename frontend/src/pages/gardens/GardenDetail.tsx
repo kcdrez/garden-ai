@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon, PlusIcon } from 'lucide-react';
 import { fetchGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
+import type { Garden, GardenBed } from '@/types/gardens';
 import { getErrorMessage } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
@@ -14,14 +15,20 @@ export default function GardenDetail() {
   const { id } = useParams<{ id: string }>();
   const [createOpen, setCreateOpen] = useState(false);
 
+  const queryClient = useQueryClient();
+
   const {
     data: garden,
     isLoading: gardenLoading,
     error: gardenError,
   } = useQuery({
-    queryKey: ['garden', id],
+    queryKey: ['gardens', id],
     queryFn: () => fetchGarden(id!),
     enabled: !!id,
+    initialData: () =>
+      queryClient.getQueryData<Garden[]>(['gardens'])?.find((g) => g.id === id),
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(['gardens'])?.dataUpdatedAt || Date.now(),
   });
 
   const {
@@ -29,9 +36,15 @@ export default function GardenDetail() {
     isLoading: bedsLoading,
     error: bedsError,
   } = useQuery({
-    queryKey: ['beds', id],
+    queryKey: ['beds', 'garden', id],
     queryFn: () => fetchBeds(id!),
     enabled: !!id,
+    initialData: () => {
+      const allBeds = queryClient.getQueryData<GardenBed[]>(['beds', 'all']);
+      return allBeds?.filter((b) => b.garden === id);
+    },
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(['beds', 'all'])?.dataUpdatedAt || Date.now(),
   });
 
   if (gardenLoading) return <div className="p-5"><LoadingSpinner /></div>;

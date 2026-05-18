@@ -32,6 +32,7 @@ export const BED_FACINGS: { value: BedFacing; label: string }[] = [
 export type GardenBed = {
   id: string;
   garden: string;
+  gardenName: string;
   name: string;
   length: number;
   width: number;

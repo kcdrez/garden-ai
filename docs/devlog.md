@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-05-17 — ~3 hours
+
+**Completed:**
+- View all beds page (`/beds`) — flat list grouped by garden; query key `['beds', 'all']`
+- View all plants page (`/plants`) — flat list with status badges and links to bed/garden
+- "Beds" and "Plants" nav links added
+- Backend: `GET /api/beds/` and `GET /api/userplants/` flat-list endpoints; added `gardenName` to `GardenBedSerializer` and `bedName`, `gardenId`, `gardenName` to `UserPlantSerializer`
+- `BedMeta` shared component — facing, sunlight, soil type, notes icon rows; `showNotes` prop for compact view
+- `formatDimensions` and `facingLabel` extracted to `src/lib/beds.ts`
+- TanStack Query cache wiring — all write mutations invalidate by prefix (`['beds']`, `['plants', 'user']`); `initialData` seeding across GardenDetail, BedDetail so navigating AllBeds → garden → bed detail makes zero extra API calls
+- Eliminated three redundant API calls on bed detail mount: garden fetch (use `bed.gardenName` instead), per-bed plants fetch (seed from `['plants', 'user', 'all']`), plant catalog fetch (add `enabled: open` to `UserPlantDialog`)
+
+**Next up:** Refactor card boilerplate — GardenItem, BedItem, and AllBeds cards share repeated structure; extract a shared card pattern
+
+---
+
 ## 2026-05-17 — ~2 hours
 
 **Completed:**
