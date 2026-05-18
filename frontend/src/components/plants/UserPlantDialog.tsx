@@ -6,7 +6,7 @@ import { userPlantSchema, type UserPlantFormValues } from '@/schemas/plants';
 import { USER_PLANT_STATUSES } from '@/types/plants';
 import type { UserPlant } from '@/types/plants';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
-import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
+import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -73,18 +73,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
       onOpenChange(false);
     },
     onError: (err) => {
-      const fieldErrors = getDRFFieldErrors(err);
-      if (fieldErrors) {
-        const knownFields = ['plant', 'variety', 'plantedDate', 'status', 'notes'] as const;
-        knownFields.forEach((f) => {
-          if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
-        });
-        if (!knownFields.some((f) => fieldErrors[f])) {
-          form.setError('root', { message: getErrorMessage(err) });
-        }
-      } else {
-        form.setError('root', { message: getErrorMessage(err) });
-      }
+      applyServerErrors(err, form, ['plant', 'variety', 'plantedDate', 'status', 'notes']);
     },
   });
 

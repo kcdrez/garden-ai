@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import type { Garden } from '@/types/gardens';
 import { updateGarden } from '@/api/gardens';
-import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
+import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,16 +39,7 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
       onOpenChange(false);
     },
     onError: (err) => {
-      const fieldErrors = getDRFFieldErrors(err);
-      if (fieldErrors) {
-        if (fieldErrors.name) form.setError('name', { message: fieldErrors.name[0] });
-        if (fieldErrors.description)
-          form.setError('description', { message: fieldErrors.description[0] });
-        if (!fieldErrors.name && !fieldErrors.description)
-          form.setError('root', { message: getErrorMessage(err) });
-      } else {
-        form.setError('root', { message: getErrorMessage(err) });
-      }
+      applyServerErrors(err, form, ['name', 'description']);
     },
   });
 

@@ -4,6 +4,7 @@ import { ArrowRightIcon } from 'lucide-react';
 import { fetchAllBeds } from '@/api/beds';
 import type { GardenBed } from '@/types/gardens';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
+import { routes } from '@/lib/routes';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import BedDetails from '@/components/beds/BedDetails';
 import { QueryState } from '@/components/ui/query-state';
@@ -49,7 +50,7 @@ export default function AllBeds() {
               <div className="flex items-center gap-2 mb-3">
                 <h3>{gardenName}</h3>
                 <Link
-                  to={`/gardens/${gardenId}`}
+                  to={routes.gardenDetail(gardenId)}
                   className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <ArrowRightIcon className="size-3.5" />
@@ -62,7 +63,7 @@ export default function AllBeds() {
                   return (
                     <Link
                       key={bed.id}
-                      to={`/gardens/${gardenId}/beds/${bed.id}`}
+                      to={routes.bedDetail(gardenId, bed.id)}
                       className="no-underline"
                     >
                       <Card className="cursor-pointer hover:bg-muted/40 transition-colors h-full">

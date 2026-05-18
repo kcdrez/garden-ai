@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField } from '@/components/ui/form-fields';
 import { getDRFFieldErrors } from '@/lib/errors';
+import { routes } from '@/lib/routes';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Register() {
   const onSubmit = async (values: RegisterFormValues) => {
     try {
       await register(values.username, values.password, values.password_confirm, values.email || undefined);
-      navigate('/gardens');
+      navigate(routes.gardens());
     } catch (err) {
       const fieldErrors = getDRFFieldErrors(err);
       if (fieldErrors) {
@@ -54,7 +55,7 @@ export default function Register() {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link to="/login" className="underline">
+          <Link to={routes.login()} className="underline">
             Log in
           </Link>
         </p>
