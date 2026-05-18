@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LeafIcon } from 'lucide-react';
-import { fetchAllUserPlants } from '@/api/plants';
+import { fetchAllUserPlants, deleteUserPlant } from '@/api/plants';
 import { USER_PLANT_STATUSES } from '@/types/plants';
+import type { UserPlant } from '@/types/plants';
 import { QueryState } from '@/components/ui/query-state';
+import CardActionsMenu from '@/components/ui/card-actions-menu';
+import UserPlantDialog from '@/components/plants/UserPlantDialog';
+import MovePlantDialog from '@/components/plants/MovePlantDialog';
 import { routes } from '@/lib/routes';
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -19,9 +24,18 @@ function statusLabel(value: string): string {
 }
 
 export default function AllPlants() {
+  const queryClient = useQueryClient();
+  const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
+  const [movingPlant, setMovingPlant] = useState<UserPlant | undefined>();
+
   const { data: userPlants = [], isLoading, error } = useQuery({
     queryKey: ['plants', 'user', 'all'],
     queryFn: fetchAllUserPlants,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (plant: UserPlant) => deleteUserPlant(plant.gardenId, plant.bed, plant.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
   });
 
   return (
@@ -65,10 +79,35 @@ export default function AllPlants() {
                   </div>
                 </div>
               </div>
+              <CardActionsMenu
+                label="Plant actions"
+                onEdit={() => setEditingPlant(plant)}
+                onMove={() => setMovingPlant(plant)}
+                onDelete={() => deleteMutation.mutate(plant)}
+                isDeleting={deleteMutation.isPending}
+              />
             </li>
           ))}
         </ul>
       </QueryState>
+
+      {editingPlant && (
+        <UserPlantDialog
+          gardenId={editingPlant.gardenId}
+          bedId={editingPlant.bed}
+          userPlant={editingPlant}
+          open={!!editingPlant}
+          onOpenChange={(open) => { if (!open) setEditingPlant(undefined); }}
+        />
+      )}
+
+      {movingPlant && (
+        <MovePlantDialog
+          userPlant={movingPlant}
+          open={!!movingPlant}
+          onOpenChange={(open) => { if (!open) setMovingPlant(undefined); }}
+        />
+      )}
     </div>
   );
 }

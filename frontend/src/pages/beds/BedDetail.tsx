@@ -21,6 +21,7 @@ import BedDetails from '@/components/beds/BedDetails';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
 import BedDialog from '@/components/beds/BedDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
+import MovePlantDialog from '@/components/plants/MovePlantDialog';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 
@@ -31,6 +32,7 @@ export default function BedDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
+  const [movingPlant, setMovingPlant] = useState<UserPlant | undefined>();
 
   const {
     data: bed,
@@ -153,6 +155,7 @@ export default function BedDetail() {
               <CardActionsMenu
                 label="Plant actions"
                 onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
+                onMove={() => setMovingPlant(plant)}
                 onDelete={() => deleteUserPlantMutation.mutate(plant.id)}
                 isDeleting={deleteUserPlantMutation.isPending}
               />
@@ -173,6 +176,14 @@ export default function BedDetail() {
           if (!open) setEditingPlant(undefined);
         }}
       />
+
+      {movingPlant && (
+        <MovePlantDialog
+          userPlant={movingPlant}
+          open={!!movingPlant}
+          onOpenChange={(open) => { if (!open) setMovingPlant(undefined); }}
+        />
+      )}
     </div>
   );
 }
