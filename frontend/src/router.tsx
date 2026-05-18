@@ -2,7 +2,9 @@ import { createBrowserRouter, redirect } from 'react-router-dom';
 import App from './App';
 import Gardens from './pages/gardens/Gardens';
 import GardenDetail from './pages/gardens/GardenDetail';
+import AllBeds from './pages/beds/AllBeds';
 import BedDetail from './pages/beds/BedDetail';
+import AllPlants from './pages/plants/AllPlants';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import { auth } from './auth/auth';
@@ -43,6 +45,8 @@ export const router = createBrowserRouter([
       { path: 'gardens', element: <Gardens /> },
       { path: 'gardens/:id', element: <GardenDetail /> },
       { path: 'gardens/:id/beds/:bedId', element: <BedDetail /> },
+      { path: 'beds', element: <AllBeds /> },
+      { path: 'plants', element: <AllPlants /> },
     ],
   },
 ]);

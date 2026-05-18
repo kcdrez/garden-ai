@@ -4,14 +4,16 @@ from .models import Garden, GardenBed
 
 
 class GardenBedSerializer(serializers.ModelSerializer):
+    garden_name = serializers.CharField(source="garden.name", read_only=True)
+
     class Meta:
         model = GardenBed
         fields = [
-            "id", "garden", "name", "length", "width", "depth", "unit",
+            "id", "garden", "garden_name", "name", "length", "width", "depth", "unit",
             "facing", "avg_sunlight_hours", "soil_type", "notes",
             "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "garden", "created_at", "updated_at"]
+        read_only_fields = ["id", "garden", "garden_name", "created_at", "updated_at"]
 
 
 class GardenSerializer(serializers.ModelSerializer):

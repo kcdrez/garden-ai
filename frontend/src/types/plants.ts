@@ -13,6 +13,9 @@ export interface Plant {
 export interface UserPlant {
   id: string;
   bed: string;
+  bedName: string;
+  gardenId: string;
+  gardenName: string;
   plant: string;
   plantName: string;
   plantCategory: PlantCategory;

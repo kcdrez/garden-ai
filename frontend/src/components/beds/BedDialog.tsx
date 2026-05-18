@@ -78,7 +78,7 @@ export default function BedDialog({
         : createBed(gardenId, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds', gardenId] });
+      queryClient.invalidateQueries({ queryKey: ['beds'] });
       onOpenChange(false);
     },
     onError: (err) => {

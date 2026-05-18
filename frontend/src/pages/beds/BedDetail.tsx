@@ -6,22 +6,18 @@ import {
   PlusIcon,
   PencilIcon,
   Trash2Icon,
-  SunIcon,
-  CompassIcon,
-  ShovelIcon,
-  NotebookPenIcon,
   MoreHorizontalIcon,
   LeafIcon,
 } from 'lucide-react';
-import { fetchGarden } from '@/api/gardens';
-import { fetchBed, deleteBed } from '@/api/beds';
+import { fetchBeds, deleteBed } from '@/api/beds';
 import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
 import { getErrorMessage } from '@/lib/errors';
-import { BED_FACINGS } from '@/types/gardens';
+import { formatDimensions } from '@/lib/beds';
 import type { GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import BedMeta from '@/components/beds/BedMeta';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -32,15 +28,6 @@ import BedDialog from '@/components/beds/BedDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
-function formatDimensions(bed: GardenBed): string {
-  const parts = [bed.length, bed.width];
-  if (bed.depth) parts.push(bed.depth);
-  return `${parts.join(' × ')} ${bed.unit}`;
-}
-
-function facingLabel(value: string): string {
-  return BED_FACINGS.find((f) => f.value === value)?.label ?? value;
-}
 
 export default function BedDetail() {
   const { id, bedId } = useParams<{ id: string; bedId: string }>();
@@ -50,20 +37,21 @@ export default function BedDetail() {
   const [addPlantOpen, setAddPlantOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
 
-  const { data: garden } = useQuery({
-    queryKey: ['garden', id],
-    queryFn: () => fetchGarden(id!),
-    enabled: !!id,
-  });
-
   const {
     data: bed,
     isLoading: bedLoading,
     error: bedError,
   } = useQuery({
-    queryKey: ['bed', id, bedId],
-    queryFn: () => fetchBed(id!, bedId!),
-    enabled: !!id && !!bedId,
+    queryKey: ['beds', 'garden', id],
+    queryFn: () => fetchBeds(id!),
+    enabled: !!id,
+    select: (beds) => beds.find((b) => b.id === bedId),
+    initialData: () => {
+      const allBeds = queryClient.getQueryData<GardenBed[]>(['beds', 'all']);
+      return allBeds?.filter((b) => b.garden === id);
+    },
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(['beds', 'all'])?.dataUpdatedAt || Date.now(),
   });
 
   const {
@@ -71,22 +59,28 @@ export default function BedDetail() {
     isLoading: plantsLoading,
     error: plantsError,
   } = useQuery({
-    queryKey: ['user-plants', bedId],
+    queryKey: ['plants', 'user', bedId],
     queryFn: () => fetchUserPlants(id!, bedId!),
     enabled: !!id && !!bedId,
+    initialData: () => {
+      const allPlants = queryClient.getQueryData<UserPlant[]>(['plants', 'user', 'all']);
+      return allPlants?.filter((p) => p.bed === bedId);
+    },
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(['plants', 'user', 'all'])?.dataUpdatedAt || Date.now(),
   });
 
   const deleteBedMutation = useMutation({
     mutationFn: () => deleteBed(id!, bedId!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds', id] });
+      queryClient.invalidateQueries({ queryKey: ['beds'] });
       navigate(`/gardens/${id}`);
     },
   });
 
   const deleteUserPlantMutation = useMutation({
     mutationFn: (plantId: string) => deleteUserPlant(id!, bedId!, plantId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user-plants', bedId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
   });
 
   if (bedLoading) return <div className="p-5"><LoadingSpinner /></div>;
@@ -103,7 +97,7 @@ export default function BedDetail() {
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeftIcon className="size-4" />
-          {garden?.name ?? 'Garden'}
+          {bed.gardenName}
         </Link>
 
         <div className="flex items-center justify-between">
@@ -131,31 +125,8 @@ export default function BedDetail() {
 
       {hasDetails && (
         <Card className="mb-6">
-          <CardContent className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-            {bed.facing && (
-              <span className="flex items-center gap-2">
-                <CompassIcon className="size-3.5 shrink-0" />
-                Faces {facingLabel(bed.facing)}
-              </span>
-            )}
-            {bed.avgSunlightHours != null && (
-              <span className="flex items-center gap-2">
-                <SunIcon className="size-3.5 shrink-0" />
-                {bed.avgSunlightHours} hrs/day avg. sunlight
-              </span>
-            )}
-            {bed.soilType && (
-              <span className="flex items-center gap-2">
-                <ShovelIcon className="size-3.5 shrink-0" />
-                {bed.soilType}
-              </span>
-            )}
-            {bed.notes && (
-              <span className="flex items-start gap-2">
-                <NotebookPenIcon className="size-3.5 shrink-0 mt-0.5" />
-                <span>{bed.notes}</span>
-              </span>
-            )}
+          <CardContent>
+            <BedMeta bed={bed} />
           </CardContent>
         </Card>
       )}
