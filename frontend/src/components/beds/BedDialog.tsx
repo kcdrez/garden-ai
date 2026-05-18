@@ -6,7 +6,7 @@ import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { createBed, updateBed } from '@/api/beds';
-import { getErrorMessage, getDRFFieldErrors } from '@/lib/errors';
+import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -82,28 +82,7 @@ export default function BedDialog({
       onOpenChange(false);
     },
     onError: (err) => {
-      const fieldErrors = getDRFFieldErrors(err);
-      if (fieldErrors) {
-        const knownFields = [
-          'name',
-          'length',
-          'width',
-          'depth',
-          'unit',
-          'facing',
-          'avgSunlightHours',
-          'soilType',
-          'notes',
-        ] as const;
-        knownFields.forEach((f) => {
-          if (fieldErrors[f]) form.setError(f, { message: fieldErrors[f][0] });
-        });
-        if (!knownFields.some((f) => fieldErrors[f])) {
-          form.setError('root', { message: getErrorMessage(err) });
-        }
-      } else {
-        form.setError('root', { message: getErrorMessage(err) });
-      }
+      applyServerErrors(err, form, ['name', 'length', 'width', 'depth', 'unit', 'facing', 'avgSunlightHours', 'soilType', 'notes']);
     },
   });
 

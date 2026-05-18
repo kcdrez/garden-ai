@@ -85,6 +85,7 @@ Testing is a planned learning goal. As features mature, add:
 - Use `QueryState` from `@/components/ui/query-state` to handle loading/error/empty states inline — avoids repeating the four-branch conditional render pattern. `LoadingSpinner` is also exported for page-level early returns.
 - Custom CSS animations: add `@keyframes` to `index.css`, then register via `--animate-<name>: <keyframe-name> <duration> <easing> <iteration>` inside the `@theme inline` block — this exposes it as an `animate-<name>` Tailwind utility class.
 - Avoid "Meta" as a suffix in component or function names unless it specifically refers to HTML meta tags or document metadata. Prefer plain English alternatives: `BedDetails` not `BedMeta`, `bedHasDetails` not `bedHasMeta`. "Meta" reads as technical jargon and requires a mental translation step that "Details" or "Info" does not.
+- All navigation paths go through `src/lib/routes.ts` — never hardcode path strings in components. Add a new helper to `routes.ts` when adding a new route, then reference it everywhere via `routes.<name>(params)`. The `router.tsx` route definitions are the only place path strings are allowed.
 
 ---
 

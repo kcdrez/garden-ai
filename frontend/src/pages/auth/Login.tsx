@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth';
+import { routes } from '@/lib/routes';
 import { login } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -18,7 +19,7 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await login(values.username, values.password);
-      navigate('/gardens');
+      navigate(routes.gardens());
     } catch {
       form.setError('root', { message: 'Invalid credentials' });
     }
@@ -46,7 +47,7 @@ export default function Login() {
 
         <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <Link to="/register" className="underline">
+          <Link to={routes.register()} className="underline">
             Create one
           </Link>
         </p>

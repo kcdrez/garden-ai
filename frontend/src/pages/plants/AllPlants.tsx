@@ -4,6 +4,7 @@ import { LeafIcon } from 'lucide-react';
 import { fetchAllUserPlants } from '@/api/plants';
 import { USER_PLANT_STATUSES } from '@/types/plants';
 import { QueryState } from '@/components/ui/query-state';
+import { routes } from '@/lib/routes';
 
 const STATUS_CLASSES: Record<string, string> = {
   planned: 'bg-muted text-muted-foreground',
@@ -34,32 +35,32 @@ export default function AllPlants() {
         emptyMessage="No plants yet. Add some from a bed page."
       >
         <ul className="flex flex-col divide-y divide-border">
-          {userPlants.map((up) => (
-            <li key={up.id} className="flex items-center justify-between py-3 gap-4">
+          {userPlants.map((plant) => (
+            <li key={plant.id} className="flex items-center justify-between py-3 gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <LeafIcon className="size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">{up.plantName}</span>
-                    {up.variety && (
-                      <span className="text-muted-foreground text-sm">— {up.variety}</span>
+                    <span className="font-medium">{plant.plantName}</span>
+                    {plant.variety && (
+                      <span className="text-muted-foreground text-sm">— {plant.variety}</span>
                     )}
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_CLASSES[up.status] ?? 'bg-muted text-muted-foreground'}`}
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_CLASSES[plant.status] ?? 'bg-muted text-muted-foreground'}`}
                     >
-                      {statusLabel(up.status)}
+                      {statusLabel(plant.status)}
                     </span>
                   </div>
                   <div className="text-sm text-muted-foreground mt-0.5">
                     <Link
-                      to={`/gardens/${up.gardenId}/beds/${up.bed}`}
+                      to={routes.bedDetail(plant.gardenId, plant.bed)}
                       className="hover:text-foreground"
                     >
-                      {up.bedName}
+                      {plant.bedName}
                     </Link>
                     <span className="mx-1">·</span>
-                    <Link to={`/gardens/${up.gardenId}`} className="hover:text-foreground">
-                      {up.gardenName}
+                    <Link to={routes.gardenDetail(plant.gardenId)} className="hover:text-foreground">
+                      {plant.gardenName}
                     </Link>
                   </div>
                 </div>
