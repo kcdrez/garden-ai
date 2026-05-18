@@ -9,3 +9,7 @@ export function formatDimensions(bed: GardenBed): string {
 export function facingLabel(value: string): string {
   return BED_FACINGS.find((f) => f.value === value)?.label ?? value;
 }
+
+export function bedHasDetails(bed: GardenBed, includeNotes = true): boolean {
+  return !!(bed.facing || bed.avgSunlightHours != null || bed.soilType || (includeNotes && bed.notes));
+}
