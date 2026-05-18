@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-17 — ~1 hour
+
+**Completed:**
+- Extracted `CardActionsMenu` to `components/ui/card-actions-menu.tsx` — shared edit/delete dropdown; replaces ~15 lines of repeated `DropdownMenu` boilerplate in `GardenItem` and `BedItem`
+- Extracted `bedHasDetails` utility to `src/lib/beds.ts` — replaces 4 copies of the inline `bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes` condition; accepts optional `includeNotes` param for the compact (no-notes) variant
+- Renamed `BedMeta` component → `BedDetails` and `bedHasMeta` → `bedHasDetails` across all files
+
+**Next up:** Move a plant from one bed to another (PATCH `bed` field on UserPlant)
+
+---
+
 ## 2026-05-17 — ~3 hours
 
 **Completed:**

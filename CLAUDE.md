@@ -284,8 +284,9 @@ These are explicitly out of scope, at least initially:
 - Railway deployment — Django backend live at `https://garden-ai-production-6a57.up.railway.app`; managed PostgreSQL on Railway; gunicorn + whitenoise for production serving; `dj-database-url` parses `DATABASE_URL`
 - View all beds page (`/beds`) — flat list grouped by garden; `GET /api/beds/` flat-list endpoint; `gardenName` added to bed serializer
 - View all plants page (`/plants`) — flat list with status badges and links to bed/garden; `GET /api/userplants/` flat-list endpoint; `bedName`, `gardenId`, `gardenName` added to user plant serializer
-- `BedMeta` shared component — facing, sunlight, soil, notes icon rows; `showNotes` prop; `formatDimensions`/`facingLabel` extracted to `src/lib/beds.ts`
+- `BedDetails` shared component — facing, sunlight, soil, notes icon rows; `showNotes` prop; `formatDimensions`/`facingLabel`/`bedHasDetails` extracted to `src/lib/beds.ts`
 - TanStack Query cache optimization — prefix-based invalidation, `initialData` seeding across list→detail navigation; zero redundant API calls when navigating between all-beds, garden detail, and bed detail pages
+- `CardActionsMenu` shared component in `components/ui/` — edit/delete dropdown used by `GardenItem` and `BedItem`; accepts `onEdit`, `onDelete`, `isDeleting`, `label` props
 
 ## 📋 Planned
 
