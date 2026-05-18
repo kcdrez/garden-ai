@@ -12,12 +12,12 @@ import {
 import { fetchBeds, deleteBed } from '@/api/beds';
 import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
 import { getErrorMessage } from '@/lib/errors';
-import { formatDimensions } from '@/lib/beds';
+import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import type { GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import BedMeta from '@/components/beds/BedMeta';
+import BedDetails from '@/components/beds/BedDetails';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -87,7 +87,7 @@ export default function BedDetail() {
   if (bedError) return <div className="p-5 text-sm text-destructive">{getErrorMessage(bedError)}</div>;
   if (!bed) return null;
 
-  const hasDetails = bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes;
+  const hasDetails = bedHasDetails(bed);
 
   return (
     <div className="p-5">
@@ -126,7 +126,7 @@ export default function BedDetail() {
       {hasDetails && (
         <Card className="mb-6">
           <CardContent>
-            <BedMeta bed={bed} />
+            <BedDetails bed={bed} />
           </CardContent>
         </Card>
       )}
