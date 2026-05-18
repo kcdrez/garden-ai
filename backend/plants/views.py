@@ -31,3 +31,13 @@ class UserPlantViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         bed = self._get_bed()
         serializer.save(bed=bed)
+
+
+class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = UserPlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserPlant.objects.filter(
+            bed__garden__owner=self.request.user
+        ).order_by("bed__garden__name", "bed__name", "created_at")

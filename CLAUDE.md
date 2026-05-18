@@ -282,6 +282,10 @@ These are explicitly out of scope, at least initially:
 - Docker + Docker Compose — full local dev stack (frontend, backend, PostgreSQL) runs with `docker compose up -d`; hot reload via volume mounts; DB healthcheck ensures startup order
 - Vercel deployment — frontend live at `https://garden-ai-gamma.vercel.app`; auto-deploys on push to `main`; `VITE_API_URL` env var for backend URL; `vercel.json` rewrite rule for React Router SPA routing
 - Railway deployment — Django backend live at `https://garden-ai-production-6a57.up.railway.app`; managed PostgreSQL on Railway; gunicorn + whitenoise for production serving; `dj-database-url` parses `DATABASE_URL`
+- View all beds page (`/beds`) — flat list grouped by garden; `GET /api/beds/` flat-list endpoint; `gardenName` added to bed serializer
+- View all plants page (`/plants`) — flat list with status badges and links to bed/garden; `GET /api/userplants/` flat-list endpoint; `bedName`, `gardenId`, `gardenName` added to user plant serializer
+- `BedMeta` shared component — facing, sunlight, soil, notes icon rows; `showNotes` prop; `formatDimensions`/`facingLabel` extracted to `src/lib/beds.ts`
+- TanStack Query cache optimization — prefix-based invalidation, `initialData` seeding across list→detail navigation; zero redundant API calls when navigating between all-beds, garden detail, and bed detail pages
 
 ## 📋 Planned
 
@@ -298,8 +302,6 @@ These are explicitly out of scope, at least initially:
 
 ### Plants
 - Move a plant from one bed to another (PATCH `bed` field on UserPlant — enforce target bed ownership)
-- View all beds across all gardens — flat list or grouped by garden; useful for planning and cross-garden comparisons (build alongside or after move-plant so the view is actionable)
-- View all plants (UserPlants) across all gardens/beds — useful for seeing everything currently growing, especially during planning phases; pairs naturally with move-plant
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
