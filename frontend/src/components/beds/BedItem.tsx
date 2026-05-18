@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { MoreHorizontalIcon, Trash2Icon, PencilIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
-import { formatDimensions } from '@/lib/beds';
-import BedMeta from '@/components/beds/BedMeta';
+import { formatDimensions, bedHasDetails } from '@/lib/beds';
+import BedDetails from '@/components/beds/BedDetails';
 import { deleteBed } from '@/api/beds';
-import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardHeader,
@@ -15,12 +13,7 @@ import {
   CardAction,
   CardContent,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import CardActionsMenu from '@/components/ui/card-actions-menu';
 import BedDialog from '@/components/beds/BedDialog';
 
 type Props = {
@@ -51,34 +44,18 @@ export default function BedItem({ gardenId, bed }: Props) {
           <CardTitle>{bed.name}</CardTitle>
           <CardDescription>{formatDimensions(bed)}</CardDescription>
           <CardAction>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
-                aria-label="Bed actions"
-              >
-                <MoreHorizontalIcon />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                  <PencilIcon />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate()}
-                >
-                  <Trash2Icon />
-                  {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <CardActionsMenu
+              label="Bed actions"
+              onEdit={() => setEditOpen(true)}
+              onDelete={() => deleteMutation.mutate()}
+              isDeleting={deleteMutation.isPending}
+            />
           </CardAction>
         </CardHeader>
 
-        {(bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes) && (
+        {bedHasDetails(bed) && (
           <CardContent>
-            <BedMeta bed={bed} />
+            <BedDetails bed={bed} />
           </CardContent>
         )}
       </Card>

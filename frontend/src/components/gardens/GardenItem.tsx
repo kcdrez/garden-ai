@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  MoreHorizontalIcon,
-  LeafIcon,
-  Trash2Icon,
-  PencilIcon,
-} from 'lucide-react';
+import { LeafIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
-import { buttonVariants } from '@/components/ui/button';
 import { formatDate } from '@/lib/dates';
 import {
   Card,
@@ -19,12 +13,7 @@ import {
   CardAction,
   CardFooter,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import CardActionsMenu from '@/components/ui/card-actions-menu';
 import EditGardenDialog from '@/components/gardens/EditGardenDialog';
 
 type Props = {
@@ -60,28 +49,12 @@ export default function GardenItem({ garden }: Props) {
           </CardDescription>
         )}
         <CardAction>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
-              aria-label="Garden actions"
-            >
-              <MoreHorizontalIcon />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <PencilIcon />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate()}
-              >
-                <Trash2Icon />
-                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CardActionsMenu
+            label="Garden actions"
+            onEdit={() => setEditOpen(true)}
+            onDelete={() => deleteMutation.mutate()}
+            isDeleting={deleteMutation.isPending}
+          />
         </CardAction>
       </CardHeader>
       <CardFooter className="mt-auto">

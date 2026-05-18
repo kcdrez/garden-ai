@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon } from 'lucide-react';
 import { fetchAllBeds } from '@/api/beds';
 import type { GardenBed } from '@/types/gardens';
-import { formatDimensions } from '@/lib/beds';
+import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import BedMeta from '@/components/beds/BedMeta';
+import BedDetails from '@/components/beds/BedDetails';
 import { QueryState } from '@/components/ui/query-state';
 
 type BedsByGarden = { gardenId: string; gardenName: string; beds: GardenBed[] }[];
@@ -70,9 +70,9 @@ export default function AllBeds() {
                           <CardTitle>{bed.name}</CardTitle>
                           <CardDescription>{formatDimensions(bed)}</CardDescription>
                         </CardHeader>
-                        {(bed.facing || bed.avgSunlightHours != null || bed.soilType) && (
+                        {bedHasDetails(bed, false) && (
                           <CardContent>
-                            <BedMeta bed={bed} showNotes={false} />
+                            <BedDetails bed={bed} showNotes={false} />
                           </CardContent>
                         )}
                       </Card>
