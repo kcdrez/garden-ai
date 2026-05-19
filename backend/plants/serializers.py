@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from gardens.models import GardenBed
+
 from .models import Plant, UserPlant
 
 
@@ -16,6 +18,12 @@ class UserPlantSerializer(serializers.ModelSerializer):
     bed_name = serializers.CharField(source="bed.name", read_only=True)
     garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
     garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
+
+    def validate_bed(self, value):
+        request = self.context.get("request")
+        if not GardenBed.objects.filter(pk=value.pk, garden__owner=request.user).exists():
+            raise serializers.ValidationError("Bed not found.")
+        return value
 
     class Meta:
         model = UserPlant
@@ -35,4 +43,5 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "bed", "bed_name", "garden_id", "garden_name", "plant_name", "plant_category", "created_at", "updated_at"]
+        read_only_fields = ["id", "bed_name", "garden_id", "garden_name", "plant_name", "plant_category", "created_at", "updated_at"]
+        extra_kwargs = {"bed": {"required": False}}

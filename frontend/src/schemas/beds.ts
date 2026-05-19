@@ -29,3 +29,13 @@ export const bedSchema = z.object({
 });
 
 export type BedFormValues = z.infer<typeof bedSchema>;
+
+export const quickBedSchema = z.object({
+  gardenId: z.string().min(1, 'Garden is required'),
+  name: z.string().min(1, 'Name is required'),
+  length: posInt,
+  width: posInt,
+  unit: z.enum(['in', 'ft', 'cm', 'm']),
+});
+
+export type QuickBedFormValues = z.infer<typeof quickBedSchema>;
