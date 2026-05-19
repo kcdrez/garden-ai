@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-18 — ~1.5 hours
+
+**Completed:**
+- Move plant between beds — PATCH `bed` field on `UserPlant`; backend `validate_bed` enforces target bed ownership; `moveUserPlant` API fn; `MovePlantDialog` two-step wizard (pick existing bed or create a new one inline, no stacked dialogs); `CardActionsMenu` extended with optional `onMove` prop; wired into `BedDetail` and `AllPlants`
+- Full edit/delete/move actions on `AllPlants` page — previously a read-only list
+- UI fixes: native `<select>` down arrow replaced with custom `ChevronDownIcon` via `appearance-none` in `NativeSelectField`; `DropdownMenu` popup alignment fixed by removing `w-(--anchor-width)` from popup class; move dialog bed buttons given visible `border-border` so they read as selectable items
+
+**Next up:** CI/CD pipeline (GitHub Actions) — auto-deploy frontend to Vercel and backend to Railway on push to `main`
+
+---
+
 ## 2026-05-17 — ~1 hour
 
 **Completed:**
