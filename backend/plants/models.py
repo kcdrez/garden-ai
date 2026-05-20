@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from core.models import BaseModel
@@ -71,3 +72,15 @@ class Observation(BaseModel):
 
     def __str__(self):
         return f"{self.user_plant} — {self.type} on {self.observed_date}"
+
+
+class PlantPlacement(BaseModel):
+    user_plant = models.OneToOneField(UserPlant, related_name="placement", on_delete=models.CASCADE)
+    bed = models.ForeignKey(GardenBed, related_name="placements", on_delete=models.CASCADE)
+    x = models.IntegerField(validators=[MinValueValidator(0)])
+    y = models.IntegerField(validators=[MinValueValidator(0)])
+    width = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+    height = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f"{self.user_plant} @ ({self.x}, {self.y})"

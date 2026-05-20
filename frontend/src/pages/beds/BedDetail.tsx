@@ -12,6 +12,7 @@ import {
 import { fetchBeds, deleteBed } from '@/api/beds';
 import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
 import PlantTimeline from '@/components/plants/PlantTimeline';
+import BedGrid from '@/components/beds/BedGrid';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { routes } from '@/lib/routes';
@@ -130,6 +131,11 @@ export default function BedDetail() {
           </CardContent>
         </Card>
       )}
+
+      <div className="mb-6">
+        <h3 className="mb-3">Layout</h3>
+        <BedGrid gardenId={id!} bedId={bedId!} bed={bed} userPlants={userPlants} />
+      </div>
 
       <div className="flex items-center justify-between mb-3">
         <h3>Plants</h3>
