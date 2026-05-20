@@ -106,6 +106,7 @@ Django's default User plus:
 - description: text (optional)
 - location: string *(planned)*
 - hardiness_zone: string *(planned)*
+- timezone: string *(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")*
 - created_at: datetime (auto)
 - updated_at: datetime (auto)
 - owner: ForeignKey(User)
@@ -253,6 +254,7 @@ These are explicitly out of scope, at least initially:
 - Prioritize working end-to-end features
 - Ask before introducing new dependencies
 - Assume simplicity over scalability unless stated otherwise
+- Follow the single responsibility principle — components and functions should do one thing; flag components that are growing too large and suggest splitting them rather than continuing to add to them
 
 ---
 
@@ -290,6 +292,12 @@ These are explicitly out of scope, at least initially:
 - Move plant between beds — PATCH `bed` field on `UserPlant`; `validate_bed` in serializer enforces target bed ownership; `MovePlantDialog` two-step wizard (pick bed or create a new one inline without stacking dialogs); wired into `BedDetail` and `AllPlants`
 - Full edit/delete/move actions on `AllPlants` page — `UserPlantDialog` and `MovePlantDialog` both accessible from the list
 - `NativeSelectField` custom chevron — `appearance-none` removes browser arrow; custom `ChevronDownIcon` absolutely positioned in a wrapper div; `pr-7` reserves space
+- `Observation` model — tracks plant events; `user_plant` FK, `observed_date` (date), `type` enum (`status_change`, `harvest`, `pest`, `weather`, `disease`, `general`), `note`, `previous_status`, `new_status`; ordered chronologically; full CRUD API nested under UserPlant
+- Auto-observation on status change — `UserPlantSerializer.create()`/`update()` creates a `status_change` observation using the user's local date derived from `UserProfile.timezone`
+- `UserProfile` model — `timezone` CharField (default `UTC`), auto-created via `post_save` signal on User; `GET/PATCH /api/auth/profile/`; frontend sends browser timezone on login and register
+- `dormant` and `fruiting` statuses — `harvested` removed (harvest is an observation event, not a status); `harvest` observation type added
+- `planted_date` renamed to `start_date` on `UserPlant`; dialog label updated to "Start Date"
+- `PlantTimeline` component — expandable per-plant section on bed detail; quick status chips, chronological history with type icons and alternating row shading, inline "Add Observation" form; manual `status_change` type for correcting erroneous auto-generated entries
 
 ## 📋 Planned
 

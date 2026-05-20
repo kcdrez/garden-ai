@@ -40,7 +40,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   const defaultValues = (): UserPlantFormValues => ({
     plant: userPlant?.plant ?? '',
     variety: userPlant?.variety ?? '',
-    plantedDate: userPlant?.plantedDate ?? '',
+    startDate: userPlant?.startDate ?? '',
     status: userPlant?.status ?? 'planned',
     notes: userPlant?.notes ?? '',
   });
@@ -60,7 +60,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
       const payload = {
         plant: values.plant,
         variety: values.variety || undefined,
-        plantedDate: values.plantedDate || undefined,
+        startDate: values.startDate || undefined,
         status: values.status,
         notes: values.notes || undefined,
       };
@@ -70,10 +70,13 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      if (isEditing) {
+        queryClient.invalidateQueries({ queryKey: ['observations', userPlant.id] });
+      }
       onOpenChange(false);
     },
     onError: (err) => {
-      applyServerErrors(err, form, ['plant', 'variety', 'plantedDate', 'status', 'notes']);
+      applyServerErrors(err, form, ['plant', 'variety', 'startDate', 'status', 'notes']);
     },
   });
 
@@ -90,7 +93,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
           <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
 
           <div className="grid grid-cols-2 gap-3">
-            <TextField control={form.control} name="plantedDate" label="Planted Date" type="date" />
+            <TextField control={form.control} name="startDate" label="Start Date" type="date" />
             <NativeSelectField control={form.control} name="status" label="Status">
               {USER_PLANT_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>
