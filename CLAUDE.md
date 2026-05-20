@@ -107,6 +107,9 @@ Django's default User plus:
 - location: string *(planned)*
 - hardiness_zone: string *(planned)*
 - timezone: string *(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")*
+- length: positive integer *(planned — required for garden-level grid layout; same unit as `unit` field)*
+- width: positive integer *(planned — required for garden-level grid layout)*
+- unit: enum — `in`, `ft`, `cm`, `m` *(planned — default: ft; mirrors GardenBed.unit; required before BedPlacement can be built)*
 - created_at: datetime (auto)
 - updated_at: datetime (auto)
 - owner: ForeignKey(User)
@@ -144,8 +147,56 @@ Django's default User plus:
 - notes: text (optional)
 - created_at / updated_at: datetime (auto)
 
+### PlantPlacement *(planned)*
+Spatial placement of a `UserPlant` within a `GardenBed` grid. Decoupled from `UserPlant` so a plant can exist without a placement, and placement can be deleted/moved without touching the plant record.
+
+- id: UUID
+- user_plant: ForeignKey(UserPlant)
+- bed: ForeignKey(GardenBed) — denormalized for easier querying; must match `user_plant.bed`
+- x: integer — column (0-indexed); 1 cell = 1 square foot regardless of the bed's display unit
+- y: integer — row (0-indexed)
+- width: integer (default 1) — cells wide; supports plants that span multiple cells
+- height: integer (default 1) — cells tall
+
+**Unit normalization:** the grid always uses square feet as the cell unit. Bed dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`), then rounded up to the nearest integer to get grid dimensions. This means a 240 cm × 120 cm bed and a 8 ft × 4 ft bed both render as an 8 × 4 grid. Odd dimensions (e.g. 66 in × 101 in) round up to the nearest foot; the last row/column is slightly smaller in reality but acceptable at this resolution.
+
+**Grid resolution:** currently fixed at 1 ft × 1 ft per cell. The schema intentionally does not encode this assumption — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer. If sub-foot resolution is needed in the future (e.g. 6-inch cells for plants with 18-inch spacing), a single migration multiplies all stored values by a scale factor and the renderer is updated. No schema shape change required.
+
+**Current constraint:** each `UserPlant` may have at most one `PlantPlacement`. Users who want to track multiple physical instances of the same variety should create separate `UserPlant` records. This is a deliberate simplification — see the design note below.
+
+---
+
+### UserPlant ↔ organism cardinality *(design decision — deferred)*
+A `UserPlant` currently represents one logical plant entry (e.g., "Cherry Tomatoes"). In practice a gardener may plant 4 tomato seedlings in one bed — each could have independent observations (disease, harvest yield, death). Allowing multiple `PlantPlacement` records per `UserPlant` would expose this mismatch: which placement does a given observation belong to?
+
+Options when this is revisited:
+- Keep 1 UserPlant = 1 organism (current constraint); users duplicate records for multiples — simplest, no schema change
+- Add a `quantity` field to UserPlant; observations remain at the UserPlant level (imprecise but pragmatic)
+- Introduce an `Organism` or `PlantInstance` model as a child of UserPlant; observations attach to an instance — most expressive, most complex
+
+Defer until harvest tracking or per-plant health tracking makes the limitation painful.
+
+---
+
 ### Season *(planned)*
 Groups planting activity by growing year/season. Enables crop rotation tracking and year-over-year comparisons. Without this, all UserPlants are a flat list scoped only by date, making rotation logic very difficult. Likely owned by a Garden.
+
+### BedPlacement *(planned)*
+Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPlacement` model — same sq-ft grid convention, same x/y/width/height pattern — but one level up in the hierarchy.
+
+- id: UUID
+- bed: OneToOneField(GardenBed) — one placement per bed
+- garden: ForeignKey(Garden) — denormalized; must match `bed.garden`
+- x: integer — column (0-indexed, 1 cell = 1 sq ft)
+- y: integer — row
+- width: integer (default derived from `bed.width` converted to feet)
+- height: integer (default derived from `bed.length` converted to feet)
+
+**Prerequisite:** `Garden` must have `length`, `width`, and `unit` fields before this model can be built — grid bounds validation requires the garden's dimensions.
+
+**Grid convention:** same sq-ft normalization as `PlantPlacement` — convert garden dimensions to feet at render time, round up. See `PlantPlacement` for the full unit conversion table.
+
+---
 
 ### PlantVariety *(planned — design decision pending)*
 Distinguishes cultivars ("Cherokee Purple", "Roma") from species ("Tomato"). Could be a field on `UserPlant` (simpler) or a separate model (required if AI or catalog features need variety-specific advice). Decide before building the plant catalog.
@@ -298,6 +349,9 @@ These are explicitly out of scope, at least initially:
 - `dormant` and `fruiting` statuses — `harvested` removed (harvest is an observation event, not a status); `harvest` observation type added
 - `planted_date` renamed to `start_date` on `UserPlant`; dialog label updated to "Start Date"
 - `PlantTimeline` component — expandable per-plant section on bed detail; quick status chips, chronological history with type icons and alternating row shading, inline "Add Observation" form; manual `status_change` type for correcting erroneous auto-generated entries
+- `PlantPlacement` model — `OneToOneField` → `UserPlant`, FK → `GardenBed`, `x/y/width/height`; sq-ft grid normalization; full CRUD API at `/api/gardens/:id/beds/:bedId/placements/`
+- `BedGrid` component — 96px sq-ft grid on bed detail page; click empty cell to place a plant, hover occupied cell to remove; self-contained (owns placements query, mutations, `PlacePlantDialog`)
+- Docker migration hook — `PostToolUse` Bash hook auto-runs `docker compose exec backend python manage.py migrate` after any `makemigrations` command
 
 ## 📋 Planned
 
@@ -319,8 +373,15 @@ These are explicitly out of scope, at least initially:
 - Seed starting and transplant planning
 - Seasonal planting schedules
 
+### Testing
+- **Backend unit tests** — serializer validation logic, model methods, helper functions (e.g. `bed_grid_dimensions`); use DRF's `APITestCase` against a real test DB; no mocking
+- **Backend integration tests** — full API endpoint coverage (auth, gardens, beds, plants, placements, observations); assert status codes, response shapes, and ownership enforcement
+- **Frontend unit/component tests** — Vitest + React Testing Library; test user-facing behaviour (form validation, conditional rendering, interactions); not implementation details
+- **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation
+- **CI pipeline** — GitHub Actions: lint (`ruff`, `eslint`), type check (`tsc --noEmit`), unit tests on every PR; e2e on merge to `main`; Vercel/Railway auto-deploy runs after CI passes
+
 ### Deployment & Infrastructure
-- CI/CD pipeline (GitHub Actions) for automated deploy on merge
+- CI/CD pipeline (GitHub Actions) — lint, type check, and unit tests gate every PR; Vercel/Railway auto-deploy already handles the deploy step
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
