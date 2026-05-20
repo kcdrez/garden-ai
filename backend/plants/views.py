@@ -3,8 +3,8 @@ from rest_framework.exceptions import NotFound
 
 from gardens.models import Garden, GardenBed
 
-from .models import Plant, UserPlant
-from .serializers import PlantSerializer, UserPlantSerializer
+from .models import Observation, Plant, UserPlant
+from .serializers import ObservationSerializer, PlantSerializer, UserPlantSerializer
 
 
 class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -41,3 +41,29 @@ class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return UserPlant.objects.filter(
             bed__garden__owner=self.request.user
         ).order_by("bed__garden__name", "bed__name", "created_at")
+
+
+class ObservationViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = ObservationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_user_plant(self):
+        try:
+            garden = Garden.objects.get(pk=self.kwargs["garden_id"], owner=self.request.user)
+            bed = GardenBed.objects.get(pk=self.kwargs["bed_id"], garden=garden)
+            return UserPlant.objects.get(pk=self.kwargs["plant_id"], bed=bed)
+        except (Garden.DoesNotExist, GardenBed.DoesNotExist, UserPlant.DoesNotExist) as err:
+            raise NotFound("Plant not found.") from err
+
+    def get_queryset(self):
+        user_plant = self._get_user_plant()
+        return Observation.objects.filter(user_plant=user_plant)
+
+    def perform_create(self, serializer):
+        user_plant = self._get_user_plant()
+        serializer.save(user_plant=user_plant)
