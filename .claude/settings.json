@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e '.tool_input.command | contains(\"makemigrations\")' > /dev/null && cd /Users/kcdrez/Documents/garden-ai && docker compose exec -T backend python manage.py migrate 2>/dev/null || true",
+            "statusMessage": "Applying migrations to Docker database..."
+          }
+        ]
+      }
+    ]
+  }
+}

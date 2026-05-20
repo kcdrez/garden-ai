@@ -25,6 +25,19 @@
 
 ---
 
+# 🐳 Docker Workflow
+
+The dev database runs inside Docker. Always apply migrations to it after generating them:
+
+```
+python manage.py makemigrations <app>
+docker compose exec backend python manage.py migrate
+```
+
+**Never skip the second step.** Running `makemigrations` locally creates the migration file but does not touch the Docker PostgreSQL database. The dev server will error with `relation "..." does not exist` until `migrate` is run inside the container.
+
+---
+
 # 📁 App Structure
 
 Django monolith with modular apps:

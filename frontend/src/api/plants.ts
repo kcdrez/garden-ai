@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Observation, Plant, UserPlant } from '@/types/plants';
+import type { Observation, Plant, PlantPlacement, UserPlant } from '@/types/plants';
 import type { ObservationFormValues, UserPlantFormValues } from '@/schemas/plants';
 
 export async function fetchPlants(): Promise<Plant[]> {
@@ -52,6 +52,28 @@ export async function deleteUserPlant(
   plantId: string,
 ): Promise<void> {
   await api.delete(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`);
+}
+
+export async function fetchPlacements(gardenId: string, bedId: string): Promise<PlantPlacement[]> {
+  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/placements/`);
+  return res.data;
+}
+
+export async function createPlacement(
+  gardenId: string,
+  bedId: string,
+  data: { userPlant: string; x: number; y: number },
+): Promise<PlantPlacement> {
+  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/placements/`, data);
+  return res.data;
+}
+
+export async function deletePlacement(
+  gardenId: string,
+  bedId: string,
+  placementId: string,
+): Promise<void> {
+  await api.delete(`/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`);
 }
 
 export async function fetchObservations(
