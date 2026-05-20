@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-05-20 — ~2 hours
+
+**Completed:**
+- `PlantPlacement` model — `OneToOneField` → `UserPlant`, FK → `GardenBed`, `x/y/width/height` integers; sq-ft grid normalization (convert bed unit at render time); migration applied to Docker DB
+- `PlantPlacementSerializer` — bounds validation, user ownership check; `bed_grid_dimensions()` helper in serializers.py
+- `PlantPlacementViewSet` — list, create, partial_update, destroy; ownership via `_get_bed()`; URL routes nested under bed (`/api/gardens/:id/beds/:bedId/placements/`)
+- `BedGrid` component — inline CSS grid (96px cells), occupied cells show plant name with hover-to-remove, empty cells clickable to place; self-contained (owns placements query, create/delete mutations, `PlacePlantDialog`)
+- `PlacePlantDialog` — lists unplaced plants in bed; click to place at selected cell
+- `BedDetail` — "Layout" section always visible above plant list; passes only `gardenId`, `bedId`, `bed`, `userPlants` to `BedGrid`
+- Docker migration hook — `PostToolUse` hook on Bash auto-runs `docker compose exec backend python manage.py migrate` after any `makemigrations` command; documented in `backend/CLAUDE.md`
+- Design decisions documented — sq-ft grid normalization rationale, future sub-foot resolution migration path, `BedPlacement` planned model, organism cardinality problem deferred
+
+**Next up:** Garden dimensions (`length`, `width`, `unit` on `Garden` model) as prerequisite for garden-level bed layout view
+
+---
+
 ## 2026-05-20 — ~3 hours
 
 **Completed:**

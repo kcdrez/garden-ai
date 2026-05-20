@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -5,7 +6,21 @@ from rest_framework import serializers
 
 from gardens.models import GardenBed
 
-from .models import Observation, Plant, UserPlant
+from .models import Observation, Plant, PlantPlacement, UserPlant
+
+_UNIT_TO_FEET = {
+    "ft": 1.0,
+    "in": 1 / 12,
+    "cm": 1 / 30.48,
+    "m": 3.28084,
+}
+
+
+def bed_grid_dimensions(bed):
+    factor = _UNIT_TO_FEET.get(bed.unit, 1.0)
+    cols = math.ceil(bed.width * factor)
+    rows = math.ceil(bed.length * factor)
+    return cols, rows
 
 
 class PlantSerializer(serializers.ModelSerializer):
@@ -78,6 +93,36 @@ class UserPlantSerializer(serializers.ModelSerializer):
         if old_status != instance.status:
             self._record_status_change(instance, old_status, instance.status)
         return instance
+
+
+class PlantPlacementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlantPlacement
+        fields = ["id", "user_plant", "bed", "x", "y", "width", "height", "created_at", "updated_at"]
+        read_only_fields = ["id", "bed", "created_at", "updated_at"]
+
+    def validate_user_plant(self, value):
+        request = self.context.get("request")
+        if not UserPlant.objects.filter(pk=value.pk, bed__garden__owner=request.user).exists():
+            raise serializers.ValidationError("Plant not found.")
+        return value
+
+    def validate(self, data):
+        user_plant = data.get("user_plant") or (self.instance.user_plant if self.instance else None)
+        bed = self.instance.bed if self.instance else user_plant.bed
+        cols, rows = bed_grid_dimensions(bed)
+
+        x = data.get("x", self.instance.x if self.instance else None)
+        y = data.get("y", self.instance.y if self.instance else None)
+        width = data.get("width", self.instance.width if self.instance else 1)
+        height = data.get("height", self.instance.height if self.instance else 1)
+
+        if x is not None and (x < 0 or x + width > cols):
+            raise serializers.ValidationError({"x": f"Out of bounds (grid is {cols} columns wide)."})
+        if y is not None and (y < 0 or y + height > rows):
+            raise serializers.ValidationError({"y": f"Out of bounds (grid is {rows} rows tall)."})
+
+        return data
 
 
 class ObservationSerializer(serializers.ModelSerializer):

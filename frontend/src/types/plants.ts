@@ -41,6 +41,18 @@ export interface UserPlant {
   updatedAt: string;
 }
 
+export interface PlantPlacement {
+  id: string;
+  userPlant: string;
+  bed: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const PLANT_CATEGORIES: { value: PlantCategory; label: string }[] = [
   { value: "vegetable", label: "Vegetable" },
   { value: "herb", label: "Herb" },
