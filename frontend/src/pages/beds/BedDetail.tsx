@@ -7,9 +7,11 @@ import {
   PencilIcon,
   Trash2Icon,
   LeafIcon,
+  ChevronDownIcon,
 } from 'lucide-react';
 import { fetchBeds, deleteBed } from '@/api/beds';
 import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
+import PlantTimeline from '@/components/plants/PlantTimeline';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { routes } from '@/lib/routes';
@@ -33,6 +35,7 @@ export default function BedDetail() {
   const [addPlantOpen, setAddPlantOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
   const [movingPlant, setMovingPlant] = useState<UserPlant | undefined>();
+  const [expandedPlantId, setExpandedPlantId] = useState<string | undefined>();
 
   const {
     data: bed,
@@ -142,25 +145,39 @@ export default function BedDetail() {
         isEmpty={userPlants.length === 0}
         emptyMessage="No plants yet. Add one to get started."
       >
-        <ul className="flex flex-col gap-2">
-          {userPlants.map((plant) => (
-            <li key={plant.id} className="flex items-center justify-between text-sm py-1">
-              <span className="flex items-center gap-2">
-                <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                <span>
-                  {plant.plantName}
-                  {plant.variety && <span className="text-muted-foreground"> — {plant.variety}</span>}
-                </span>
-              </span>
-              <CardActionsMenu
-                label="Plant actions"
-                onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
-                onMove={() => setMovingPlant(plant)}
-                onDelete={() => deleteUserPlantMutation.mutate(plant.id)}
-                isDeleting={deleteUserPlantMutation.isPending}
-              />
-            </li>
-          ))}
+        <ul className="flex flex-col gap-1">
+          {userPlants.map((plant) => {
+            const isExpanded = expandedPlantId === plant.id;
+            return (
+              <li key={plant.id}>
+                <div className="flex items-center justify-between text-sm py-1">
+                  <button
+                    className="flex items-center gap-2 flex-1 text-left hover:text-foreground text-foreground"
+                    onClick={() => setExpandedPlantId(isExpanded ? undefined : plant.id)}
+                  >
+                    <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>
+                      {plant.plantName}
+                      {plant.variety && <span className="text-muted-foreground"> — {plant.variety}</span>}
+                    </span>
+                    <ChevronDownIcon
+                      className={`size-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <CardActionsMenu
+                    label="Plant actions"
+                    onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
+                    onMove={() => setMovingPlant(plant)}
+                    onDelete={() => deleteUserPlantMutation.mutate(plant.id)}
+                    isDeleting={deleteUserPlantMutation.isPending}
+                  />
+                </div>
+                {isExpanded && (
+                  <PlantTimeline gardenId={id!} bedId={bedId!} plant={plant} />
+                )}
+              </li>
+            );
+          })}
         </ul>
       </QueryState>
 
