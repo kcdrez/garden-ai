@@ -92,3 +92,4 @@ Testing is a planned learning goal. As features mature, add:
 # 🔮 Planned UI Improvements
 
 - **Skeleton cards** — replace the `LoadingSpinner` inside `QueryState` with per-entity skeleton placeholders (pulsing gray card shapes) for list/grid loading states. Use a generic skeleton (title bar + 2–3 lines, `animate-pulse`) rather than an exact match of the real card — avoids needing to update the skeleton every time card fields change. Revisit once card structures stabilise.
+- **Refactor `PlantTimeline.tsx`** — currently handles too much: data fetching, status change mutation, observation list rendering, and the add-observation form. Split into focused sub-components (e.g. `ObservationList`, `ObservationForm`, `StatusChips`) following the single responsibility principle.

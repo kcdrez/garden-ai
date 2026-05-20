@@ -1,6 +1,14 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from .models import UserProfile
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ["timezone"]
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
