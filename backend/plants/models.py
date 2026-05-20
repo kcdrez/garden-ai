@@ -30,14 +30,15 @@ class UserPlant(BaseModel):
         ("planned", "Planned"),
         ("planted", "Planted"),
         ("growing", "Growing"),
-        ("harvested", "Harvested"),
+        ("fruiting", "Fruiting"),
+        ("dormant", "Dormant"),
         ("removed", "Removed"),
     ]
 
     bed = models.ForeignKey(GardenBed, related_name="user_plants", on_delete=models.CASCADE)
     plant = models.ForeignKey(Plant, related_name="user_plants", on_delete=models.PROTECT)
     variety = models.CharField(max_length=100, blank=True)
-    planted_date = models.DateField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="planned")
     notes = models.TextField(blank=True)
 
@@ -46,3 +47,27 @@ class UserPlant(BaseModel):
         if self.variety:
             label += f" ({self.variety})"
         return label
+
+
+class Observation(BaseModel):
+    TYPE_CHOICES = [
+        ("status_change", "Status Change"),
+        ("harvest", "Harvest"),
+        ("pest", "Pest"),
+        ("weather", "Weather"),
+        ("disease", "Disease"),
+        ("general", "General"),
+    ]
+
+    user_plant = models.ForeignKey(UserPlant, related_name="observations", on_delete=models.CASCADE)
+    observed_date = models.DateField()
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    note = models.TextField(blank=True)
+    previous_status = models.CharField(max_length=20, blank=True)
+    new_status = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        ordering = ["observed_date", "created_at"]
+
+    def __str__(self):
+        return f"{self.user_plant} — {self.type} on {self.observed_date}"

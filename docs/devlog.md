@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-05-20 — ~3 hours
+
+**Completed:**
+- `Observation` model — `user_plant` FK, `observed_date`, `type`, `note`, `previous_status`, `new_status`; ordered chronologically (`observed_date`, `created_at` ascending); `GET/POST /api/.../observations/` and `DELETE .../observations/:id/`
+- Auto-observation on status change — creation moved to `UserPlantSerializer.create()`/`update()` so it has access to the user's timezone for local date derivation
+- `UserProfile` model — `timezone` CharField, auto-created via `post_save` signal; `GET/PATCH /api/auth/profile/`; timezone sent by frontend as part of login and register payloads (no separate request)
+- `dormant` and `fruiting` statuses added; `harvested` removed (harvest is now an observation event, not a status); `harvest` added as observation type
+- `planted_date` renamed to `start_date` on `UserPlant` (label in dialog updated to "Start Date")
+- `PlantTimeline` component — expandable per-plant on bed detail page; quick status chip row (click to change); chronological history list with type icons and alternating row shading; "Add Observation" inline form; all observations deletable on hover
+- Manual `status_change` observations — `status_change` added to observation type dropdown; shows New Status select, hides Note field; allows correcting erroneous auto-generated entries with the right date
+- Garden locale note added to CLAUDE.md — future enhancement to use garden timezone instead of user timezone for observation dates
+
+**Next up:** Visual garden layout — drag-and-drop grid for bed planning
+
+---
+
 ## 2026-05-18 — ~1.5 hours
 
 **Completed:**
