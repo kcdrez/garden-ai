@@ -30,7 +30,7 @@ export default function PlacePlantDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Place plant — column {(cell?.x ?? 0) + 1}, row {(cell?.y ?? 0) + 1}
+            Place Plant — Column {(cell?.x ?? 0) + 1}, Row {(cell?.y ?? 0) + 1}
           </DialogTitle>
         </DialogHeader>
 
@@ -52,7 +52,10 @@ export default function PlacePlantDialog({
                   <span className="text-sm">
                     {plant.plantName}
                     {plant.variety && (
-                      <span className="text-muted-foreground"> — {plant.variety}</span>
+                      <span className="text-muted-foreground">
+                        {' '}
+                        — {plant.variety}
+                      </span>
                     )}
                   </span>
                 </Button>

@@ -6,6 +6,7 @@ import { bedGridDimensions } from '@/lib/beds';
 import type { GardenBed } from '@/types/gardens';
 import type { PlantPlacement, UserPlant } from '@/types/plants';
 import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
+import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface BedGridProps {
   gardenId: string;
@@ -18,7 +19,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const queryClient = useQueryClient();
   const [placingCell, setPlacingCell] = useState<{ x: number; y: number } | null>(null);
 
-  const { data: placements = [] } = useQuery({
+  const { data: placements = [], isLoading: placementsLoading } = useQuery({
     queryKey: ['placements', bedId],
     queryFn: () => fetchPlacements(gardenId, bedId),
   });
@@ -36,6 +37,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     mutationFn: (placementId: string) => deletePlacement(gardenId, bedId, placementId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
   });
+
+  if (placementsLoading) return <LoadingSpinner />;
 
   const { cols, rows } = bedGridDimensions(bed);
 
