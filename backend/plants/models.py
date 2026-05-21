@@ -6,17 +6,16 @@ from gardens.models import GardenBed
 
 
 class Plant(BaseModel):
-    CATEGORY_CHOICES = [
-        ("vegetable", "Vegetable"),
-        ("herb", "Herb"),
-        ("fruit", "Fruit"),
-        ("flower", "Flower"),
-        ("other", "Other"),
-    ]
+    class Category(models.TextChoices):
+        VEGETABLE = "vegetable", "Vegetable"
+        HERB = "herb", "Herb"
+        FRUIT = "fruit", "Fruit"
+        FLOWER = "flower", "Flower"
+        OTHER = "other", "Other"
 
     common_name = models.CharField(max_length=100)
     scientific_name = models.CharField(max_length=150, blank=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=20, choices=Category.choices)
     description = models.TextField(blank=True)
 
     class Meta:
@@ -27,20 +26,19 @@ class Plant(BaseModel):
 
 
 class UserPlant(BaseModel):
-    STATUS_CHOICES = [
-        ("planned", "Planned"),
-        ("planted", "Planted"),
-        ("growing", "Growing"),
-        ("fruiting", "Fruiting"),
-        ("dormant", "Dormant"),
-        ("removed", "Removed"),
-    ]
+    class Status(models.TextChoices):
+        PLANNED = "planned", "Planned"
+        PLANTED = "planted", "Planted"
+        GROWING = "growing", "Growing"
+        FRUITING = "fruiting", "Fruiting"
+        DORMANT = "dormant", "Dormant"
+        REMOVED = "removed", "Removed"
 
     bed = models.ForeignKey(GardenBed, related_name="user_plants", on_delete=models.CASCADE)
     plant = models.ForeignKey(Plant, related_name="user_plants", on_delete=models.PROTECT)
     variety = models.CharField(max_length=100, blank=True)
     start_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="planned")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PLANNED)
     notes = models.TextField(blank=True)
 
     def __str__(self):
@@ -51,18 +49,17 @@ class UserPlant(BaseModel):
 
 
 class Observation(BaseModel):
-    TYPE_CHOICES = [
-        ("status_change", "Status Change"),
-        ("harvest", "Harvest"),
-        ("pest", "Pest"),
-        ("weather", "Weather"),
-        ("disease", "Disease"),
-        ("general", "General"),
-    ]
+    class Type(models.TextChoices):
+        STATUS_CHANGE = "status_change", "Status Change"
+        HARVEST = "harvest", "Harvest"
+        PEST = "pest", "Pest"
+        WEATHER = "weather", "Weather"
+        DISEASE = "disease", "Disease"
+        GENERAL = "general", "General"
 
     user_plant = models.ForeignKey(UserPlant, related_name="observations", on_delete=models.CASCADE)
     observed_date = models.DateField()
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=20, choices=Type.choices)
     note = models.TextField(blank=True)
     previous_status = models.CharField(max_length=20, blank=True)
     new_status = models.CharField(max_length=20, blank=True)
