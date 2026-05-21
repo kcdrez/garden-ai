@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
+import { fetchGardens } from '@/api/gardens';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { createBed, updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
@@ -19,7 +20,7 @@ import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 
 type Props = {
-  gardenId: string;
+  gardenId?: string;
   bed?: GardenBed;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +34,16 @@ export default function BedDialog({
 }: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!bed;
+  const needsGardenPicker = !gardenId;
+
+  const [selectedGardenId, setSelectedGardenId] = useState('');
+  const effectiveGardenId = gardenId ?? selectedGardenId;
+
+  const { data: gardens = [] } = useQuery({
+    queryKey: ['gardens'],
+    queryFn: fetchGardens,
+    enabled: open && needsGardenPicker,
+  });
 
   const defaultValues = (): BedFormValues => ({
     name: bed?.name ?? '',
@@ -54,7 +65,10 @@ export default function BedDialog({
   });
 
   useEffect(() => {
-    if (open) form.reset(defaultValues());
+    if (open) {
+      form.reset(defaultValues());
+      setSelectedGardenId('');
+    }
   }, [open, bed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const mutation = useMutation({
@@ -74,8 +88,8 @@ export default function BedDialog({
         notes: values.notes || undefined,
       };
       return isEditing
-        ? updateBed(gardenId, bed.id, payload)
-        : createBed(gardenId, payload);
+        ? updateBed(effectiveGardenId, bed.id, payload)
+        : createBed(effectiveGardenId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
@@ -94,6 +108,24 @@ export default function BedDialog({
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
+          {needsGardenPicker && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Garden</label>
+              <div className="relative">
+                <select
+                  value={selectedGardenId}
+                  onChange={(e) => setSelectedGardenId(e.target.value)}
+                  className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-7 text-sm"
+                >
+                  <option value="">— Select a garden —</option>
+                  {gardens.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
 
           <div className="grid grid-cols-3 gap-3">
@@ -147,7 +179,7 @@ export default function BedDialog({
           <DialogFooter>
             <Button
               type="submit"
-              disabled={!form.formState.isValid || mutation.isPending}
+              disabled={!form.formState.isValid || mutation.isPending || (needsGardenPicker && !selectedGardenId)}
             >
               {mutation.isPending ? 'Saving…' : isEditing ? 'Save' : 'Add Bed'}
             </Button>

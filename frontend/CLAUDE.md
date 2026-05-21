@@ -32,13 +32,13 @@
   /auth         → Token storage and auth utilities
   /components   → Feature-based component folders; layout-level components at root
     /beds       → BedItem.tsx, BedDialog.tsx
-    /gardens    → GardenItem.tsx, EditGardenDialog.tsx
+    /gardens    → GardenItem.tsx, GardenDialog.tsx (handles both create and edit; `garden` prop optional)
     /plants     → PlantPicker.tsx, UserPlantDialog.tsx
     /ui         → shadcn UI primitives (button, card, form, dropdown-menu, etc.) plus custom utilities:
                   form-fields.tsx — TextField, TextAreaField, NativeSelectField wrappers
                   query-state.tsx — QueryState, LoadingSpinner
     NavBar.tsx  → layout component, not feature-specific
-  /lib          → Utilities (utils.ts, errors.ts, dates.ts)
+  /lib          → Utilities (utils.ts, errors.ts, dates.ts, zod.ts — shared Zod validators `posInt`/`optPosInt`)
   /pages        → Feature-based page folders
     /auth       → Login.tsx, Register.tsx
     /beds       → BedDetail.tsx
@@ -79,6 +79,7 @@ Testing is a planned learning goal. As features mature, add:
 - Feature-based structure preferred over type-based structure — components and pages are grouped by domain (`/beds`, `/gardens`, `/plants`), not by kind (`/dialogs`, `/cards`). The `/ui` folder is the exception: it holds generic design-system primitives only.
 - For complex custom inputs that don't fit `TextField`/`TextAreaField`/`NativeSelectField` (e.g. `PlantPicker`), use `useController` from RHF directly and render label + error manually — same visual pattern as FormItem/FormLabel/FormMessage but without the FormControl wrapper
 - Clickable entity cards (e.g. `BedItem`) use an `onClick` on the card with an early return guard — `if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;` — so dropdown triggers and buttons inside the card still work without navigating
+- Dialogs must be rendered as **siblings** of their triggering card, never as children — React portal events bubble through the React tree (not the DOM), so a dialog inside a clickable card's JSX will fire the card's `onClick` on every interaction inside the dialog. Wrap card + dialog in a fragment and place them side by side
 - All API response fields are camelCase (converted by the backend's `djangorestframework-camel-case`). TypeScript types, Zod schemas, and API payloads all use camelCase — never snake_case at the frontend boundary
 - The Axios client (`api/client.ts`) includes a response interceptor that silently refreshes the JWT access token on 401 using the stored refresh token, then retries the original request. If the refresh fails, tokens are cleared and the user is redirected to `/login`. The refresh call uses raw `axios` (not the `api` instance) to avoid re-triggering the interceptor.
 - UI should assume backend may return empty arrays or partial data

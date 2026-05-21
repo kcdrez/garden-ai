@@ -23,35 +23,27 @@ import { Form } from '@/components/ui/form';
 import { TextField, NativeSelectField } from '@/components/ui/form-fields';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
-type Props = {
+// --- PickBedStep ---
+
+type PickBedStepProps = {
   userPlant: UserPlant;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  autoSelectBedId?: string;
+  onMoved: () => void;
+  onCreateNew: () => void;
 };
 
-export default function MovePlantDialog({ userPlant, open, onOpenChange }: Props) {
+function PickBedStep({ userPlant, autoSelectBedId, onMoved, onCreateNew }: PickBedStepProps) {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<'pick' | 'create'>('pick');
   const [selectedBedId, setSelectedBedId] = useState('');
 
-  const { data: beds = [], isLoading: bedsLoading } = useQuery({
+  const { data: beds = [], isLoading } = useQuery({
     queryKey: ['beds', 'all'],
     queryFn: fetchAllBeds,
-    enabled: open,
-  });
-
-  const { data: gardens = [] } = useQuery({
-    queryKey: ['gardens'],
-    queryFn: fetchGardens,
-    enabled: open,
   });
 
   useEffect(() => {
-    if (open) {
-      setStep('pick');
-      setSelectedBedId('');
-    }
-  }, [open]);
+    if (autoSelectBedId) setSelectedBedId(autoSelectBedId);
+  }, [autoSelectBedId]);
 
   const availableBeds = beds.filter((b) => b.id !== userPlant.bed);
 
@@ -68,21 +60,85 @@ export default function MovePlantDialog({ userPlant, open, onOpenChange }: Props
     mutationFn: () => moveUserPlant(userPlant.gardenId, userPlant.bed, userPlant.id, selectedBedId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ['placements', userPlant.bed] });
+      onMoved();
     },
   });
 
-  const createForm = useForm<QuickBedFormValues>({
-    resolver: zodResolver(quickBedSchema),
-    defaultValues: { gardenId: userPlant.gardenId, name: '', length: '', width: '', unit: 'ft' },
-    mode: 'onChange',
+  return (
+    <>
+      {userPlant.placementId && (
+        <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 rounded-md px-3 py-2">
+          This plant is currently placed on the grid. Moving it will remove its placement.
+        </p>
+      )}
+
+      {isLoading ? (
+        <div className="py-4 flex justify-center"><LoadingSpinner /></div>
+      ) : availableBeds.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">No other beds yet.</p>
+      ) : (
+        <div className="max-h-56 overflow-y-auto flex flex-col gap-4 py-1">
+          {Object.values(bedsByGarden).map(({ gardenName, beds: gardenBeds }) => (
+            <div key={gardenName}>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                {gardenName}
+              </p>
+              <div className="flex flex-col gap-1">
+                {gardenBeds.map((bed) => (
+                  <button
+                    key={bed.id}
+                    type="button"
+                    onClick={() => setSelectedBedId(bed.id)}
+                    className={`text-left px-3 py-2 rounded-md text-sm border transition-colors ${
+                      selectedBedId === bed.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/40 hover:bg-muted'
+                    }`}
+                  >
+                    {bed.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button type="button" onClick={onCreateNew} className="text-sm text-primary hover:underline text-left">
+        + Create new bed
+      </button>
+
+      <DialogFooter>
+        <Button onClick={() => moveMutation.mutate()} disabled={!selectedBedId || moveMutation.isPending}>
+          {moveMutation.isPending ? 'Moving…' : 'Move Plant'}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
+
+// --- CreateBedStep ---
+
+type CreateBedStepProps = {
+  defaultGardenId: string;
+  onSuccess: (newBedId: string) => void;
+  onBack: () => void;
+};
+
+function CreateBedStep({ defaultGardenId, onSuccess, onBack }: CreateBedStepProps) {
+  const queryClient = useQueryClient();
+
+  const { data: gardens = [] } = useQuery({
+    queryKey: ['gardens'],
+    queryFn: fetchGardens,
   });
 
-  useEffect(() => {
-    if (step === 'create') {
-      createForm.reset({ gardenId: userPlant.gardenId, name: '', length: '', width: '', unit: 'ft' });
-    }
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  const form = useForm<QuickBedFormValues>({
+    resolver: zodResolver(quickBedSchema),
+    defaultValues: { gardenId: defaultGardenId, name: '', length: '', width: '', unit: 'ft' },
+    mode: 'onChange',
+  });
 
   const createMutation = useMutation({
     mutationFn: (values: QuickBedFormValues) =>
@@ -94,13 +150,73 @@ export default function MovePlantDialog({ userPlant, open, onOpenChange }: Props
       }),
     onSuccess: (newBed) => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
-      setSelectedBedId(newBed.id);
-      setStep('pick');
+      onSuccess(newBed.id);
     },
     onError: (err) => {
-      applyServerErrors(err, createForm, ['name', 'length', 'width', 'unit']);
+      applyServerErrors(err, form, ['name', 'length', 'width', 'unit']);
     },
   });
+
+  return (
+    <Form form={form} onSubmit={(v) => createMutation.mutate(v)}>
+      <NativeSelectField control={form.control} name="gardenId" label="Garden">
+        {gardens.map((g) => (
+          <option key={g.id} value={g.id}>{g.name}</option>
+        ))}
+      </NativeSelectField>
+
+      <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
+
+      <div className="grid grid-cols-3 gap-3">
+        <TextField control={form.control} name="length" label="Length" inputMode="numeric" />
+        <TextField control={form.control} name="width" label="Width" inputMode="numeric" />
+        <NativeSelectField control={form.control} name="unit" label="Unit">
+          {BED_UNITS.map((u) => (
+            <option key={u.value} value={u.value}>{u.label}</option>
+          ))}
+        </NativeSelectField>
+      </div>
+
+      {form.formState.errors.root && (
+        <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
+      )}
+
+      <DialogFooter className="sm:justify-between">
+        <Button type="button" variant="ghost" onClick={onBack}>
+          <ArrowLeftIcon className="size-4" />
+          Back
+        </Button>
+        <Button type="submit" disabled={!form.formState.isValid || createMutation.isPending}>
+          {createMutation.isPending ? 'Creating…' : 'Create Bed'}
+        </Button>
+      </DialogFooter>
+    </Form>
+  );
+}
+
+// --- MovePlantDialog ---
+
+type Props = {
+  userPlant: UserPlant;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+export default function MovePlantDialog({ userPlant, open, onOpenChange }: Props) {
+  const [step, setStep] = useState<'pick' | 'create'>('pick');
+  const [autoSelectBedId, setAutoSelectBedId] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setStep('pick');
+      setAutoSelectBedId('');
+    }
+  }, [open]);
+
+  function handleCreateSuccess(newBedId: string) {
+    setAutoSelectBedId(newBedId);
+    setStep('pick');
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,116 +228,18 @@ export default function MovePlantDialog({ userPlant, open, onOpenChange }: Props
         </DialogHeader>
 
         {step === 'pick' ? (
-          <>
-            {bedsLoading ? (
-              <div className="py-4 flex justify-center">
-                <LoadingSpinner />
-              </div>
-            ) : availableBeds.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-2">No other beds yet.</p>
-            ) : (
-              <div className="max-h-56 overflow-y-auto flex flex-col gap-4 py-1">
-                {Object.values(bedsByGarden).map(({ gardenName, beds: gardenBeds }) => (
-                  <div key={gardenName}>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                      {gardenName}
-                    </p>
-                    <div className="flex flex-col gap-1">
-                      {gardenBeds.map((bed) => (
-                        <button
-                          key={bed.id}
-                          type="button"
-                          onClick={() => setSelectedBedId(bed.id)}
-                          className={`text-left px-3 py-2 rounded-md text-sm border transition-colors ${
-                            selectedBedId === bed.id
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-muted-foreground/40 hover:bg-muted'
-                          }`}
-                        >
-                          {bed.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setStep('create')}
-              className="text-sm text-primary hover:underline text-left"
-            >
-              + Create new bed
-            </button>
-
-            <DialogFooter>
-              <Button
-                onClick={() => moveMutation.mutate()}
-                disabled={!selectedBedId || moveMutation.isPending}
-              >
-                {moveMutation.isPending ? 'Moving…' : 'Move Plant'}
-              </Button>
-            </DialogFooter>
-          </>
+          <PickBedStep
+            userPlant={userPlant}
+            autoSelectBedId={autoSelectBedId}
+            onMoved={() => onOpenChange(false)}
+            onCreateNew={() => setStep('create')}
+          />
         ) : (
-          <Form form={createForm} onSubmit={(v) => createMutation.mutate(v)}>
-            <NativeSelectField control={createForm.control} name="gardenId" label="Garden">
-              {gardens.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </NativeSelectField>
-
-            <TextField
-              control={createForm.control}
-              name="name"
-              label="Name"
-              placeholder="Raised Bed 1"
-            />
-
-            <div className="grid grid-cols-3 gap-3">
-              <TextField
-                control={createForm.control}
-                name="length"
-                label="Length"
-                inputMode="numeric"
-              />
-              <TextField
-                control={createForm.control}
-                name="width"
-                label="Width"
-                inputMode="numeric"
-              />
-              <NativeSelectField control={createForm.control} name="unit" label="Unit">
-                {BED_UNITS.map((u) => (
-                  <option key={u.value} value={u.value}>
-                    {u.label}
-                  </option>
-                ))}
-              </NativeSelectField>
-            </div>
-
-            {createForm.formState.errors.root && (
-              <p className="text-destructive text-sm">
-                {createForm.formState.errors.root.message}
-              </p>
-            )}
-
-            <DialogFooter className="sm:justify-between">
-              <Button type="button" variant="ghost" onClick={() => setStep('pick')}>
-                <ArrowLeftIcon className="size-4" />
-                Back
-              </Button>
-              <Button
-                type="submit"
-                disabled={!createForm.formState.isValid || createMutation.isPending}
-              >
-                {createMutation.isPending ? 'Creating…' : 'Create Bed'}
-              </Button>
-            </DialogFooter>
-          </Form>
+          <CreateBedStep
+            defaultGardenId={userPlant.gardenId}
+            onSuccess={handleCreateSuccess}
+            onBack={() => setStep('pick')}
+          />
         )}
       </DialogContent>
     </Dialog>

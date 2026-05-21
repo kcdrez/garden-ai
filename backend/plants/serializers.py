@@ -36,6 +36,13 @@ class UserPlantSerializer(serializers.ModelSerializer):
     bed_name = serializers.CharField(source="bed.name", read_only=True)
     garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
     garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
+    placement_id = serializers.SerializerMethodField()
+
+    def get_placement_id(self, obj):
+        try:
+            return str(obj.placement.id)
+        except PlantPlacement.DoesNotExist:
+            return None
 
     def validate_bed(self, value):
         request = self.context.get("request")
@@ -54,6 +61,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "plant",
             "plant_name",
             "plant_category",
+            "placement_id",
             "variety",
             "start_date",
             "status",
@@ -61,7 +69,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "bed_name", "garden_id", "garden_name", "plant_name", "plant_category", "created_at", "updated_at"]
+        read_only_fields = ["id", "bed_name", "garden_id", "garden_name", "plant_name", "plant_category", "placement_id", "created_at", "updated_at"]
         extra_kwargs = {"bed": {"required": False}}
 
     def _local_date(self):
@@ -88,8 +96,11 @@ class UserPlantSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        old_bed = instance.bed
         old_status = instance.status
         instance = super().update(instance, validated_data)
+        if instance.bed != old_bed:
+            PlantPlacement.objects.filter(user_plant=instance).delete()
         if old_status != instance.status:
             self._record_status_change(instance, old_status, instance.status)
         return instance

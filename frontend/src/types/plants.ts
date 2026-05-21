@@ -33,6 +33,7 @@ export interface UserPlant {
   plant: string;
   plantName: string;
   plantCategory: PlantCategory;
+  placementId: string | null;
   variety: string;
   startDate: string | null;
   status: UserPlantStatus;

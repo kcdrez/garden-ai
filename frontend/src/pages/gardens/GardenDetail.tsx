@@ -60,7 +60,7 @@ export default function GardenDetail() {
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeftIcon className="size-4" />
-          All Gardens
+          Your Gardens
         </Link>
         <div className="flex items-center justify-between">
           <div>
