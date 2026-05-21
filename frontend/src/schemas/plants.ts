@@ -6,6 +6,8 @@ const statusValues = USER_PLANT_STATUSES.map(s => s.value) as [UserPlantStatus, 
 const observationTypeValues = OBSERVATION_TYPES.map(t => t.value) as [ObservationType, ...ObservationType[]];
 
 export const userPlantSchema = z.object({
+  gardenId: z.string().min(1, 'Garden is required'),
+  bedId: z.string().min(1, 'Bed is required'),
   plant: z.string().min(1, 'Plant is required'),
   variety: z.string().optional(),
   startDate: z.string().optional(),

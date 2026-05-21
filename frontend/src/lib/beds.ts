@@ -1,5 +1,22 @@
 import { BED_FACINGS, type GardenBed } from '@/types/gardens';
 
+export type BedsByGarden = { gardenId: string; gardenName: string; beds: GardenBed[] }[];
+
+export function groupByGarden(beds: GardenBed[]): BedsByGarden {
+  const map = new Map<string, { gardenName: string; beds: GardenBed[] }>();
+  for (const bed of beds) {
+    if (!map.has(bed.garden)) {
+      map.set(bed.garden, { gardenName: bed.gardenName, beds: [] });
+    }
+    map.get(bed.garden)!.beds.push(bed);
+  }
+  return Array.from(map.entries()).map(([gardenId, { gardenName, beds }]) => ({
+    gardenId,
+    gardenName,
+    beds,
+  }));
+}
+
 export function formatDimensions(bed: GardenBed): string {
   const parts = [bed.length, bed.width];
   if (bed.depth) parts.push(bed.depth);
