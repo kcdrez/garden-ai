@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,6 +5,7 @@ import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
 import { fetchGardens } from '@/api/gardens';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
+import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { createBed, updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
@@ -56,9 +56,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
     mode: 'onChange',
   });
 
-  useEffect(() => {
-    if (open) form.reset(defaultValues());
-  }, [open, bed]); // eslint-disable-line react-hooks/exhaustive-deps
+  useDialogFormReset(form, open, defaultValues);
 
   const mutation = useMutation({
     mutationFn: (values: BedFormValues) => {
