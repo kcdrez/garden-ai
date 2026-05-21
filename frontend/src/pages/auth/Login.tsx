@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth';
 import { routes } from '@/lib/routes';
 import { login } from '@/api/auth';
+import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField } from '@/components/ui/form-fields';
@@ -20,8 +21,8 @@ export default function Login() {
     try {
       await login(values.username, values.password);
       navigate(routes.gardens());
-    } catch {
-      form.setError('root', { message: 'Invalid credentials' });
+    } catch (err) {
+      applyServerErrors(err, form, ['username', 'password']);
     }
   };
 
