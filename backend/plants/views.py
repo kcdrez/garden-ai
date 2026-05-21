@@ -7,22 +7,24 @@ from .models import Observation, Plant, PlantPlacement, UserPlant
 from .serializers import ObservationSerializer, PlantPlacementSerializer, PlantSerializer, UserPlantSerializer
 
 
-class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = PlantSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Plant.objects.all()
-
-
-class UserPlantViewSet(viewsets.ModelViewSet):
-    serializer_class = UserPlantSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+class BedScopedMixin:
     def _get_bed(self):
         try:
             garden = Garden.objects.get(pk=self.kwargs["garden_id"], owner=self.request.user)
             return GardenBed.objects.get(pk=self.kwargs["bed_id"], garden=garden)
         except (Garden.DoesNotExist, GardenBed.DoesNotExist) as err:
             raise NotFound("Bed not found.") from err
+
+
+class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = PlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Plant.objects.all()
+
+
+class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
+    serializer_class = UserPlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         bed = self._get_bed()
@@ -50,6 +52,7 @@ class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class PlantPlacementViewSet(
+    BedScopedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -58,13 +61,6 @@ class PlantPlacementViewSet(
 ):
     serializer_class = PlantPlacementSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def _get_bed(self):
-        try:
-            garden = Garden.objects.get(pk=self.kwargs["garden_id"], owner=self.request.user)
-            return GardenBed.objects.get(pk=self.kwargs["bed_id"], garden=garden)
-        except (Garden.DoesNotExist, GardenBed.DoesNotExist) as err:
-            raise NotFound("Bed not found.") from err
 
     def get_queryset(self):
         bed = self._get_bed()
