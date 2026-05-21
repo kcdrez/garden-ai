@@ -1,6 +1,6 @@
 import { createBrowserRouter, redirect } from 'react-router-dom';
 import App from './App';
-import Gardens from './pages/gardens/Gardens';
+import AllGardens from './pages/gardens/AllGardens';
 import GardenDetail from './pages/gardens/GardenDetail';
 import AllBeds from './pages/beds/AllBeds';
 import BedDetail from './pages/beds/BedDetail';
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
     loader: requireAuth,
     children: [
       { index: true, element: <Home /> },
-      { path: 'gardens', element: <Gardens /> },
+      { path: 'gardens', element: <AllGardens /> },
       { path: 'gardens/:id', element: <GardenDetail /> },
       { path: 'gardens/:id/beds/:bedId', element: <BedDetail /> },
       { path: 'beds', element: <AllBeds /> },

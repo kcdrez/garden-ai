@@ -2,6 +2,30 @@
 
 ---
 
+## 2026-05-21 — ~3 hours
+
+**Completed:**
+- `Garden` model — `length`, `width`, `unit` fields added; `UNIT_CHOICES` moved to module level (shared by `Garden` and `GardenBed`)
+- `GardenDialog` — merged `EditGardenDialog` into single create/edit component; inline form removed from gardens page
+- "Add" button consistency — all three "all" pages now have a header row with an Add button; `BedDialog.gardenId` and `UserPlantDialog.gardenId/bedId` made optional with inline selectors
+- `AllGardens.tsx` rename — `Gardens.tsx` → `AllGardens.tsx` for consistency; stale duplicate `pages/GardenDetail.tsx` deleted
+- "Your X" headings — standardized across all pages and breadcrumbs (was a mix of "All" and "Your")
+- Garden card — shows dimensions when set; created date removed
+- `BedSingleIcon` on bed cards; `SproutIcon` on plant list rows
+- `PlantItem` component — extracted from `AllPlants` page; owns its own edit/move/delete state
+- `MovePlantDialog` refactor — split into `PickBedStep` and `CreateBedStep` internal components; each owns its own data fetching and mutations
+- Portal click-through bug — `EditGardenDialog` (now `GardenDialog`) moved outside `Card` in `GardenItem` to prevent React portal event bubbling
+- `BedGrid` loading fix — grid no longer renders as interactive while placements query is loading; prevents stale unplaced list
+- Move plant placement bug — backend cascade-deletes `PlantPlacement` when `UserPlant.bed` changes; `placement_id` added to `UserPlant` API response; `MovePlantDialog` warns user when moving a placed plant; original bed's placements cache invalidated on move
+- `bed_count` on `GardenSerializer`, `plant_count` on `GardenBedSerializer` — shown on garden and bed cards
+- `AllBeds` — replaced inline card with `BedItem` (was missing icon, plant count, and details)
+- `posInt`/`optPosInt` extracted to `src/lib/zod.ts`; `GardenPayload` derived from `Garden` type via `Partial<Pick<...>>`
+- Dropdown menu items — `cursor-pointer` globally via `dropdown-menu.tsx`
+
+**Next up:** Garden-level bed layout view — `BedPlacement` model and grid UI (garden dimensions prerequisite now met)
+
+---
+
 ## 2026-05-20 — ~2 hours
 
 **Completed:**

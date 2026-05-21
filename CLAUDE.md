@@ -107,9 +107,9 @@ Django's default User plus:
 - location: string *(planned)*
 - hardiness_zone: string *(planned)*
 - timezone: string *(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")*
-- length: positive integer *(planned — required for garden-level grid layout; same unit as `unit` field)*
-- width: positive integer *(planned — required for garden-level grid layout)*
-- unit: enum — `in`, `ft`, `cm`, `m` *(planned — default: ft; mirrors GardenBed.unit; required before BedPlacement can be built)*
+- length: positive integer (optional — required for garden-level grid layout; same unit as `unit` field)
+- width: positive integer (optional — required for garden-level grid layout)
+- unit: enum — `in`, `ft`, `cm`, `m` (default: ft; mirrors GardenBed.unit; required before BedPlacement can be built)
 - created_at: datetime (auto)
 - updated_at: datetime (auto)
 - owner: ForeignKey(User)
@@ -142,12 +142,15 @@ Django's default User plus:
 - bed: ForeignKey(GardenBed)
 - plant: ForeignKey(Plant)
 - variety: string (optional — e.g. "Cherry Tomato")
-- planted_date: date (optional)
-- status: enum — `planned`, `planted`, `growing`, `harvested`, `removed`
+- start_date: date (optional)
+- status: enum — `planned`, `planted`, `growing`, `fruiting`, `dormant`, `removed`
 - notes: text (optional)
+- placement_id: UUID or null (read-only; UUID of the associated `PlantPlacement` if one exists)
 - created_at / updated_at: datetime (auto)
 
-### PlantPlacement *(planned)*
+**Move behaviour:** when `bed` is changed via PATCH, any existing `PlantPlacement` for this `UserPlant` is automatically deleted. The plant arrives in the new bed unplaced.
+
+### PlantPlacement
 Spatial placement of a `UserPlant` within a `GardenBed` grid. Decoupled from `UserPlant` so a plant can exist without a placement, and placement can be deleted/moved without touching the plant record.
 
 - id: UUID
@@ -350,8 +353,13 @@ These are explicitly out of scope, at least initially:
 - `planted_date` renamed to `start_date` on `UserPlant`; dialog label updated to "Start Date"
 - `PlantTimeline` component — expandable per-plant section on bed detail; quick status chips, chronological history with type icons and alternating row shading, inline "Add Observation" form; manual `status_change` type for correcting erroneous auto-generated entries
 - `PlantPlacement` model — `OneToOneField` → `UserPlant`, FK → `GardenBed`, `x/y/width/height`; sq-ft grid normalization; full CRUD API at `/api/gardens/:id/beds/:bedId/placements/`
-- `BedGrid` component — 96px sq-ft grid on bed detail page; click empty cell to place a plant, hover occupied cell to remove; self-contained (owns placements query, mutations, `PlacePlantDialog`)
+- `BedGrid` component — 96px sq-ft grid on bed detail page; click empty cell to place a plant, hover occupied cell to remove; self-contained (owns placements query, mutations, `PlacePlantDialog`); shows loading state until placements are fetched to prevent stale unplaced list
 - Docker migration hook — `PostToolUse` Bash hook auto-runs `docker compose exec backend python manage.py migrate` after any `makemigrations` command
+- Garden dimensions — `length`, `width`, `unit` added to `Garden` model; shown on garden cards; prerequisite for `BedPlacement` grid view
+- `bed_count` on `GardenSerializer`, `plant_count` on `GardenBedSerializer` — computed via `source="<related_manager>.count"`; shown on garden and bed cards
+- `placement_id` on `UserPlantSerializer` — `SerializerMethodField` returning the UUID of the associated `PlantPlacement` or null; cascade delete of placement when `bed` changes
+- Move plant fix — `UserPlantSerializer.update()` deletes existing `PlantPlacement` when bed changes; `MovePlantDialog` warns user when moving a placed plant; original bed's placements cache invalidated on move
+- UI consistency pass — `GardenDialog` (merged create/edit); inline form removed from gardens page; Add buttons on all three "all" pages; `BedDialog`/`UserPlantDialog` accept optional `gardenId`/`bedId` with inline selectors; `AllGardens.tsx` rename; "Your X" headings everywhere; `PlantItem` component; `MovePlantDialog` refactored into `PickBedStep`/`CreateBedStep`; `BedItem` reused on `AllBeds` page; `posInt`/`optPosInt` extracted to `src/lib/zod.ts`
 
 ## 📋 Planned
 
