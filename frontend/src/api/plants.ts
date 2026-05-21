@@ -1,6 +1,6 @@
 import { api } from './client';
-import type { Observation, Plant, PlantPlacement, UserPlant } from '@/types/plants';
-import type { ObservationFormValues, UserPlantFormValues } from '@/schemas/plants';
+import type { Observation, Plant, PlantPlacement, UserPlant, UserPlantPayload } from '@/types/plants';
+import type { ObservationFormValues } from '@/schemas/plants';
 
 export async function fetchPlants(): Promise<Plant[]> {
   const res = await api.get('/plants/');
@@ -20,7 +20,7 @@ export async function fetchUserPlants(gardenId: string, bedId: string): Promise<
 export async function createUserPlant(
   gardenId: string,
   bedId: string,
-  data: UserPlantFormValues,
+  data: UserPlantPayload,
 ): Promise<UserPlant> {
   const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/`, data);
   return res.data;
@@ -30,7 +30,7 @@ export async function updateUserPlant(
   gardenId: string,
   bedId: string,
   plantId: string,
-  data: Partial<UserPlantFormValues>,
+  data: Partial<UserPlantPayload>,
 ): Promise<UserPlant> {
   const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`, data);
   return res.data;

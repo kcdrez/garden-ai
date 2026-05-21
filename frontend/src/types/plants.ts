@@ -42,6 +42,14 @@ export interface UserPlant {
   updatedAt: string;
 }
 
+export type UserPlantPayload = {
+  plant: string;
+  status: UserPlantStatus;
+  variety?: string;
+  startDate?: string;
+  notes?: string;
+};
+
 export interface PlantPlacement {
   id: string;
   userPlant: string;
