@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userPlantSchema, type UserPlantFormValues } from '@/schemas/plants';
+import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { USER_PLANT_STATUSES } from '@/types/plants';
 import type { UserPlant } from '@/types/plants';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
@@ -51,9 +51,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     mode: 'onChange',
   });
 
-  useEffect(() => {
-    if (open) form.reset(defaultValues());
-  }, [open, userPlant]); // eslint-disable-line react-hooks/exhaustive-deps
+  useDialogFormReset(form, open, defaultValues);
 
   const selectedGardenId = form.watch('gardenId');
 
