@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BedSingleIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
+import { isCardNavigationSuppressed } from '@/lib/utils';
 import { routes } from '@/lib/routes';
 import BedDetails from '@/components/beds/BedDetails';
 import { deleteBed } from '@/api/beds';
@@ -35,7 +36,7 @@ export default function BedItem({ gardenId, bed }: Props) {
   });
 
   function handleCardClick(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
+    if (isCardNavigationSuppressed(e)) return;
     navigate(routes.bedDetail(gardenId, bed.id));
   }
 

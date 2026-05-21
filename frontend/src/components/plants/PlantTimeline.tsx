@@ -27,19 +27,11 @@ import {
   type UserPlant,
   type UserPlantStatus,
 } from '@/types/plants';
+import { STATUS_CLASSES } from '@/lib/plants';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { QueryState } from '@/components/ui/query-state';
-
-const STATUS_CLASSES: Record<string, string> = {
-  planned: 'bg-muted text-muted-foreground',
-  planted: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  growing: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  fruiting: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  dormant: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  removed: 'bg-muted text-muted-foreground',
-};
 
 const OBSERVATION_ICONS: Record<ObservationType, React.ComponentType<{ className?: string }>> = {
   status_change: CircleIcon,

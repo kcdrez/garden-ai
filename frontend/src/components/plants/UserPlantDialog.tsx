@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,32 +32,12 @@ type Props = {
 export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!userPlant;
-  const needsPicker = !gardenId || !bedId;
-
-  const [selectedGardenId, setSelectedGardenId] = useState('');
-  const [selectedBedId, setSelectedBedId] = useState('');
-  const effectiveGardenId = gardenId ?? selectedGardenId;
-  const effectiveBedId = bedId ?? selectedBedId;
-
-  const { data: gardens = [] } = useQuery({
-    queryKey: ['gardens'],
-    queryFn: fetchGardens,
-    enabled: open && !gardenId,
-  });
-
-  const { data: beds = [] } = useQuery({
-    queryKey: ['beds', effectiveGardenId],
-    queryFn: () => fetchBeds(effectiveGardenId),
-    enabled: open && !bedId && !!effectiveGardenId,
-  });
-
-  const { data: plants = [] } = useQuery({
-    queryKey: ['plants', 'catalog'],
-    queryFn: fetchPlants,
-    enabled: open,
-  });
+  const needsGardenPicker = !gardenId;
+  const needsBedPicker = !bedId;
 
   const defaultValues = (): UserPlantFormValues => ({
+    gardenId: gardenId ?? '',
+    bedId: bedId ?? '',
     plant: userPlant?.plant ?? '',
     variety: userPlant?.variety ?? '',
     startDate: userPlant?.startDate ?? '',
@@ -72,12 +52,28 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   });
 
   useEffect(() => {
-    if (open) {
-      form.reset(defaultValues());
-      setSelectedGardenId('');
-      setSelectedBedId('');
-    }
+    if (open) form.reset(defaultValues());
   }, [open, userPlant]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectedGardenId = form.watch('gardenId');
+
+  const { data: gardens = [] } = useQuery({
+    queryKey: ['gardens'],
+    queryFn: fetchGardens,
+    enabled: open && needsGardenPicker,
+  });
+
+  const { data: beds = [] } = useQuery({
+    queryKey: ['beds', selectedGardenId],
+    queryFn: () => fetchBeds(selectedGardenId),
+    enabled: open && needsBedPicker && !!selectedGardenId,
+  });
+
+  const { data: plants = [] } = useQuery({
+    queryKey: ['plants', 'catalog'],
+    queryFn: fetchPlants,
+    enabled: open,
+  });
 
   const mutation = useMutation({
     mutationFn: (values: UserPlantFormValues) => {
@@ -89,8 +85,8 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
         notes: values.notes || undefined,
       };
       return isEditing
-        ? updateUserPlant(effectiveGardenId, effectiveBedId, userPlant.id, payload)
-        : createUserPlant(effectiveGardenId, effectiveBedId, payload);
+        ? updateUserPlant(values.gardenId, values.bedId, userPlant.id, payload)
+        : createUserPlant(values.gardenId, values.bedId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
@@ -112,38 +108,33 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          {needsPicker && (
+          {(needsGardenPicker || needsBedPicker) && (
             <div className="grid grid-cols-2 gap-3">
-              {!gardenId && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium">Garden</label>
-                  <select
-                    value={selectedGardenId}
-                    onChange={(e) => { setSelectedGardenId(e.target.value); setSelectedBedId(''); }}
-                    className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">— Select —</option>
-                    {gardens.map((g) => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
+              {needsGardenPicker && (
+                <NativeSelectField
+                  control={form.control}
+                  name="gardenId"
+                  label="Garden"
+                  onValueChange={() => form.setValue('bedId', '', { shouldValidate: true })}
+                >
+                  <option value="">— Select —</option>
+                  {gardens.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </NativeSelectField>
               )}
-              {!bedId && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium">Bed</label>
-                  <select
-                    value={selectedBedId}
-                    onChange={(e) => setSelectedBedId(e.target.value)}
-                    disabled={!effectiveGardenId}
-                    className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
-                  >
-                    <option value="">— Select —</option>
-                    {beds.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
+              {needsBedPicker && (
+                <NativeSelectField
+                  control={form.control}
+                  name="bedId"
+                  label="Bed"
+                  className={!selectedGardenId ? 'opacity-50 pointer-events-none' : ''}
+                >
+                  <option value="">— Select —</option>
+                  {beds.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </NativeSelectField>
               )}
             </div>
           )}
@@ -156,9 +147,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
             <TextField control={form.control} name="startDate" label="Start Date" type="date" />
             <NativeSelectField control={form.control} name="status" label="Status">
               {USER_PLANT_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </NativeSelectField>
           </div>
@@ -170,7 +159,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
           )}
 
           <DialogFooter>
-            <Button type="submit" disabled={!form.formState.isValid || mutation.isPending || (needsPicker && (!effectiveGardenId || !effectiveBedId))}>
+            <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
               {mutation.isPending ? 'Saving…' : isEditing ? 'Save' : 'Add Plant'}
             </Button>
           </DialogFooter>
