@@ -32,42 +32,44 @@ export default function GardenItem({ garden }: Props) {
   });
 
   return (
-    <Card
-      className="cursor-pointer hover:bg-muted/40 transition-colors"
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
-        navigate(routes.gardenDetail(garden.id));
-      }}
-    >
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <LeafIcon className="size-4 text-primary" />
-          {garden.name}
-        </CardTitle>
-        {garden.description && (
-          <CardDescription className="line-clamp-2">
-            {garden.description}
-          </CardDescription>
-        )}
-        <CardAction>
-          <CardActionsMenu
-            label="Garden actions"
-            onEdit={() => setEditOpen(true)}
-            onDelete={() => deleteMutation.mutate()}
-            isDeleting={deleteMutation.isPending}
-          />
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="mt-auto">
-        <span className="text-xs text-muted-foreground">
-          Created {formatDate(garden.createdAt)}
-        </span>
-      </CardFooter>
+    <>
+      <Card
+        className="cursor-pointer hover:bg-muted/40 transition-colors"
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
+          navigate(routes.gardenDetail(garden.id));
+        }}
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LeafIcon className="size-4 text-primary" />
+            {garden.name}
+          </CardTitle>
+          {garden.description && (
+            <CardDescription className="line-clamp-2">
+              {garden.description}
+            </CardDescription>
+          )}
+          <CardAction>
+            <CardActionsMenu
+              label="Garden actions"
+              onEdit={() => setEditOpen(true)}
+              onDelete={() => deleteMutation.mutate()}
+              isDeleting={deleteMutation.isPending}
+            />
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="mt-auto">
+          <span className="text-xs text-muted-foreground">
+            Created {formatDate(garden.createdAt)}
+          </span>
+        </CardFooter>
+      </Card>
       <EditGardenDialog
         garden={garden}
         open={editOpen}
         onOpenChange={setEditOpen}
       />
-    </Card>
+    </>
   );
 }

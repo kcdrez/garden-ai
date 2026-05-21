@@ -385,6 +385,8 @@ These are explicitly out of scope, at least initially:
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
+- **Semantic versioning** — separate FE and BE version numbers (e.g. `1.2.3`) displayed in the app footer; auto-incremented on every merge to `main` via GitHub Actions using `semantic-release` and conventional commits (`feat:`, `fix:`, `chore:`); FE version read from `package.json` at build time via Vite env var, BE version from a `VERSION` file or `pyproject.toml` exposed at `/api/version/`; frontend fetches BE version on load and renders both in a footer chip so it's easy to confirm a deploy went live without comparing SHAs
+- **Preview environments per PR** — Vercel already creates a frontend preview URL per PR, but it points at prod backend so it only works for pure UI changes; full preview requires Railway PR Environments (ephemeral backend + DB per PR) wired together via a GitHub Action that sets `VITE_API_URL` on the Vercel preview to point at the Railway PR environment URL; needed for any PR that crosses the stack (new model, migration, endpoint, or serializer field)
 
 ### Tracking & Journaling
 - Garden notes and journaling

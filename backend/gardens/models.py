@@ -3,10 +3,20 @@ from django.db import models
 
 from core.models import BaseModel
 
+UNIT_CHOICES = [
+    ("in", "Inches"),
+    ("ft", "Feet"),
+    ("cm", "Centimeters"),
+    ("m", "Meters"),
+]
+
 
 class Garden(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    length = models.PositiveIntegerField(null=True, blank=True)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    unit = models.CharField(max_length=2, choices=UNIT_CHOICES, default="ft")
 
     owner = models.ForeignKey(User, related_name="gardens", on_delete=models.CASCADE)
 
@@ -15,13 +25,6 @@ class Garden(BaseModel):
 
 
 class GardenBed(BaseModel):
-    UNIT_CHOICES = [
-        ("in", "Inches"),
-        ("ft", "Feet"),
-        ("cm", "Centimeters"),
-        ("m", "Meters"),
-    ]
-
     FACING_CHOICES = [
         ("N", "North"),
         ("NE", "Northeast"),
