@@ -1,18 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ArrowLeftIcon,
-  PlusIcon,
-  PencilIcon,
-  Trash2Icon,
-  LeafIcon,
-  ChevronDownIcon,
-} from 'lucide-react';
+import { ArrowLeftIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { fetchBeds, deleteBed } from '@/api/beds';
-import { fetchUserPlants, deleteUserPlant } from '@/api/plants';
-import PlantTimeline from '@/components/plants/PlantTimeline';
+import { fetchUserPlants } from '@/api/plants';
 import BedGrid from '@/components/beds/BedGrid';
+import PlantListSection from '@/components/plants/PlantListSection';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { routes } from '@/lib/routes';
@@ -21,22 +14,14 @@ import type { UserPlant } from '@/types/plants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import BedDetails from '@/components/beds/BedDetails';
-import CardActionsMenu from '@/components/ui/card-actions-menu';
 import BedDialog from '@/components/beds/BedDialog';
-import UserPlantDialog from '@/components/plants/UserPlantDialog';
-import MovePlantDialog from '@/components/plants/MovePlantDialog';
-import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
-
+import { LoadingSpinner } from '@/components/ui/query-state';
 
 export default function BedDetail() {
   const { id, bedId } = useParams<{ id: string; bedId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [addPlantOpen, setAddPlantOpen] = useState(false);
-  const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
-  const [movingPlant, setMovingPlant] = useState<UserPlant | undefined>();
-  const [expandedPlantId, setExpandedPlantId] = useState<string | undefined>();
 
   const {
     data: bed,
@@ -79,16 +64,9 @@ export default function BedDetail() {
     },
   });
 
-  const deleteUserPlantMutation = useMutation({
-    mutationFn: (plantId: string) => deleteUserPlant(id!, bedId!, plantId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
-  });
-
   if (bedLoading) return <div className="p-5"><LoadingSpinner /></div>;
   if (bedError) return <div className="p-5 text-sm text-destructive">{getErrorMessage(bedError)}</div>;
   if (!bed) return null;
-
-  const hasDetails = bedHasDetails(bed);
 
   return (
     <div className="p-5">
@@ -124,7 +102,7 @@ export default function BedDetail() {
         </div>
       </div>
 
-      {hasDetails && (
+      {bedHasDetails(bed) && (
         <Card className="mb-6">
           <CardContent>
             <BedDetails bed={bed} />
@@ -137,76 +115,15 @@ export default function BedDetail() {
         <BedGrid gardenId={id!} bedId={bedId!} bed={bed} userPlants={userPlants} />
       </div>
 
-      <div className="flex items-center justify-between mb-3">
-        <h3>Plants</h3>
-        <Button onClick={() => setAddPlantOpen(true)}>
-          <PlusIcon className="size-4" />
-          Add Plant
-        </Button>
-      </div>
-
-      <QueryState
-        isLoading={plantsLoading}
-        error={plantsError}
-        isEmpty={userPlants.length === 0}
-        emptyMessage="No plants yet. Add one to get started."
-      >
-        <ul className="flex flex-col gap-1">
-          {userPlants.map((plant) => {
-            const isExpanded = expandedPlantId === plant.id;
-            return (
-              <li key={plant.id}>
-                <div className="flex items-center justify-between text-sm py-1">
-                  <button
-                    className="flex items-center gap-2 flex-1 text-left hover:text-foreground text-foreground"
-                    onClick={() => setExpandedPlantId(isExpanded ? undefined : plant.id)}
-                  >
-                    <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                    <span>
-                      {plant.plantName}
-                      {plant.variety && <span className="text-muted-foreground"> — {plant.variety}</span>}
-                    </span>
-                    <ChevronDownIcon
-                      className={`size-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <CardActionsMenu
-                    label="Plant actions"
-                    onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
-                    onMove={() => setMovingPlant(plant)}
-                    onDelete={() => deleteUserPlantMutation.mutate(plant.id)}
-                    isDeleting={deleteUserPlantMutation.isPending}
-                  />
-                </div>
-                {isExpanded && (
-                  <PlantTimeline gardenId={id!} bedId={bedId!} plant={plant} />
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </QueryState>
-
-      <BedDialog gardenId={id!} bed={bed} open={editOpen} onOpenChange={setEditOpen} />
-
-      <UserPlantDialog
+      <PlantListSection
         gardenId={id!}
         bedId={bedId!}
-        userPlant={editingPlant}
-        open={addPlantOpen}
-        onOpenChange={(open) => {
-          setAddPlantOpen(open);
-          if (!open) setEditingPlant(undefined);
-        }}
+        userPlants={userPlants}
+        isLoading={plantsLoading}
+        error={plantsError}
       />
 
-      {movingPlant && (
-        <MovePlantDialog
-          userPlant={movingPlant}
-          open={!!movingPlant}
-          onOpenChange={(open) => { if (!open) setMovingPlant(undefined); }}
-        />
-      )}
+      <BedDialog gardenId={id!} bed={bed} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
