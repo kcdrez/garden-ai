@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
-import type { Garden } from '@/types/gardens';
+import { BED_UNITS, type Garden } from '@/types/gardens';
 import { updateGarden } from '@/api/gardens';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { TextField, TextAreaField } from '@/components/ui/form-fields';
+import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 
 type Props = {
   garden: Garden;
@@ -27,19 +27,31 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
 
   const form = useForm<GardenFormValues>({
     resolver: zodResolver(gardenSchema),
-    defaultValues: { name: garden.name, description: garden.description ?? '' },
+    defaultValues: {
+      name: garden.name,
+      description: garden.description ?? '',
+      length: garden.length != null ? String(garden.length) : '',
+      width: garden.width != null ? String(garden.width) : '',
+      unit: garden.unit ?? 'ft',
+    },
     mode: 'onChange',
   });
 
   const updateMutation = useMutation({
     mutationFn: (values: GardenFormValues) =>
-      updateGarden(garden.id, { name: values.name.trim(), description: values.description }),
+      updateGarden(garden.id, {
+        name: values.name.trim(),
+        description: values.description,
+        length: values.length ? parseInt(values.length, 10) : null,
+        width: values.width ? parseInt(values.width, 10) : null,
+        unit: values.unit,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gardens'] });
       onOpenChange(false);
     },
     onError: (err) => {
-      applyServerErrors(err, form, ['name', 'description']);
+      applyServerErrors(err, form, ['name', 'description', 'length', 'width', 'unit']);
     },
   });
 
@@ -57,6 +69,15 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
         <Form form={form} onSubmit={onSubmit}>
           <TextField control={form.control} name="name" label="Name" />
           <TextAreaField control={form.control} name="description" label="Description" rows={3} />
+          <div className="flex gap-3">
+            <TextField control={form.control} name="length" label="Length" inputMode="numeric" placeholder="e.g. 20" />
+            <TextField control={form.control} name="width" label="Width" inputMode="numeric" placeholder="e.g. 15" />
+            <NativeSelectField control={form.control} name="unit" label="Unit">
+              {BED_UNITS.map((u) => (
+                <option key={u.value} value={u.value}>{u.label}</option>
+              ))}
+            </NativeSelectField>
+          </div>
 
           {form.formState.errors.root && (
             <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
