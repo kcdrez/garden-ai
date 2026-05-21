@@ -2,6 +2,9 @@ export type Garden = {
   id: string;
   name: string;
   description?: string | null;
+  length?: number | null;
+  width?: number | null;
+  unit: BedUnit;
   createdAt: string;
   updatedAt: string;
   owner: number;

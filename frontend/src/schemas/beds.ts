@@ -1,13 +1,5 @@
 import { z } from 'zod';
-
-const posInt = z
-  .string()
-  .min(1, 'Required')
-  .refine((v) => /^\d+$/.test(v) && parseInt(v, 10) >= 1, 'Must be at least 1');
-
-const optPosInt = z
-  .string()
-  .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) >= 1), 'Must be at least 1');
+import { posInt, optPosInt } from '@/lib/zod';
 
 const optSunlight = z
   .string()
