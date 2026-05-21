@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { BedSingleIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { routes } from '@/lib/routes';
@@ -42,8 +43,14 @@ export default function BedItem({ gardenId, bed }: Props) {
     <>
       <Card className="cursor-pointer hover:bg-muted/40 transition-colors" onClick={handleCardClick}>
         <CardHeader>
-          <CardTitle>{bed.name}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <BedSingleIcon className="size-4 text-primary" />
+            {bed.name}
+          </CardTitle>
           <CardDescription>{formatDimensions(bed)}</CardDescription>
+          <CardDescription>
+            {bed.plantCount === 1 ? '1 plant' : `${bed.plantCount} plants`}
+          </CardDescription>
           <CardAction>
             <CardActionsMenu
               label="Bed actions"

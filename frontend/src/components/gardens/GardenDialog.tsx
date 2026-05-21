@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import { BED_UNITS, type Garden } from '@/types/gardens';
-import { updateGarden } from '@/api/gardens';
+import { createGarden, updateGarden } from '@/api/gardens';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,35 +18,44 @@ import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 
 type Props = {
-  garden: Garden;
+  garden?: Garden;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export default function EditGardenDialog({ garden, open, onOpenChange }: Props) {
+const defaultValues = (garden?: Garden): GardenFormValues => ({
+  name: garden?.name ?? '',
+  description: garden?.description ?? '',
+  length: garden?.length != null ? String(garden.length) : '',
+  width: garden?.width != null ? String(garden.width) : '',
+  unit: garden?.unit ?? 'ft',
+});
+
+export default function GardenDialog({ garden, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
+  const isEditing = !!garden;
 
   const form = useForm<GardenFormValues>({
     resolver: zodResolver(gardenSchema),
-    defaultValues: {
-      name: garden.name,
-      description: garden.description ?? '',
-      length: garden.length != null ? String(garden.length) : '',
-      width: garden.width != null ? String(garden.width) : '',
-      unit: garden.unit ?? 'ft',
-    },
+    defaultValues: defaultValues(garden),
     mode: 'onChange',
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (values: GardenFormValues) =>
-      updateGarden(garden.id, {
+  useEffect(() => {
+    if (open) form.reset(defaultValues(garden));
+  }, [open, garden]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mutation = useMutation({
+    mutationFn: (values: GardenFormValues) => {
+      const payload = {
         name: values.name.trim(),
         description: values.description,
         length: values.length ? parseInt(values.length, 10) : null,
         width: values.width ? parseInt(values.width, 10) : null,
         unit: values.unit,
-      }),
+      };
+      return isEditing ? updateGarden(garden.id, payload) : createGarden(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gardens'] });
       onOpenChange(false);
@@ -55,19 +65,15 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
     },
   });
 
-  function onSubmit(values: GardenFormValues) {
-    updateMutation.mutate(values);
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Garden</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Garden' : 'Add Garden'}</DialogTitle>
         </DialogHeader>
 
-        <Form form={form} onSubmit={onSubmit}>
-          <TextField control={form.control} name="name" label="Name" />
+        <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
+          <TextField control={form.control} name="name" label="Name" placeholder="My Garden" />
           <TextAreaField control={form.control} name="description" label="Description" rows={3} />
           <div className="flex gap-3">
             <TextField control={form.control} name="length" label="Length" inputMode="numeric" placeholder="e.g. 20" />
@@ -84,11 +90,8 @@ export default function EditGardenDialog({ garden, open, onOpenChange }: Props) 
           )}
 
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={!form.formState.isValid || updateMutation.isPending}
-            >
-              {updateMutation.isPending ? 'Saving…' : 'Save'}
+            <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
+              {mutation.isPending ? 'Saving…' : isEditing ? 'Save' : 'Add Garden'}
             </Button>
           </DialogFooter>
         </Form>

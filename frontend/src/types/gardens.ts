@@ -5,6 +5,7 @@ export type Garden = {
   length?: number | null;
   width?: number | null;
   unit: BedUnit;
+  bedCount: number;
   createdAt: string;
   updatedAt: string;
   owner: number;
@@ -45,6 +46,7 @@ export type GardenBed = {
   avgSunlightHours?: number | null;
   soilType?: string | null;
   notes?: string | null;
+  plantCount: number;
   createdAt: string;
   updatedAt: string;
 };

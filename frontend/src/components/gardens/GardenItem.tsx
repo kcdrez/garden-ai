@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LeafIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
-import { formatDate } from '@/lib/dates';
 import { routes } from '@/lib/routes';
 import {
   Card,
@@ -12,10 +11,9 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-  CardFooter,
 } from '@/components/ui/card';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
-import EditGardenDialog from '@/components/gardens/EditGardenDialog';
+import GardenDialog from '@/components/gardens/GardenDialog';
 
 type Props = {
   garden: Garden;
@@ -50,6 +48,14 @@ export default function GardenItem({ garden }: Props) {
               {garden.description}
             </CardDescription>
           )}
+          {garden.length && garden.width && (
+            <CardDescription>
+              {garden.length} × {garden.width} {garden.unit}
+            </CardDescription>
+          )}
+          <CardDescription>
+            {garden.bedCount === 1 ? '1 bed' : `${garden.bedCount} beds`}
+          </CardDescription>
           <CardAction>
             <CardActionsMenu
               label="Garden actions"
@@ -59,13 +65,9 @@ export default function GardenItem({ garden }: Props) {
             />
           </CardAction>
         </CardHeader>
-        <CardFooter className="mt-auto">
-          <span className="text-xs text-muted-foreground">
-            Created {formatDate(garden.createdAt)}
-          </span>
-        </CardFooter>
+
       </Card>
-      <EditGardenDialog
+      <GardenDialog
         garden={garden}
         open={editOpen}
         onOpenChange={setEditOpen}
