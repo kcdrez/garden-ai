@@ -26,7 +26,11 @@ class UserPlantViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         bed = self._get_bed()
-        return UserPlant.objects.filter(bed=bed).order_by("created_at")
+        return (
+            UserPlant.objects.filter(bed=bed)
+            .select_related("plant", "bed__garden")
+            .order_by("created_at")
+        )
 
     def perform_create(self, serializer):
         bed = self._get_bed()
@@ -38,9 +42,11 @@ class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return UserPlant.objects.filter(
-            bed__garden__owner=self.request.user
-        ).order_by("bed__garden__name", "bed__name", "created_at")
+        return (
+            UserPlant.objects.filter(bed__garden__owner=self.request.user)
+            .select_related("plant", "bed__garden")
+            .order_by("bed__garden__name", "bed__name", "created_at")
+        )
 
 
 class PlantPlacementViewSet(
