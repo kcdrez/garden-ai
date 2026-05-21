@@ -1,9 +1,9 @@
 export type Garden = {
   id: string;
   name: string;
-  description?: string | null;
-  length?: number | null;
-  width?: number | null;
+  description: string | null;
+  length: number | null;
+  width: number | null;
   unit: BedUnit;
   bedCount: number;
   createdAt: string;
@@ -40,12 +40,12 @@ export type GardenBed = {
   name: string;
   length: number;
   width: number;
-  depth?: number | null;
+  depth: number | null;
   unit: BedUnit;
-  facing?: BedFacing | null;
-  avgSunlightHours?: number | null;
-  soilType?: string | null;
-  notes?: string | null;
+  facing: BedFacing | null;
+  avgSunlightHours: number | null;
+  soilType: string | null;
+  notes: string | null;
   plantCount: number;
   createdAt: string;
   updatedAt: string;
