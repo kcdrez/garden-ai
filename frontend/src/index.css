@@ -138,12 +138,11 @@ body {
   }
 
   h1 {
-    font-size: 56px;
-    letter-spacing: -1.68px;
-    margin: 32px 0;
+    font-size: 36px;
+    letter-spacing: -0.72px;
+    margin: 20px 0;
     @media (max-width: 1024px) {
-      font-size: 36px;
-      margin: 20px 0;
+      font-size: 28px;
     }
   }
   h2 {

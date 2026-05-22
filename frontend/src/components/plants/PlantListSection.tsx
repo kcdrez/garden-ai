@@ -39,7 +39,7 @@ export default function PlantListSection({
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <h3>Plants</h3>
+        <h2>Plants</h2>
         <Button onClick={() => setAddPlantOpen(true)}>
           <PlusIcon className="size-4" />
           Add Plant
