@@ -23,7 +23,7 @@ export default function AllBeds() {
   return (
     <div className="p-5">
       <div className="flex items-center justify-between mb-6">
-        <h2>Your Beds</h2>
+        <h1>Your Beds</h1>
         <Button onClick={() => setAddOpen(true)}>
           <PlusIcon className="size-4" />
           Add Bed
@@ -40,7 +40,7 @@ export default function AllBeds() {
           {grouped.map(({ gardenId, gardenName, beds: gardenBeds }) => (
             <section key={gardenId}>
               <div className="flex items-center gap-2 mb-3">
-                <h3>{gardenName}</h3>
+                <h2>{gardenName}</h2>
                 <Link
                   to={routes.gardenDetail(gardenId)}
                   className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
