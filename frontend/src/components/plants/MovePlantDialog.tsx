@@ -7,8 +7,8 @@ import { fetchAllBeds, createBed } from '@/api/beds';
 import { fetchGardens } from '@/api/gardens';
 import { moveUserPlant } from '@/api/plants';
 import type { UserPlant } from '@/types/plants';
-import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS } from '@/types/gardens';
+import { groupByGarden } from '@/lib/beds';
 import { quickBedSchema, type QuickBedFormValues } from '@/schemas/beds';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
@@ -47,14 +47,7 @@ function PickBedStep({ userPlant, autoSelectBedId, onMoved, onCreateNew }: PickB
 
   const availableBeds = beds.filter((b) => b.id !== userPlant.bed);
 
-  const bedsByGarden = availableBeds.reduce<Record<string, { gardenName: string; beds: GardenBed[] }>>(
-    (acc, bed) => {
-      if (!acc[bed.garden]) acc[bed.garden] = { gardenName: bed.gardenName, beds: [] };
-      acc[bed.garden].beds.push(bed);
-      return acc;
-    },
-    {},
-  );
+  const bedsByGarden = groupByGarden(availableBeds);
 
   const moveMutation = useMutation({
     mutationFn: () => moveUserPlant(userPlant.gardenId, userPlant.bed, userPlant.id, selectedBedId),
@@ -79,8 +72,8 @@ function PickBedStep({ userPlant, autoSelectBedId, onMoved, onCreateNew }: PickB
         <p className="text-sm text-muted-foreground py-2">No other beds yet.</p>
       ) : (
         <div className="max-h-56 overflow-y-auto flex flex-col gap-4 py-1">
-          {Object.values(bedsByGarden).map(({ gardenName, beds: gardenBeds }) => (
-            <div key={gardenName}>
+          {bedsByGarden.map(({ gardenId, gardenName, beds: gardenBeds }) => (
+            <div key={gardenId}>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 {gardenName}
               </p>

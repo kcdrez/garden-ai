@@ -3,8 +3,10 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from core.models import BaseModel
 
-class UserProfile(models.Model):
+
+class UserProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="userprofile")
     timezone = models.CharField(max_length=50, default="UTC")
 

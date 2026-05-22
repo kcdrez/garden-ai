@@ -85,7 +85,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
         Observation.objects.create(
             user_plant=user_plant,
             observed_date=self._local_date(),
-            type="status_change",
+            type=Observation.Type.STATUS_CHANGE,
             previous_status=previous_status or "",
             new_status=new_status,
         )

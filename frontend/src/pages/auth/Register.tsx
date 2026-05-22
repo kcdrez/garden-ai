@@ -6,7 +6,7 @@ import { register } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField } from '@/components/ui/form-fields';
-import { getDRFFieldErrors } from '@/lib/errors';
+import { applyServerErrors } from '@/lib/errors';
 import { routes } from '@/lib/routes';
 
 export default function Register() {
@@ -22,14 +22,7 @@ export default function Register() {
       await register(values.username, values.password, values.password_confirm, values.email || undefined);
       navigate(routes.gardens());
     } catch (err) {
-      const fieldErrors = getDRFFieldErrors(err);
-      if (fieldErrors) {
-        Object.entries(fieldErrors).forEach(([field, messages]) => {
-          form.setError(field as keyof RegisterFormValues, { message: messages[0] });
-        });
-      } else {
-        form.setError('root', { message: 'Registration failed. Please try again.' });
-      }
+      applyServerErrors(err, form, ['username', 'email', 'password', 'password_confirm']);
     }
   };
 

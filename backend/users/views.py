@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from django.contrib.auth.models import User
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,12 +13,21 @@ from .models import UserProfile
 from .serializers import ProfileSerializer, RegisterSerializer
 
 
+def _apply_timezone(user, timezone_str):
+    """Store a browser-supplied timezone if it is valid; silently ignore invalid values."""
+    if not timezone_str:
+        return
+    try:
+        ZoneInfo(timezone_str)
+    except (ZoneInfoNotFoundError, KeyError):
+        return
+    UserProfile.objects.filter(user=user).update(timezone=timezone_str)
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        timezone = self.initial_data.get("timezone")
-        if timezone:
-            UserProfile.objects.filter(user=self.user).update(timezone=timezone)
+        _apply_timezone(self.user, self.initial_data.get("timezone"))
         return data
 
 
@@ -32,9 +43,7 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        timezone = request.data.get("timezone")
-        if timezone:
-            UserProfile.objects.filter(user=user).update(timezone=timezone)
+        _apply_timezone(user, request.data.get("timezone"))
 
         refresh = RefreshToken.for_user(user)
         return Response(

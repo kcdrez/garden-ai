@@ -70,42 +70,42 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
             if (placement && !isOrigin) return null;
 
-            if (placement) {
+            if (!placement) {
               return (
-                <div
+                <button
                   key={`${col},${row}`}
-                  className="w-24 h-24 bg-primary/15 relative group flex items-center justify-center p-1 overflow-hidden"
-                  style={
-                    placement.width > 1 || placement.height > 1
-                      ? { gridColumn: `span ${placement.width}`, gridRow: `span ${placement.height}` }
-                      : undefined
-                  }
-                >
-                  <span className="text-xs leading-tight text-center break-words w-full pointer-events-none select-none">
-                    {plant?.plantName}
-                    {plant?.variety && (
-                      <span className="block text-muted-foreground truncate">{plant.variety}</span>
-                    )}
-                  </span>
-                  <button
-                    className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-destructive/80 text-destructive-foreground transition-colors"
-                    onClick={() => deletePlacementMutation.mutate(placement.id)}
-                    disabled={deletePlacementMutation.isPending}
-                    aria-label={`Remove ${plant?.plantName ?? 'plant'} from grid`}
-                  >
-                    <XIcon className="size-3" />
-                  </button>
-                </div>
+                  className="w-24 h-24 bg-background hover:bg-muted/50 transition-colors"
+                  onClick={() => setPlacingCell({ x: col, y: row })}
+                  aria-label={`Place plant at column ${col + 1}, row ${row + 1}`}
+                />
               );
             }
 
             return (
-              <button
+              <div
                 key={`${col},${row}`}
-                className="w-24 h-24 bg-background hover:bg-muted/50 transition-colors"
-                onClick={() => setPlacingCell({ x: col, y: row })}
-                aria-label={`Place plant at column ${col + 1}, row ${row + 1}`}
-              />
+                className="w-24 h-24 bg-primary/15 relative group flex items-center justify-center p-1 overflow-hidden"
+                style={
+                  placement.width > 1 || placement.height > 1
+                    ? { gridColumn: `span ${placement.width}`, gridRow: `span ${placement.height}` }
+                    : undefined
+                }
+              >
+                <span className="text-xs leading-tight text-center break-words w-full pointer-events-none select-none">
+                  {plant?.plantName}
+                  {plant?.variety && (
+                    <span className="block text-muted-foreground truncate">{plant.variety}</span>
+                  )}
+                </span>
+                <button
+                  className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-destructive/80 text-destructive-foreground transition-colors"
+                  onClick={() => deletePlacementMutation.mutate(placement.id)}
+                  disabled={deletePlacementMutation.isPending}
+                  aria-label={`Remove ${plant?.plantName ?? 'plant'} from grid`}
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </div>
             );
           })}
         </div>

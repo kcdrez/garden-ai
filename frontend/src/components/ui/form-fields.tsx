@@ -64,7 +64,7 @@ function TextAreaField<
   )
 }
 
-const selectClass = cn(
+export const selectClass = cn(
   'h-8 w-full appearance-none rounded-lg border border-input bg-transparent pl-2.5 pr-7 py-1 text-sm outline-none',
   'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
   'dark:bg-input/30',
@@ -77,6 +77,7 @@ type NativeSelectFieldProps<
   children: React.ReactNode
   optional?: boolean
   className?: string
+  onValueChange?: (value: string) => void
 }
 
 function NativeSelectField<
@@ -89,6 +90,7 @@ function NativeSelectField<
   children,
   optional = false,
   className,
+  onValueChange,
 }: NativeSelectFieldProps<TFieldValues, TName>) {
   return (
     <FormField
@@ -101,11 +103,14 @@ function NativeSelectField<
             <FormControl>
               <select
                 value={optional ? (field.value ?? '') : field.value}
-                onChange={(e) =>
-                  optional
-                    ? field.onChange(e.target.value || undefined)
-                    : field.onChange(e.target.value)
-                }
+                onChange={(e) => {
+                  if (optional) {
+                    field.onChange(e.target.value || undefined)
+                  } else {
+                    field.onChange(e.target.value)
+                  }
+                  onValueChange?.(e.target.value)
+                }}
                 onBlur={field.onBlur}
                 name={field.name}
                 ref={field.ref}

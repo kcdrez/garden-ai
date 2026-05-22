@@ -3,30 +3,12 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRightIcon, PlusIcon } from 'lucide-react';
 import { fetchAllBeds } from '@/api/beds';
-import type { GardenBed } from '@/types/gardens';
+import { groupByGarden } from '@/lib/beds';
 import { routes } from '@/lib/routes';
-
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
 import { QueryState } from '@/components/ui/query-state';
-
-type BedsByGarden = { gardenId: string; gardenName: string; beds: GardenBed[] }[];
-
-function groupByGarden(beds: GardenBed[]): BedsByGarden {
-  const map = new Map<string, { gardenName: string; beds: GardenBed[] }>();
-  for (const bed of beds) {
-    if (!map.has(bed.garden)) {
-      map.set(bed.garden, { gardenName: bed.gardenName, beds: [] });
-    }
-    map.get(bed.garden)!.beds.push(bed);
-  }
-  return Array.from(map.entries()).map(([gardenId, { gardenName, beds }]) => ({
-    gardenId,
-    gardenName,
-    beds,
-  }));
-}
 
 export default function AllBeds() {
   const [addOpen, setAddOpen] = useState(false);

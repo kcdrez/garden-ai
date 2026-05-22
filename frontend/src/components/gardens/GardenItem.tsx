@@ -5,6 +5,7 @@ import { LeafIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
 import { routes } from '@/lib/routes';
+import { isCardNavigationSuppressed } from '@/lib/utils';
 import {
   Card,
   CardHeader,
@@ -34,7 +35,7 @@ export default function GardenItem({ garden }: Props) {
       <Card
         className="cursor-pointer hover:bg-muted/40 transition-colors"
         onClick={(e) => {
-          if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;
+          if (isCardNavigationSuppressed(e)) return;
           navigate(routes.gardenDetail(garden.id));
         }}
       >

@@ -1,9 +1,9 @@
 export type Garden = {
   id: string;
   name: string;
-  description?: string | null;
-  length?: number | null;
-  width?: number | null;
+  description: string | null;
+  length: number | null;
+  width: number | null;
   unit: BedUnit;
   bedCount: number;
   createdAt: string;
@@ -11,18 +11,16 @@ export type Garden = {
   owner: number;
 };
 
-export type BedUnit = 'in' | 'ft' | 'cm' | 'm';
-
-export const BED_UNITS: { value: BedUnit; label: string }[] = [
+export const BED_UNITS = [
   { value: 'in', label: 'Inches' },
   { value: 'ft', label: 'Feet' },
   { value: 'cm', label: 'Centimeters' },
   { value: 'm', label: 'Meters' },
-];
+] as const;
 
-export type BedFacing = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
+export type BedUnit = typeof BED_UNITS[number]['value'];
 
-export const BED_FACINGS: { value: BedFacing; label: string }[] = [
+export const BED_FACINGS = [
   { value: 'N', label: 'North' },
   { value: 'NE', label: 'Northeast' },
   { value: 'E', label: 'East' },
@@ -31,7 +29,9 @@ export const BED_FACINGS: { value: BedFacing; label: string }[] = [
   { value: 'SW', label: 'Southwest' },
   { value: 'W', label: 'West' },
   { value: 'NW', label: 'Northwest' },
-];
+] as const;
+
+export type BedFacing = typeof BED_FACINGS[number]['value'];
 
 export type GardenBed = {
   id: string;
@@ -40,12 +40,12 @@ export type GardenBed = {
   name: string;
   length: number;
   width: number;
-  depth?: number | null;
+  depth: number | null;
   unit: BedUnit;
-  facing?: BedFacing | null;
-  avgSunlightHours?: number | null;
-  soilType?: string | null;
-  notes?: string | null;
+  facing: BedFacing | null;
+  avgSunlightHours: number | null;
+  soilType: string | null;
+  notes: string | null;
   plantCount: number;
   createdAt: string;
   updatedAt: string;
