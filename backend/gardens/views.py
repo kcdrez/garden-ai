@@ -21,6 +21,7 @@ class GardenViewSet(viewsets.ModelViewSet):
 class GardenBedViewSet(viewsets.ModelViewSet):
     serializer_class = GardenBedSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "bed_id"
 
     def _get_garden(self):
         try:
