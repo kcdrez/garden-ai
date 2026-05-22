@@ -372,15 +372,20 @@ These are explicitly out of scope, at least initially:
 - `BedPlacement` model, serializer, viewset, URLs — `GET/POST /api/gardens/:id/bed-placements/`, `DELETE /api/gardens/:id/bed-placements/:id/`; bounds validation in serializer; `GardenScopedMixin` extracted and shared by `GardenBedViewSet` and `BedPlacementViewSet`
 - `GardenGrid` component — wraps `PlacementGrid`; computes bed footprint from dimensions at create time; shows bed name, dimensions, and plant count per cell; rendered on garden detail page when garden has dimensions set
 - `PlaceBedDialog` — two-section layout ("Select a bed" / "Won't fit here"); pre-filters by bounds + overlap at the clicked cell; shows dimensions inline; disabled beds shown with section label explaining why
+- Edit and delete garden from garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens`; matches `BedDetail` button pattern
+- `FormRootError` component — styled callout (border, background tint, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages; `nonFieldErrors` camelCase bug fixed in `errors.ts`; fallback no longer leaks field key names to users
+- Heading hierarchy — `h1` for page titles, `h2` for section headings across all pages; `h1` size reduced from 56px to 36px (28px mobile) to fit app context rather than marketing hero
 
 ## 📋 Planned
+
+### UI / Branding *(deferred — functionality first)*
+- Branding pass — define a color palette, typography scale, and visual identity; the app is currently unstyled beyond Tailwind defaults; revisit once core functionality is stable
 
 ### Authentication & Accounts
 - User profile (timezone, locale settings, first/last name)
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
-- Edit and delete garden from the garden detail page — currently only possible from the garden list; the detail page has no actions menu
 - Visual garden layout management
 - Customizable garden dimensions and grids
 - Drag-and-drop garden design interface
@@ -388,6 +393,8 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
+- Transplant tracking — auto-log an observation when a plant is moved between beds; primary use case is moving from an indoor bed (window/artificial light) to an outdoor bed; a dedicated `transplant` observation type is likely the right approach but deferred until the move-log UX is designed
+- Dedicated plant detail page (`/plants/:plantId`) — full observation timeline, status history, and plant metadata on its own bookmarkable page; currently the timeline is only accessible as a collapsible section within the bed detail page; consistent with the Garden → Bed → Plant hierarchy where every level has a detail page
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
