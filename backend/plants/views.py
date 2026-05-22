@@ -31,7 +31,7 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
         return (
             UserPlant.objects.filter(bed=bed)
             .select_related("plant", "bed__garden")
-            .order_by("created_at")
+            .order_by("plant__common_name", "-created_at")
         )
 
     def perform_create(self, serializer):
@@ -47,7 +47,7 @@ class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return (
             UserPlant.objects.filter(bed__garden__owner=self.request.user)
             .select_related("plant", "bed__garden")
-            .order_by("bed__garden__name", "bed__name", "created_at")
+            .order_by("bed__garden__name", "bed__name", "plant__common_name", "-created_at")
         )
 
 
