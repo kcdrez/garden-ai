@@ -8,6 +8,7 @@ import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField } from '@/components/ui/form-fields';
+import { FormRootError } from '@/components/ui/form-root-error';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,11 +40,7 @@ export default function Login() {
             Login
           </Button>
 
-          {form.formState.errors.root && (
-            <p className="text-destructive text-sm">
-              {form.formState.errors.root.message}
-            </p>
-          )}
+          <FormRootError message={form.formState.errors.root?.message} />
         </Form>
 
         <p className="text-center text-sm text-muted-foreground">
