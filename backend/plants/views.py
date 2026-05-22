@@ -25,6 +25,7 @@ class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Ge
 class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
     serializer_class = UserPlantSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "plant_id"
 
     def get_queryset(self):
         bed = self._get_bed()
@@ -61,6 +62,7 @@ class PlantPlacementViewSet(
 ):
     serializer_class = PlantPlacementSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "placement_id"
 
     def get_queryset(self):
         bed = self._get_bed()
@@ -82,6 +84,7 @@ class ObservationViewSet(
 ):
     serializer_class = ObservationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "observation_id"
 
     def _get_user_plant(self):
         try:
