@@ -22,6 +22,7 @@ import {
 import { Form } from '@/components/ui/form';
 import { TextField, NativeSelectField } from '@/components/ui/form-fields';
 import { LoadingSpinner } from '@/components/ui/query-state';
+import { FormRootError } from '@/components/ui/form-root-error';
 
 // --- PickBedStep ---
 
@@ -170,9 +171,7 @@ function CreateBedStep({ defaultGardenId, onSuccess, onBack }: CreateBedStepProp
         </NativeSelectField>
       </div>
 
-      {form.formState.errors.root && (
-        <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
-      )}
+      <FormRootError message={form.formState.errors.root?.message} />
 
       <DialogFooter className="sm:justify-between">
         <Button type="button" variant="ghost" onClick={onBack}>

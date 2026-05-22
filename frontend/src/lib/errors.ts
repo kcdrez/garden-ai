@@ -8,12 +8,12 @@ export function getErrorMessage(err: unknown): string {
     const data = err.response?.data;
     if (data) {
       if (typeof data.detail === 'string') return data.detail;
-      if (Array.isArray(data.non_field_errors)) return data.non_field_errors.join(' ');
+      if (Array.isArray(data.nonFieldErrors)) return data.nonFieldErrors.join(' ');
       if (typeof data === 'object') {
-        const fieldMessages = Object.entries(data as DRFErrors)
-          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-          .join('\n');
-        if (fieldMessages) return fieldMessages;
+        const messages = Object.values(data as DRFErrors)
+          .flat()
+          .join(' ');
+        if (messages) return messages;
       }
     }
   }
@@ -25,7 +25,7 @@ export function getErrorMessage(err: unknown): string {
 export function getDRFFieldErrors(err: unknown): DRFErrors | null {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
-    if (data && typeof data === 'object' && !data.detail && !data.non_field_errors) {
+    if (data && typeof data === 'object' && !data.detail && !data.nonFieldErrors) {
       return data as DRFErrors;
     }
   }

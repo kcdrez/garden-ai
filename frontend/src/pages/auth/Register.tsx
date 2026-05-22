@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField } from '@/components/ui/form-fields';
 import { applyServerErrors } from '@/lib/errors';
+import { FormRootError } from '@/components/ui/form-root-error';
 import { routes } from '@/lib/routes';
 
 export default function Register() {
@@ -41,9 +42,7 @@ export default function Register() {
             Create Account
           </Button>
 
-          {form.formState.errors.root && (
-            <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
-          )}
+          <FormRootError message={form.formState.errors.root?.message} />
         </Form>
 
         <p className="text-center text-sm text-muted-foreground">
