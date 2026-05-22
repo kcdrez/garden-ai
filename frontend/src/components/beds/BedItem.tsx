@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/card';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
 import BedDialog from '@/components/beds/BedDialog';
+import { useConfirm } from '@/hooks/useConfirm';
 
 type Props = {
   gardenId: string;
@@ -28,12 +29,21 @@ type Props = {
 export default function BedItem({ gardenId, bed }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteBed(gardenId, bed.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds'] }),
   });
+
+  async function handleDelete() {
+    const ok = await confirm({
+      title: 'Delete bed?',
+      description: `"${bed.name}" and all its plants will be permanently deleted.`,
+    });
+    if (ok) deleteMutation.mutate();
+  }
 
   function handleCardClick(e: React.MouseEvent) {
     if (isCardNavigationSuppressed(e)) return;
@@ -56,7 +66,7 @@ export default function BedItem({ gardenId, bed }: Props) {
             <CardActionsMenu
               label="Bed actions"
               onEdit={() => setEditOpen(true)}
-              onDelete={() => deleteMutation.mutate()}
+              onDelete={handleDelete}
               isDeleting={deleteMutation.isPending}
             />
           </CardAction>

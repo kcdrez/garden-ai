@@ -375,6 +375,7 @@ These are explicitly out of scope, at least initially:
 - Edit and delete garden from garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens`; matches `BedDetail` button pattern
 - `FormRootError` component — styled callout (border, background tint, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages; `nonFieldErrors` camelCase bug fixed in `errors.ts`; fallback no longer leaks field key names to users
 - Heading hierarchy — `h1` for page titles, `h2` for section headings across all pages; `h1` size reduced from 56px to 36px (28px mobile) to fit app context rather than marketing hero
+- `useConfirm` hook — `ConfirmProvider` in `main.tsx` mounts one global dialog; `useConfirm()` returns `confirm(options) => Promise<boolean>`; all destructive deletes (garden, bed, plant) use `await confirm(...)` before firing the mutation; no per-component dialog state or JSX needed
 
 ## 📋 Planned
 

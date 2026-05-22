@@ -5,6 +5,16 @@
 ## 2026-05-22 — ~0.5 hours
 
 **Completed:**
+- `useConfirm` hook — `ConfirmProvider` mounts one global dialog at the app root (`main.tsx`); `useConfirm()` returns `confirm(options) => Promise<boolean>`; callers `await confirm(...)` and act on the result — no per-component dialog state or JSX needed
+- Confirmation on all destructive deletes — `GardenItem`, `BedItem`, `PlantItem`, `PlantListSection`, `GardenDetail` all use the hook; delete handlers extracted as named `handleDelete` functions per React convention
+
+**Next up:** Dedicated plant detail page (`/plants/:plantId`) — full observation timeline and plant metadata on its own bookmarkable page; consistent with the Garden → Bed → Plant hierarchy
+
+---
+
+## 2026-05-22 — ~0.5 hours
+
+**Completed:**
 - `FormRootError` component — styled callout (border, background, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages
 - Fixed `nonFieldErrors` camelCase bug in `errors.ts` — `non_field_errors` checks updated to match camelCase API responses; fallback no longer leaks field key names to the user
 - Edit and delete actions on garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens` on success; matches `BedDetail` button pattern
