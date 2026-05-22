@@ -68,7 +68,7 @@ Testing is a planned learning goal. As features mature, add:
 - Mutations call `queryClient.invalidateQueries` on success rather than manually updating local state
 - `QueryClient` is configured with `staleTime: Infinity` — data is never considered stale automatically; mutations are the only trigger for refetch via `invalidateQueries`
 - Route protection is handled by loader functions in `router.tsx`, not component-level auth checks
-- Dark mode is controlled via the `.dark` class on `<html>`, persisted in `localStorage` under the key `theme`
+- Dark mode is controlled via the `.dark` class on `<html>`, persisted in `localStorage` under the key stored in `THEME_STORAGE_KEY` (exported from `src/hooks/useTheme.ts`); use the `useTheme()` hook to read/toggle — never access `localStorage` or `document.documentElement` directly from components
 - Form validation uses React Hook Form + Zod with `mode: 'onChange'` so submit buttons disable until the form is valid
 - Zod schemas live in `src/schemas/` (one file per domain), not inline in components — export a named schema (e.g. `bedSchema`) and its inferred type (e.g. `BedFormValues`)
 - `FormMessage` always renders (never returns null) with `min-h-[1.25rem]` to reserve space and prevent layout shift when errors appear
@@ -87,10 +87,12 @@ Testing is a planned learning goal. As features mature, add:
 - Custom CSS animations: add `@keyframes` to `index.css`, then register via `--animate-<name>: <keyframe-name> <duration> <easing> <iteration>` inside the `@theme inline` block — this exposes it as an `animate-<name>` Tailwind utility class.
 - Avoid "Meta" as a suffix in component or function names unless it specifically refers to HTML meta tags or document metadata. Prefer plain English alternatives: `BedDetails` not `BedMeta`, `bedHasDetails` not `bedHasMeta`. "Meta" reads as technical jargon and requires a mental translation step that "Details" or "Info" does not.
 - All navigation paths go through `src/lib/routes.ts` — never hardcode path strings in components. Add a new helper to `routes.ts` when adding a new route, then reference it everywhere via `routes.<name>(params)`. The `router.tsx` route definitions are the only place path strings are allowed.
+- Use `useDialogFormReset(form, open, getDefaultValues)` from `src/hooks/useDialogFormReset.ts` to reset dialog forms when they open — never use a raw `useEffect` for this. Pass `getDefaultValues` as a function (not inline) to avoid stale closure issues.
+- API payload types and form schema types are kept separate — form schemas (in `src/schemas/`) may include UI-only fields like `gardenId`/`bedId` for pickers; API payload types (in `src/types/`) contain only the fields sent over the wire. Never use a form schema type as an API function parameter type.
+- Optional fields on TypeScript types for API responses use `T | null` (not `?: T | null`) — DRF always includes the key in the response, it's just potentially null. `?: T` implies the key might be absent, which is incorrect for serializer-defined fields.
 
 ---
 
 # 🔮 Planned UI Improvements
 
 - **Skeleton cards** — replace the `LoadingSpinner` inside `QueryState` with per-entity skeleton placeholders (pulsing gray card shapes) for list/grid loading states. Use a generic skeleton (title bar + 2–3 lines, `animate-pulse`) rather than an exact match of the real card — avoids needing to update the skeleton every time card fields change. Revisit once card structures stabilise.
-- **Refactor `PlantTimeline.tsx`** — currently handles too much: data fetching, status change mutation, observation list rendering, and the add-observation form. Split into focused sub-components (e.g. `ObservationList`, `ObservationForm`, `StatusChips`) following the single responsibility principle.

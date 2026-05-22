@@ -58,8 +58,14 @@ Django monolith with modular apps:
 - All queryset filtering should scope to `request.user` to enforce ownership
 - Nested resources (e.g. beds under a garden) use manual URL patterns with `ViewSet.as_view({...})` rather than `drf-nested-routers` — keeps the dependency list lean; see `gardens/urls.py` for the pattern
 - Nested ViewSets enforce ownership by looking up the parent via `request.user` in a `_get_parent()` helper and raising `NotFound` if it doesn't belong to the user
+- Shared lookup logic across multiple ViewSets lives in a mixin (e.g. `BedScopedMixin` in `plants/views.py` provides `_get_bed()` to both `UserPlantViewSet` and `PlantPlacementViewSet`)
+- URL kwargs use descriptive `_id` suffix names for all manual URL patterns (`garden_id`, `bed_id`, `plant_id`, `observation_id`, `placement_id`); set `lookup_url_kwarg` on the ViewSet to match. The router-generated garden URLs use the DRF default `pk`.
+- Model choice fields use `models.TextChoices` inner classes (e.g. `UserPlant.Status`, `Observation.Type`, `Plant.Category`) — reference constants as `Model.ChoiceClass.VALUE` rather than raw strings
+- All entity list endpoints order by `name, -created_at`; event/history endpoints (observations) order chronologically
+- All models inherit `BaseModel` from `core/models.py` — provides UUID primary key, `created_at`, `updated_at`
 - Timestamps returned in ISO 8601 format
 - All JSON field names are returned as camelCase (handled by `djangorestframework-camel-case`) — serializer fields stay snake_case as normal; the renderer/parser handles conversion at the HTTP boundary
+- Eliminate N+1 queries by using `select_related` for FK traversals in serializer `source` fields, and `annotate(Count(...))` for computed counts — never use `source="related_manager.count"` on a serializer field
 
 ---
 
