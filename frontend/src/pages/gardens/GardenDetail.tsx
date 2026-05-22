@@ -13,11 +13,13 @@ import BedDialog from '@/components/beds/BedDialog';
 import GardenDialog from '@/components/gardens/GardenDialog';
 import GardenGrid from '@/components/gardens/GardenGrid';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export default function GardenDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -28,6 +30,14 @@ export default function GardenDetail() {
       navigate(routes.gardens());
     },
   });
+
+  async function handleDelete() {
+    const ok = await confirm({
+      title: 'Delete garden?',
+      description: `"${garden?.name}" and all its beds and plants will be permanently deleted.`,
+    });
+    if (ok) deleteMutation.mutate();
+  }
 
   const {
     data: garden,
@@ -89,10 +99,10 @@ export default function GardenDetail() {
               variant="destructive"
               size="sm"
               disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
             >
               <Trash2Icon className="size-4" />
-              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+              Delete
             </Button>
           </div>
         </div>

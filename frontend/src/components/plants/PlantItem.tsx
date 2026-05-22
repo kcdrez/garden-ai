@@ -9,6 +9,7 @@ import CardActionsMenu from '@/components/ui/card-actions-menu';
 import StatusBadge from '@/components/plants/StatusBadge';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
+import { useConfirm } from '@/hooks/useConfirm';
 
 type Props = {
   plant: UserPlant;
@@ -16,6 +17,7 @@ type Props = {
 
 export default function PlantItem({ plant }: Props) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
 
@@ -23,6 +25,14 @@ export default function PlantItem({ plant }: Props) {
     mutationFn: () => deleteUserPlant(plant.gardenId, plant.bed, plant.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
   });
+
+  async function handleDelete() {
+    const ok = await confirm({
+      title: 'Delete plant?',
+      description: `"${plant.plantName}${plant.variety ? ` — ${plant.variety}` : ''}" will be permanently deleted from this bed.`,
+    });
+    if (ok) deleteMutation.mutate();
+  }
 
   return (
     <>
@@ -52,7 +62,7 @@ export default function PlantItem({ plant }: Props) {
           label="Plant actions"
           onEdit={() => setEditOpen(true)}
           onMove={() => setMoveOpen(true)}
-          onDelete={() => deleteMutation.mutate()}
+          onDelete={handleDelete}
           isDeleting={deleteMutation.isPending}
         />
       </li>
