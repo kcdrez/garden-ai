@@ -2,6 +2,36 @@
 
 ---
 
+## 2026-05-21 — ~4 hours
+
+**Completed:**
+- Full frontend code audit and cleanup — redundant code extracted, SRP enforced, naming standardized, type inconsistencies fixed:
+  - `StatusBadge` component + `STATUS_CLASSES`/`statusLabel` centralized in `src/lib/plants.ts`
+  - `groupByGarden` utility in `src/lib/beds.ts`; `getTodayISO()`/`formatObservationDate()` in `src/lib/dates.ts`
+  - `BED_UNITS`/`BED_FACINGS` converted to `as const`; all enum types and Zod schemas derived from single source
+  - `NativeSelectField` gains `onValueChange` prop + exported `selectClass`; all `<select>` elements in the app now use it
+  - `BedDialog`/`UserPlantDialog` rewritten: `gardenId`/`bedId` in form schema, all pickers via `NativeSelectField`
+  - `useDialogFormReset` custom hook — replaces `useEffect` reset pattern across all dialogs
+  - `PlantTimeline` split into `StatusChips`, `ObservationList`, `ObservationForm` sub-components
+  - `PlantListSection` component extracted from `BedDetail`; `BedDetail` simplified from ~212 to ~119 lines
+  - `Login.tsx`/`Register.tsx` — both use `applyServerErrors`; `Register.tsx` was using manual `getDRFFieldErrors` loop
+  - `types/gardens.ts` — `?: T | null` corrected to `T | null` (API always includes the field)
+  - `useTheme` hook extracted from `NavBar`; `THEME_STORAGE_KEY` constant shared between `main.tsx` and hook
+  - `UserPlantPayload` type in `types/plants.ts` — decouples API payload from form schema (was `Partial<UserPlantFormValues>`, which leaked `gardenId`/`bedId` into the wire type)
+  - `MAX_SUNLIGHT_HOURS = 24` constant in `schemas/beds.ts`; `BedGrid` redundant placement branch simplified
+- Full backend code audit and cleanup:
+  - `UserProfile` → `BaseModel` — UUID primary key, `created_at`, `updated_at`; migration written manually (PostgreSQL identity column requires `DROP IDENTITY` + `gen_random_uuid()` USING clause)
+  - Timezone validation — `ProfileSerializer.validate_timezone` rejects invalid IANA strings; `_apply_timezone` helper deduplicates login/register logic and silently ignores invalid browser-supplied timezones
+  - N+1 queries eliminated — `annotate(bed_count, plant_count)` on garden/bed viewsets; `select_related("garden")` on bed viewsets; `select_related("plant", "bed__garden")` on plant viewsets
+  - `BedScopedMixin` — `_get_bed()` consolidated from `UserPlantViewSet` and `PlantPlacementViewSet`
+  - `TextChoices` — `Plant.Category`, `UserPlant.Status`, `Observation.Type` all converted; `Observation.Type.STATUS_CHANGE` replaces hardcoded `"status_change"` string in serializer
+  - Ordering standardized — all entity lists use `name, -created_at`; observations remain chronological
+  - URL kwargs standardized — all manual URL patterns use descriptive `_id` suffix names (`bed_id`, `plant_id`, `observation_id`, `placement_id`); `lookup_url_kwarg` set on each viewset
+
+**Next up:** Garden-level bed layout view — `BedPlacement` model and grid UI (garden dimensions prerequisite already met)
+
+---
+
 ## 2026-05-21 — ~3 hours
 
 **Completed:**
