@@ -7,16 +7,7 @@ from .models import Observation, Plant, PlantPlacement, UserPlant
 from .serializers import ObservationSerializer, PlantPlacementSerializer, PlantSerializer, UserPlantSerializer
 
 
-class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = PlantSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Plant.objects.all()
-
-
-class UserPlantViewSet(viewsets.ModelViewSet):
-    serializer_class = UserPlantSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+class BedScopedMixin:
     def _get_bed(self):
         try:
             garden = Garden.objects.get(pk=self.kwargs["garden_id"], owner=self.request.user)
@@ -24,9 +15,25 @@ class UserPlantViewSet(viewsets.ModelViewSet):
         except (Garden.DoesNotExist, GardenBed.DoesNotExist) as err:
             raise NotFound("Bed not found.") from err
 
+
+class PlantViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = PlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Plant.objects.all()
+
+
+class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
+    serializer_class = UserPlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "plant_id"
+
     def get_queryset(self):
         bed = self._get_bed()
-        return UserPlant.objects.filter(bed=bed).order_by("created_at")
+        return (
+            UserPlant.objects.filter(bed=bed)
+            .select_related("plant", "bed__garden")
+            .order_by("plant__common_name", "-created_at")
+        )
 
     def perform_create(self, serializer):
         bed = self._get_bed()
@@ -38,12 +45,15 @@ class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return UserPlant.objects.filter(
-            bed__garden__owner=self.request.user
-        ).order_by("bed__garden__name", "bed__name", "created_at")
+        return (
+            UserPlant.objects.filter(bed__garden__owner=self.request.user)
+            .select_related("plant", "bed__garden")
+            .order_by("bed__garden__name", "bed__name", "plant__common_name", "-created_at")
+        )
 
 
 class PlantPlacementViewSet(
+    BedScopedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -52,13 +62,7 @@ class PlantPlacementViewSet(
 ):
     serializer_class = PlantPlacementSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def _get_bed(self):
-        try:
-            garden = Garden.objects.get(pk=self.kwargs["garden_id"], owner=self.request.user)
-            return GardenBed.objects.get(pk=self.kwargs["bed_id"], garden=garden)
-        except (Garden.DoesNotExist, GardenBed.DoesNotExist) as err:
-            raise NotFound("Bed not found.") from err
+    lookup_url_kwarg = "placement_id"
 
     def get_queryset(self):
         bed = self._get_bed()
@@ -80,6 +84,7 @@ class ObservationViewSet(
 ):
     serializer_class = ObservationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "observation_id"
 
     def _get_user_plant(self):
         try:

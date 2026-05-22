@@ -5,7 +5,7 @@ from .models import Garden, GardenBed
 
 class GardenBedSerializer(serializers.ModelSerializer):
     garden_name = serializers.CharField(source="garden.name", read_only=True)
-    plant_count = serializers.IntegerField(source="user_plants.count", read_only=True)
+    plant_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = GardenBed
@@ -18,7 +18,7 @@ class GardenBedSerializer(serializers.ModelSerializer):
 
 
 class GardenSerializer(serializers.ModelSerializer):
-    bed_count = serializers.IntegerField(source="beds.count", read_only=True)
+    bed_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Garden

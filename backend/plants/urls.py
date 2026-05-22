@@ -24,7 +24,7 @@ urlpatterns = router.urls + [
         name="user-plants-list",
     ),
     path(
-        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:pk>/",
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/",
         user_plant_detail,
         name="user-plants-detail",
     ),
@@ -34,7 +34,7 @@ urlpatterns = router.urls + [
         name="observations-list",
     ),
     path(
-        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/observations/<uuid:pk>/",
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/observations/<uuid:observation_id>/",
         observation_detail,
         name="observations-detail",
     ),
@@ -44,7 +44,7 @@ urlpatterns = router.urls + [
         name="placements-list",
     ),
     path(
-        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/placements/<uuid:pk>/",
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/placements/<uuid:placement_id>/",
         placement_detail,
         name="placements-detail",
     ),

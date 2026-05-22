@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,6 +5,7 @@ import type { GardenBed } from '@/types/gardens';
 import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
 import { fetchGardens } from '@/api/gardens';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
+import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { createBed, updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
@@ -26,18 +26,10 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-export default function BedDialog({
-  gardenId,
-  bed,
-  open,
-  onOpenChange,
-}: Props) {
+export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!bed;
   const needsGardenPicker = !gardenId;
-
-  const [selectedGardenId, setSelectedGardenId] = useState('');
-  const effectiveGardenId = gardenId ?? selectedGardenId;
 
   const { data: gardens = [] } = useQuery({
     queryKey: ['gardens'],
@@ -46,14 +38,14 @@ export default function BedDialog({
   });
 
   const defaultValues = (): BedFormValues => ({
+    gardenId: gardenId ?? '',
     name: bed?.name ?? '',
     length: bed != null ? String(bed.length) : '',
     width: bed != null ? String(bed.width) : '',
     depth: bed?.depth != null ? String(bed.depth) : '',
     unit: bed?.unit ?? 'ft',
     facing: bed?.facing ?? undefined,
-    avgSunlightHours:
-      bed?.avgSunlightHours != null ? String(bed.avgSunlightHours) : '',
+    avgSunlightHours: bed?.avgSunlightHours != null ? String(bed.avgSunlightHours) : '',
     soilType: bed?.soilType ?? '',
     notes: bed?.notes ?? '',
   });
@@ -64,12 +56,7 @@ export default function BedDialog({
     mode: 'onChange',
   });
 
-  useEffect(() => {
-    if (open) {
-      form.reset(defaultValues());
-      setSelectedGardenId('');
-    }
-  }, [open, bed]); // eslint-disable-line react-hooks/exhaustive-deps
+  useDialogFormReset(form, open, defaultValues);
 
   const mutation = useMutation({
     mutationFn: (values: BedFormValues) => {
@@ -81,15 +68,13 @@ export default function BedDialog({
         unit: values.unit,
         facing: values.facing,
         avgSunlightHours:
-          values.avgSunlightHours !== ''
-            ? parseInt(values.avgSunlightHours, 10)
-            : undefined,
+          values.avgSunlightHours !== '' ? parseInt(values.avgSunlightHours, 10) : undefined,
         soilType: values.soilType || undefined,
         notes: values.notes || undefined,
       };
       return isEditing
-        ? updateBed(effectiveGardenId, bed.id, payload)
-        : createBed(effectiveGardenId, payload);
+        ? updateBed(values.gardenId, bed.id, payload)
+        : createBed(values.gardenId, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
@@ -109,21 +94,12 @@ export default function BedDialog({
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
           {needsGardenPicker && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Garden</label>
-              <div className="relative">
-                <select
-                  value={selectedGardenId}
-                  onChange={(e) => setSelectedGardenId(e.target.value)}
-                  className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-7 text-sm"
-                >
-                  <option value="">— Select a garden —</option>
-                  {gardens.map((g) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <NativeSelectField control={form.control} name="gardenId" label="Garden">
+              <option value="">— Select a garden —</option>
+              {gardens.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </NativeSelectField>
           )}
 
           <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
@@ -136,9 +112,7 @@ export default function BedDialog({
 
           <NativeSelectField control={form.control} name="unit" label="Unit">
             {BED_UNITS.map((u) => (
-              <option key={u.value} value={u.value}>
-                {u.label}
-              </option>
+              <option key={u.value} value={u.value}>{u.label}</option>
             ))}
           </NativeSelectField>
 
@@ -146,9 +120,7 @@ export default function BedDialog({
             <NativeSelectField control={form.control} name="facing" label="Facing" optional>
               <option value="">— None —</option>
               {BED_FACINGS.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
+                <option key={f.value} value={f.value}>{f.label}</option>
               ))}
             </NativeSelectField>
 
@@ -171,16 +143,11 @@ export default function BedDialog({
           <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
 
           {form.formState.errors.root && (
-            <p className="text-destructive text-sm">
-              {form.formState.errors.root.message}
-            </p>
+            <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
           )}
 
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={!form.formState.isValid || mutation.isPending || (needsGardenPicker && !selectedGardenId)}
-            >
+            <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
               {mutation.isPending ? 'Saving…' : isEditing ? 'Save' : 'Add Bed'}
             </Button>
           </DialogFooter>

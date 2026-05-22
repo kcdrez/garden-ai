@@ -15,5 +15,5 @@ all_beds = AllGardenBedsViewSet.as_view({"get": "list"})
 urlpatterns = router.urls + [
     path("beds/", all_beds, name="all-beds"),
     path("gardens/<uuid:garden_id>/beds/", bed_list, name="garden-beds-list"),
-    path("gardens/<uuid:garden_id>/beds/<uuid:pk>/", bed_detail, name="garden-beds-detail"),
+    path("gardens/<uuid:garden_id>/beds/<uuid:bed_id>/", bed_detail, name="garden-beds-detail"),
 ]

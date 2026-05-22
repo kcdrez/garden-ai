@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -8,6 +10,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ["timezone"]
+
+    def validate_timezone(self, value):
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, KeyError):
+            raise serializers.ValidationError("Invalid timezone.")
+        return value
 
 
 class RegisterSerializer(serializers.ModelSerializer):
