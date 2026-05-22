@@ -10,6 +10,7 @@ import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
+import GardenGrid from '@/components/gardens/GardenGrid';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 export default function GardenDetail() {
@@ -85,6 +86,13 @@ export default function GardenDetail() {
           ))}
         </div>
       </QueryState>
+
+      {garden.length && garden.width && (
+        <div className="mt-8">
+          <h3 className="mb-3">Garden Layout</h3>
+          <GardenGrid gardenId={id!} garden={garden} beds={beds} />
+        </div>
+      )}
 
       <BedDialog
         gardenId={id!}

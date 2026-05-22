@@ -1,4 +1,4 @@
-import { BED_FACINGS, type GardenBed } from '@/types/gardens';
+import { BED_FACINGS, type Garden, type GardenBed } from '@/types/gardens';
 
 export type BedsByGarden = { gardenId: string; gardenName: string; beds: GardenBed[] }[];
 
@@ -43,5 +43,22 @@ export function bedGridDimensions(bed: GardenBed): { cols: number; rows: number 
   return {
     cols: Math.ceil(bed.width * factor),
     rows: Math.ceil(bed.length * factor),
+  };
+}
+
+export function gardenGridDimensions(garden: Garden): { cols: number; rows: number } | null {
+  if (garden.length == null || garden.width == null) return null;
+  const factor = UNIT_TO_FEET[garden.unit] ?? 1;
+  return {
+    cols: Math.ceil(garden.width * factor),
+    rows: Math.ceil(garden.length * factor),
+  };
+}
+
+export function bedPlacementDimensions(bed: GardenBed): { width: number; height: number } {
+  const factor = UNIT_TO_FEET[bed.unit] ?? 1;
+  return {
+    width: Math.ceil(bed.width * factor),
+    height: Math.ceil(bed.length * factor),
   };
 }

@@ -40,7 +40,7 @@ export default function PlacementGrid({
     <div className="overflow-auto">
       <div
         className="inline-grid gap-px bg-border border border-border rounded p-px"
-        style={{ gridTemplateColumns: `repeat(${cols}, 6rem)` }}
+        style={{ gridTemplateColumns: `repeat(${cols}, 6rem)`, gridTemplateRows: `repeat(${rows}, 6rem)` }}
       >
         {Array.from({ length: rows * cols }, (_, i) => {
           const col = i % cols;
@@ -55,6 +55,7 @@ export default function PlacementGrid({
               <button
                 key={`${col},${row}`}
                 className="w-24 h-24 bg-background hover:bg-muted/50 transition-colors"
+                style={{ gridColumnStart: col + 1, gridRowStart: row + 1 }}
                 onClick={() => onEmptyCellClick(col, row)}
                 aria-label={`Place at column ${col + 1}, row ${row + 1}`}
               />
@@ -64,12 +65,11 @@ export default function PlacementGrid({
           return (
             <div
               key={`${col},${row}`}
-              className="w-24 h-24 bg-primary/15 relative group flex items-center justify-center p-1 overflow-hidden"
-              style={
-                placement.width > 1 || placement.height > 1
-                  ? { gridColumn: `span ${placement.width}`, gridRow: `span ${placement.height}` }
-                  : undefined
-              }
+              className="bg-primary/15 relative group flex items-center justify-center p-1 overflow-hidden"
+              style={{
+                gridColumn: `${col + 1} / span ${placement.width}`,
+                gridRow: `${row + 1} / span ${placement.height}`,
+              }}
             >
               {renderCell(placement)}
               <button
