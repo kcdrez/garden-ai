@@ -9,6 +9,7 @@ import { QueryState } from '@/components/ui/query-state';
 import PlantTimeline from '@/components/plants/PlantTimeline';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
+import { useConfirm } from '@/hooks/useConfirm';
 
 type Props = {
   gardenId: string;
@@ -26,6 +27,7 @@ export default function PlantListSection({
   error,
 }: Props) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [addPlantOpen, setAddPlantOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<UserPlant | undefined>();
   const [movingPlant, setMovingPlant] = useState<UserPlant | undefined>();
@@ -55,6 +57,15 @@ export default function PlantListSection({
         <ul className="flex flex-col gap-1">
           {userPlants.map((plant) => {
             const isExpanded = expandedPlantId === plant.id;
+
+            async function handleDelete() {
+              const ok = await confirm({
+                title: 'Delete plant?',
+                description: `"${plant.plantName}${plant.variety ? ` — ${plant.variety}` : ''}" will be permanently deleted from this bed.`,
+              });
+              if (ok) deleteMutation.mutate(plant.id);
+            }
+
             return (
               <li key={plant.id}>
                 <div className="flex items-center justify-between text-sm py-1">
@@ -77,7 +88,7 @@ export default function PlantListSection({
                     label="Plant actions"
                     onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
                     onMove={() => setMovingPlant(plant)}
-                    onDelete={() => deleteMutation.mutate(plant.id)}
+                    onDelete={handleDelete}
                     isDeleting={deleteMutation.isPending}
                   />
                 </div>

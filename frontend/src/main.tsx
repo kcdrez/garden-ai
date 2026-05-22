@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import { router } from './router.tsx'
 import { THEME_STORAGE_KEY } from './hooks/useTheme'
+import { ConfirmProvider } from './hooks/useConfirm'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,7 +24,9 @@ if (saved === 'dark' || (!saved && prefersDark)) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ConfirmProvider>
+        <RouterProvider router={router} />
+      </ConfirmProvider>
     </QueryClientProvider>
   </StrictMode>,
 )
