@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftIcon, PlusIcon } from 'lucide-react';
-import { fetchGarden } from '@/api/gardens';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeftIcon, PlusIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { fetchGarden, deleteGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
 import type { Garden, GardenBed } from '@/types/gardens';
 import { getErrorMessage } from '@/lib/errors';
@@ -10,14 +10,24 @@ import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
+import GardenDialog from '@/components/gardens/GardenDialog';
 import GardenGrid from '@/components/gardens/GardenGrid';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 export default function GardenDetail() {
   const { id } = useParams<{ id: string }>();
-  const [createOpen, setCreateOpen] = useState(false);
-
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteGarden(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gardens'] });
+      navigate(routes.gardens());
+    },
+  });
 
   const {
     data: garden,
@@ -65,19 +75,36 @@ export default function GardenDetail() {
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h2>{garden.name}</h2>
+            <h1>{garden.name}</h1>
             {garden.description && (
               <p className="text-muted-foreground mt-1">{garden.description}</p>
             )}
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <PlusIcon className="size-4" />
-            Add Bed
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <PencilIcon className="size-4" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate()}
+            >
+              <Trash2Icon className="size-4" />
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <h3 className="mb-3">Garden Beds</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h2>Garden Beds</h2>
+        <Button onClick={() => setCreateOpen(true)}>
+          <PlusIcon className="size-4" />
+          Add Bed
+        </Button>
+      </div>
 
       <QueryState isLoading={bedsLoading} error={bedsError} isEmpty={beds.length === 0} emptyMessage="No beds yet. Add one to get started.">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -89,7 +116,7 @@ export default function GardenDetail() {
 
       {garden.length && garden.width && (
         <div className="mt-8">
-          <h3 className="mb-3">Garden Layout</h3>
+          <h2 className="mb-3">Garden Layout</h2>
           <GardenGrid gardenId={id!} garden={garden} beds={beds} />
         </div>
       )}
@@ -98,6 +125,11 @@ export default function GardenDetail() {
         gardenId={id!}
         open={createOpen}
         onOpenChange={setCreateOpen}
+      />
+      <GardenDialog
+        garden={garden}
+        open={editOpen}
+        onOpenChange={setEditOpen}
       />
     </div>
   );

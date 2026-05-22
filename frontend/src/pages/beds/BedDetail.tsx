@@ -81,7 +81,7 @@ export default function BedDetail() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h2>{bed.name}</h2>
+            <h1>{bed.name}</h1>
             <p className="text-muted-foreground mt-1">{formatDimensions(bed)}</p>
           </div>
           <div className="flex gap-2">
@@ -111,7 +111,7 @@ export default function BedDetail() {
       )}
 
       <div className="mb-6">
-        <h3 className="mb-3">Layout</h3>
+        <h2 className="mb-3">Layout</h2>
         <BedGrid gardenId={id!} bedId={bedId!} bed={bed} userPlants={userPlants} />
       </div>
 

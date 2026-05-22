@@ -18,7 +18,7 @@ export default function AllPlants() {
   return (
     <div className="p-5">
       <div className="flex items-center justify-between mb-6">
-        <h2>Your Plants</h2>
+        <h1>Your Plants</h1>
         <Button onClick={() => setAddOpen(true)}>
           <PlusIcon className="size-4" />
           Add Plant
