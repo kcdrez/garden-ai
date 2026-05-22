@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-05-22 — ~0.5 hours
+
+**Completed:**
+- `FormRootError` component — styled callout (border, background, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages
+- Fixed `nonFieldErrors` camelCase bug in `errors.ts` — `non_field_errors` checks updated to match camelCase API responses; fallback no longer leaks field key names to the user
+- Edit and delete actions on garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens` on success; matches `BedDetail` button pattern
+- "Add Bed" moved from header to "Garden Beds" section heading — consistent with how "Add Plant" sits in `PlantListSection` on the bed detail page
+- Heading hierarchy fixed across all pages — `h1` for page titles, `h2` for section headings (was `h2`/`h3` with no `h1` anywhere)
+- `h1` font size reduced from 56px to 36px (28px mobile) — previous size was designed for marketing hero sections, not app page titles
+
+**Next up:** Confirmation dialog — reusable `ConfirmDialog` for all destructive delete actions (currently fire immediately on click)
+
+---
+
 ## 2026-05-22 — ~2 hours
 
 **Completed:**
