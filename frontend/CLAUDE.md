@@ -95,6 +95,7 @@ Testing is a planned learning goal. As features mature, add:
 
 # 🔮 Planned UI Improvements
 
+- **Placement base type** — `PlantPlacement` and `BedPlacement` share 7 of 9 fields (`id`, `x`, `y`, `width`, `height`, `createdAt`, `updatedAt`); extract a `BasePlacement` type to a shared location and derive both from it; `GridPlacement` in `PlacementGrid.tsx` becomes a `Pick` of it; also fix `PlantPlacement` using `interface` while `BedPlacement` uses `type`.
 - **Confirmation dialog** — reusable `ConfirmDialog` component for all destructive actions (delete garden, delete bed, delete plant, remove placement); currently deletions fire immediately on click. Should accept `title`, `description`, and `onConfirm` props and use the existing shadcn `Dialog` primitive.
 - **Form root error display** — `form.formState.errors.root` renders as a plain `<p className="text-destructive text-sm">` in `GardenDialog` and `BedDialog`; padding and layout are rough. Revisit with a styled callout or alert component. Repro: place a bed on the garden grid, edit the garden, shrink dimensions so the bed goes out of bounds → error appears below the form fields.
 - **Skeleton cards** — replace the `LoadingSpinner` inside `QueryState` with per-entity skeleton placeholders (pulsing gray card shapes) for list/grid loading states. Use a generic skeleton (title bar + 2–3 lines, `animate-pulse`) rather than an exact match of the real card — avoids needing to update the skeleton every time card fields change. Revisit once card structures stabilise.

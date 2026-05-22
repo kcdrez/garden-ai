@@ -1,23 +1,13 @@
-import math
-
 from django.db.models import ExpressionWrapper, F, IntegerField, Q
 from rest_framework import serializers
 
-from .models import BedPlacement, Garden, GardenBed
+from core.utils import grid_dimensions
 
-_UNIT_TO_FEET = {
-    "ft": 1.0,
-    "in": 1 / 12,
-    "cm": 1 / 30.48,
-    "m": 3.28084,
-}
+from .models import BedPlacement, Garden, GardenBed
 
 
 def garden_grid_dimensions(garden):
-    factor = _UNIT_TO_FEET.get(garden.unit, 1.0)
-    cols = math.ceil(garden.width * factor)
-    rows = math.ceil(garden.length * factor)
-    return cols, rows
+    return grid_dimensions(garden.length, garden.width, garden.unit)
 
 
 class GardenBedSerializer(serializers.ModelSerializer):
@@ -48,9 +38,7 @@ class GardenBedSerializer(serializers.ModelSerializer):
 
         from plants.models import PlantPlacement  # local import to avoid circular dep
 
-        factor = _UNIT_TO_FEET.get(new_unit, 1.0)
-        new_cols = math.ceil(new_width * factor)
-        new_rows = math.ceil(new_length * factor)
+        new_cols, new_rows = grid_dimensions(new_length, new_width, new_unit)
 
         out_of_bounds = (
             PlantPlacement.objects.filter(bed=self.instance)
@@ -112,9 +100,7 @@ class GardenSerializer(serializers.ModelSerializer):
                 )
             return data
 
-        factor = _UNIT_TO_FEET.get(new_unit, 1.0)
-        new_cols = math.ceil(new_width * factor)
-        new_rows = math.ceil(new_length * factor)
+        new_cols, new_rows = grid_dimensions(new_length, new_width, new_unit)
 
         out_of_bounds = (
             self.instance.bed_placements
