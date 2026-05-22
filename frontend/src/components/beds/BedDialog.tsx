@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { FormRootError } from '@/components/ui/form-root-error';
 
 type Props = {
   gardenId?: string;
@@ -142,9 +143,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
 
           <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
 
-          {form.formState.errors.root && (
-            <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
-          )}
+          <FormRootError message={form.formState.errors.root?.message} />
 
           <DialogFooter>
             <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
