@@ -184,7 +184,7 @@ Defer until harvest tracking or per-plant health tracking makes the limitation p
 ### Season *(planned)*
 Groups planting activity by growing year/season. Enables crop rotation tracking and year-over-year comparisons. Without this, all UserPlants are a flat list scoped only by date, making rotation logic very difficult. Likely owned by a Garden.
 
-### BedPlacement *(planned)*
+### BedPlacement
 Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPlacement` model — same sq-ft grid convention, same x/y/width/height pattern — but one level up in the hierarchy.
 
 - id: UUID
@@ -192,12 +192,12 @@ Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPla
 - garden: ForeignKey(Garden) — denormalized; must match `bed.garden`
 - x: integer — column (0-indexed, 1 cell = 1 sq ft)
 - y: integer — row
-- width: integer (default derived from `bed.width` converted to feet)
-- height: integer (default derived from `bed.length` converted to feet)
-
-**Prerequisite:** `Garden` must have `length`, `width`, and `unit` fields before this model can be built — grid bounds validation requires the garden's dimensions.
+- width: integer — derived from `bed.width` converted to feet (computed and sent by the frontend at create time)
+- height: integer — derived from `bed.length` converted to feet
 
 **Grid convention:** same sq-ft normalization as `PlantPlacement` — convert garden dimensions to feet at render time, round up. See `PlantPlacement` for the full unit conversion table.
+
+**Resize protection:** `GardenSerializer.validate()` blocks resizing a garden if any existing `BedPlacement` would go out of bounds; `GardenBedSerializer.validate()` blocks resizing a bed if any existing `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors` → `form.setError('root')` in the dialog.
 
 ---
 
@@ -247,6 +247,14 @@ Nested under a garden — ownership enforced via the parent garden's owner check
 - `GET    /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
 - `PATCH  /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
 - `DELETE /api/gardens/:id/beds/:bedId/`   → 204
+
+### BedPlacement API contract
+
+Nested under a garden. Requires garden to have `length`, `width`, and `unit` set.
+
+- `GET    /api/gardens/:id/bed-placements/`                        → 200 `[{ id, bed, garden, x, y, width, height, created_at, updated_at }]`
+- `POST   /api/gardens/:id/bed-placements/`                        → 201 `{ id, ... }`
+- `DELETE /api/gardens/:id/bed-placements/:bedPlacementId/`        → 204
 
 ---
 
@@ -360,6 +368,10 @@ These are explicitly out of scope, at least initially:
 - `placement_id` on `UserPlantSerializer` — `SerializerMethodField` returning the UUID of the associated `PlantPlacement` or null; cascade delete of placement when `bed` changes
 - Move plant fix — `UserPlantSerializer.update()` deletes existing `PlantPlacement` when bed changes; `MovePlantDialog` warns user when moving a placed plant; original bed's placements cache invalidated on move
 - UI consistency pass — `GardenDialog` (merged create/edit); inline form removed from gardens page; Add buttons on all three "all" pages; `BedDialog`/`UserPlantDialog` accept optional `gardenId`/`bedId` with inline selectors; `AllGardens.tsx` rename; "Your X" headings everywhere; `PlantItem` component; `MovePlantDialog` refactored into `PickBedStep`/`CreateBedStep`; `BedItem` reused on `AllBeds` page; `posInt`/`optPosInt` extracted to `src/lib/zod.ts`
+- `PlacementGrid` generic UI component in `components/ui/` — shared by `BedGrid` and `GardenGrid`; owns CSS grid rendering, cell iteration, multi-cell span (`gridTemplateRows` + explicit `gridColumnStart`/`gridRowStart`), empty cell button, hover-to-remove overlay; `renderCell` render prop for domain-specific cell content
+- `BedPlacement` model, serializer, viewset, URLs — `GET/POST /api/gardens/:id/bed-placements/`, `DELETE /api/gardens/:id/bed-placements/:id/`; bounds validation in serializer; `GardenScopedMixin` extracted and shared by `GardenBedViewSet` and `BedPlacementViewSet`
+- `GardenGrid` component — wraps `PlacementGrid`; computes bed footprint from dimensions at create time; shows bed name, dimensions, and plant count per cell; rendered on garden detail page when garden has dimensions set
+- `PlaceBedDialog` — two-section layout ("Select a bed" / "Won't fit here"); pre-filters by bounds + overlap at the clicked cell; shows dimensions inline; disabled beds shown with section label explaining why
 
 ## 📋 Planned
 
@@ -368,6 +380,7 @@ These are explicitly out of scope, at least initially:
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
+- Edit and delete garden from the garden detail page — currently only possible from the garden list; the detail page has no actions menu
 - Visual garden layout management
 - Customizable garden dimensions and grids
 - Drag-and-drop garden design interface
