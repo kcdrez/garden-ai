@@ -1,26 +1,16 @@
-import math
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from rest_framework import serializers
 
+from core.utils import grid_dimensions
 from gardens.models import GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
 
-_UNIT_TO_FEET = {
-    "ft": 1.0,
-    "in": 1 / 12,
-    "cm": 1 / 30.48,
-    "m": 3.28084,
-}
-
 
 def bed_grid_dimensions(bed):
-    factor = _UNIT_TO_FEET.get(bed.unit, 1.0)
-    cols = math.ceil(bed.width * factor)
-    rows = math.ceil(bed.length * factor)
-    return cols, rows
+    return grid_dimensions(bed.length, bed.width, bed.unit)
 
 
 class PlantSerializer(serializers.ModelSerializer):

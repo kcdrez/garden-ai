@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-22 — ~2 hours
+
+**Completed:**
+- `PlacementGrid` generic UI component extracted to `components/ui/` — shared by `BedGrid` (plant placements) and new `GardenGrid` (bed placements); owns CSS grid rendering, cell iteration, multi-cell span, empty cell button, hover-to-remove overlay
+- `BedGrid` refactored to thin data-fetching wrapper around `PlacementGrid`
+- `BedPlacement` model, serializer, viewset, and URLs — `GET/POST /api/gardens/:id/bed-placements/`, `DELETE /api/gardens/:id/bed-placements/:id/`; bounds validation in serializer
+- `GardenGrid` component — wraps `PlacementGrid`; computes bed footprint from dimensions at create time; shows bed name, dimensions, and plant count per cell
+- `PlaceBedDialog` — two-section layout ("Select a bed" / "Won't fit here"); filters by bounds + overlap at clicked cell; shows dimensions inline per bed
+- `GardenScopedMixin` extracted in `gardens/views.py` — shared by `GardenBedViewSet` and `BedPlacementViewSet`
+- Multi-cell span fix — `gridTemplateRows` added to `PlacementGrid` so rows don't collapse when a span fills the whole row; explicit `gridColumnStart`/`gridRowStart` on all cells to prevent auto-placement drift
+- Resize validation (BE) — `GardenSerializer.validate()` blocks resize if any `BedPlacement` would go out of bounds; `GardenBedSerializer.validate()` blocks resize if any `PlantPlacement` would go out of bounds; errors surface as `non_field_errors` → `form.setError('root')` in both dialogs
+
+**Next up:** Revisit form root error display UI — padding and layout are functional but visually rough; see repro steps below
+
+**Repro for form root error (resize validation):**
+1. Create a garden with dimensions e.g. 10 × 10 ft
+2. Place a bed in the layout (e.g. a 4 × 4 ft bed at position col 7, row 7)
+3. Edit the garden and reduce width or length to e.g. 5 × 5 ft → error should appear
+- Same pattern for bed → plant: place a plant on the bed grid, then shrink the bed so the plant goes out of bounds
+
+---
+
 ## 2026-05-21 — ~4 hours
 
 **Completed:**

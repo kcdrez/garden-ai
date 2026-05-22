@@ -33,6 +33,18 @@ export const BED_FACINGS = [
 
 export type BedFacing = typeof BED_FACINGS[number]['value'];
 
+export type BedPlacement = {
+  id: string;
+  bed: string;
+  garden: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type GardenBed = {
   id: string;
   garden: string;

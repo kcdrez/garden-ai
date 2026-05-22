@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from core.models import BaseModel
@@ -49,3 +50,15 @@ class GardenBed(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.garden.name})"
+
+
+class BedPlacement(BaseModel):
+    bed = models.OneToOneField(GardenBed, related_name="placement", on_delete=models.CASCADE)
+    garden = models.ForeignKey(Garden, related_name="bed_placements", on_delete=models.CASCADE)
+    x = models.IntegerField(validators=[MinValueValidator(0)])
+    y = models.IntegerField(validators=[MinValueValidator(0)])
+    width = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+    height = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f"{self.bed} @ ({self.x}, {self.y})"
