@@ -14,7 +14,7 @@ class GardenViewSet(viewsets.ModelViewSet):
         return (
             Garden.objects.filter(owner=self.request.user)
             .annotate(bed_count=Count("beds"))
-            .order_by("-created_at")
+            .order_by("name", "-created_at")
         )
 
 
@@ -34,7 +34,7 @@ class GardenBedViewSet(viewsets.ModelViewSet):
             GardenBed.objects.filter(garden=garden)
             .select_related("garden")
             .annotate(plant_count=Count("user_plants"))
-            .order_by("created_at")
+            .order_by("name", "-created_at")
         )
 
     def perform_create(self, serializer):
@@ -51,5 +51,5 @@ class AllGardenBedsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             GardenBed.objects.filter(garden__owner=self.request.user)
             .select_related("garden")
             .annotate(plant_count=Count("user_plants"))
-            .order_by("garden__name", "created_at")
+            .order_by("garden__name", "name", "-created_at")
         )
