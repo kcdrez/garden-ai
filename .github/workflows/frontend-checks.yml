@@ -6,6 +6,9 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend-checks.yml'
 
+permissions:
+  contents: read
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
