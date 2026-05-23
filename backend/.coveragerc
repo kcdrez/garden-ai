@@ -1,0 +1,9 @@
+[run]
+source = gardens, plants, users
+omit =
+    */migrations/*
+    */venv/*
+    */tests/*
+
+[report]
+show_missing = true
