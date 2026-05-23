@@ -40,7 +40,7 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
         serializer.save(bed=bed)
 
 
-class AllUserPlantsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class AllUserPlantsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = UserPlantSerializer
     permission_classes = [permissions.IsAuthenticated]
 

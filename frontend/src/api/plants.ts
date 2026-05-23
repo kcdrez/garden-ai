@@ -12,6 +12,11 @@ export async function fetchAllUserPlants(): Promise<UserPlant[]> {
   return res.data ?? [];
 }
 
+export async function fetchUserPlant(plantId: string): Promise<UserPlant> {
+  const res = await api.get(`/userplants/${plantId}/`);
+  return res.data;
+}
+
 export async function fetchUserPlants(gardenId: string, bedId: string): Promise<UserPlant[]> {
   const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/plants/`);
   return res.data;

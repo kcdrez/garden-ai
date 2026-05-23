@@ -7,4 +7,5 @@ export const routes = {
   allBeds: () => '/beds',
   bedDetail: (gardenId: string, bedId: string) => `/gardens/${gardenId}/beds/${bedId}`,
   allPlants: () => '/plants',
+  plantDetail: (plantId: string) => `/plants/${plantId}`,
 };
