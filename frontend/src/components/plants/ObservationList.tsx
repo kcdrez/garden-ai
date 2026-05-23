@@ -63,7 +63,7 @@ export default function ObservationList({
 
   return (
     <div>
-      <p className="text-xs text-muted-foreground mb-2">History</p>
+      <p className="text-xs text-muted-foreground pb-2">History</p>
       <QueryState
         isLoading={isLoading}
         error={error}

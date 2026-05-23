@@ -381,6 +381,7 @@ These are explicitly out of scope, at least initially:
 
 ### UI / Branding *(deferred — functionality first)*
 - Branding pass — define a color palette, typography scale, and visual identity; the app is currently unstyled beyond Tailwind defaults; revisit once core functionality is stable
+- Inline editing on detail pages — replace edit/move dialogs with inline forms on Garden, Bed, and Plant detail pages; each page has different field shapes and action complexity so evaluate per page rather than applying a single pattern blindly; move wizard (two-step pick/create) may still warrant a dialog even when edit goes inline
 
 ### Authentication & Accounts
 - User profile (timezone, locale settings, first/last name)

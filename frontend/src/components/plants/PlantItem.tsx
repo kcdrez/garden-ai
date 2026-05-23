@@ -41,7 +41,9 @@ export default function PlantItem({ plant }: Props) {
           <SproutIcon className="size-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium">{plant.plantName}</span>
+              <Link to={routes.plantDetail(plant.id)} className="font-medium hover:underline">
+                {plant.plantName}
+              </Link>
               {plant.variety && (
                 <span className="text-muted-foreground text-sm">— {plant.variety}</span>
               )}
