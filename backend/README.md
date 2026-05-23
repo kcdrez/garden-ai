@@ -47,6 +47,22 @@ make dev
 
 ---
 
+## Running tests
+
+**Prerequisites:** Docker must be running (`docker compose up -d` from the project root).
+
+Tests run inside Docker against the PostgreSQL container. Each run creates a temporary `test_garden_ai` database, runs all migrations (including the plant catalog seed), executes the tests, then drops the database.
+
+```bash
+# from the backend/ directory
+make test                   # run all tests
+make test-app app=gardens   # run one app's tests
+make test-app app=plants    # run one app's tests
+make coverage               # run tests and print a coverage report
+```
+
+---
+
 ## Useful commands
 
 ```bash
@@ -54,6 +70,7 @@ make dev          # run dev server
 make migrate      # apply migrations
 make migrations   # create new migrations
 make shell        # open Django shell
+make test         # run test suite
 ```
 
 Or via Docker:
