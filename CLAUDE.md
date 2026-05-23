@@ -114,7 +114,7 @@ Django's default User plus:
 - name: string (required)
 - description: text (optional)
 - location: string _(planned)_
-- hardiness_zone: string _(planned)_
+- hardiness*zone: string *(planned)\_
 - timezone: string _(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")_
 - length: positive integer (optional — required for garden-level grid layout; same unit as `unit` field)
 - width: positive integer (optional — required for garden-level grid layout)
@@ -509,4 +509,4 @@ These are explicitly out of scope, at least initially:
 - Role-based permissions
 - Offline-friendly support
 
-this a test. making a change to a file to test workflows in git.
+this a test. making a change to a file to test workflows in git.2
