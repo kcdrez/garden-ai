@@ -6,6 +6,9 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-tests.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -48,10 +51,18 @@ jobs:
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
 
+      - name: Lint with ruff
+        working-directory: backend
+        run: ruff check .
+
       - name: Run migrations
         working-directory: backend
         run: python manage.py migrate
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: backend
-        run: python manage.py test gardens.tests plants.tests
+        run: coverage run manage.py test gardens.tests plants.tests users.tests
+
+      - name: Check coverage threshold
+        working-directory: backend
+        run: coverage report --fail-under=90

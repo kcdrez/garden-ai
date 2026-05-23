@@ -195,7 +195,7 @@ class PlantPlacementAPITests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_create_placement_out_of_bounds_is_rejected(self):
-        # bed is 8ft wide = 8 columns (0–7); x=8 is out of bounds
+        # bed is 8ft wide = 8 columns (0-7); x=8 is out of bounds
         res = self.client.post(
             self._list_url(),
             {"userPlant": str(self.user_plant.id), "x": 8, "y": 0},
@@ -203,7 +203,7 @@ class PlantPlacementAPITests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_placement_y_out_of_bounds_is_rejected(self):
-        # bed is 4ft long = 4 rows (0–3); y=4 is out of bounds
+        # bed is 4ft long = 4 rows (0-3); y=4 is out of bounds
         res = self.client.post(
             self._list_url(),
             {"userPlant": str(self.user_plant.id), "x": 0, "y": 4},
