@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-22 — ~2.5 hours
+
+**Completed:**
+- Plant detail page (`/plants/:plantId`) — full timeline, status chips, metadata card, edit/delete/move actions; completes the Garden → Bed → Plant hierarchy
+- Backend unit tests — 35 tests across gardens, beds, plants, placements, and observations; `make test` and `make coverage` targets added
+- GitHub Actions CI — backend tests run on every PR touching `backend/**`; branch ruleset blocks merges on failure
+- CLAUDE.md cleanup — trimmed completed list, API contracts, and domain model field listings to reduce token usage
+
+**Next up:** Frontend unit tests or CI/CD improvements — backend test coverage gaps (auth endpoints, observation endpoints) worth filling before moving to new features
+
+---
+
 ## 2026-05-22 — ~0.5 hours
 
 **Completed:**
