@@ -1,6 +1,7 @@
 # Garden AI — Agent Context File
 
 This file provides project-wide context. Stack, conventions, and tooling details live in the directory-level files:
+
 - Frontend: `/frontend/CLAUDE.md`
 - Backend: `/backend/CLAUDE.md`
 
@@ -28,6 +29,7 @@ A lightweight session journal — one entry per work session, focused on what sh
 ## Consumption (start of session)
 
 At the start of every session, read the most recent devlog entry before doing anything else. Use it to:
+
 - Understand what was just finished so you don't re-explain or redo it
 - Pick up the **Next up** item as the default starting point if the user hasn't given a specific direction
 - Cross-reference against the ✅ Completed list below if something seems missing
@@ -35,6 +37,7 @@ At the start of every session, read the most recent devlog entry before doing an
 ## Adding a new entry (end of session)
 
 At the end of a session — or when the user asks — append a new dated entry to `/docs/devlog.md`. Rules:
+
 - One entry per session, appended at the top (newest first)
 - **Completed** bullets are high-level; skip internal refactors and tooling noise unless they unblock something
 - **Next up** is a single line, not a list — the most important thing to tackle next
@@ -57,16 +60,19 @@ The long-term goal is to evolve into a system that can:
 This is primarily a **portfolio project** built to deepen experience across the full stack and support a job search. It may grow into something more, but learning and demonstrable depth are the primary goals.
 
 **The developer brings:**
+
 - 10+ years of frontend experience (primarily Vue)
 - ~1.5 years of Django backend experience
 - Little to no DevOps experience
 
 **Learning goals for this project:**
+
 - React (TypeScript) — applying existing frontend expertise in a new ecosystem
 - Full-stack development — owning the entire feature lifecycle end-to-end
 - DevOps — hands-on experience with deployment, CI/CD, and cloud infrastructure (Vercel + AWS)
 
 **Implications for AI agents:**
+
 - React patterns and idioms are a learning surface — prefer explaining non-obvious choices rather than just implementing them
 - Django patterns may be familiar but assume React/TypeScript idioms are being actively learned
 - DevOps tooling should be introduced gradually with clear rationale; don't assume prior AWS/CI knowledge
@@ -75,9 +81,9 @@ This is primarily a **portfolio project** built to deepen experience across the 
 
 # 📁 Repository Structure
 
-/frontend  → React application (see /frontend/CLAUDE.md)
-/backend   → Django REST API (see /backend/CLAUDE.md)
-/docs      → Optional documentation
+/frontend → React application (see /frontend/CLAUDE.md)
+/backend → Django REST API (see /backend/CLAUDE.md)
+/docs → Optional documentation
 /CLAUDE.md → This file
 
 ---
@@ -93,20 +99,23 @@ This is primarily a **portfolio project** built to deepen experience across the 
 
 # 🌱 Core Domain Model
 
-Fields marked *(planned)* exist in the schema design but are not yet built.
+Fields marked _(planned)_ exist in the schema design but are not yet built.
 
-### User *(extended)*
+### User _(extended)_
+
 Django's default User plus:
-- timezone *(planned)*
-- locale *(planned)*
+
+- timezone _(planned)_
+- locale _(planned)_
 
 ### Garden
+
 - id: UUID or AutoField
 - name: string (required)
 - description: text (optional)
-- location: string *(planned)*
-- hardiness_zone: string *(planned)*
-- timezone: string *(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")*
+- location: string _(planned)_
+- hardiness_zone: string _(planned)_
+- timezone: string _(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")_
 - length: positive integer (optional — required for garden-level grid layout; same unit as `unit` field)
 - width: positive integer (optional — required for garden-level grid layout)
 - unit: enum — `in`, `ft`, `cm`, `m` (default: ft; mirrors GardenBed.unit; required before BedPlacement can be built)
@@ -115,6 +124,7 @@ Django's default User plus:
 - owner: ForeignKey(User)
 
 ### GardenBed
+
 - id: UUID
 - garden: ForeignKey(Garden)
 - name: string (required)
@@ -130,6 +140,7 @@ Django's default User plus:
 - updated_at: datetime (auto)
 
 ### Plant
+
 - id: UUID
 - common_name: string
 - scientific_name: string
@@ -138,6 +149,7 @@ Django's default User plus:
 - Global seeded catalog (41 plants); read-only via API (`GET /api/plants/`)
 
 ### UserPlant — plant placement in a bed
+
 - id: UUID
 - bed: ForeignKey(GardenBed)
 - plant: ForeignKey(Plant)
@@ -151,6 +163,7 @@ Django's default User plus:
 **Move behaviour:** when `bed` is changed via PATCH, any existing `PlantPlacement` for this `UserPlant` is automatically deleted. The plant arrives in the new bed unplaced.
 
 ### PlantPlacement
+
 Spatial placement of a `UserPlant` within a `GardenBed` grid. Decoupled from `UserPlant` so a plant can exist without a placement, and placement can be deleted/moved without touching the plant record.
 
 - id: UUID
@@ -169,10 +182,12 @@ Spatial placement of a `UserPlant` within a `GardenBed` grid. Decoupled from `Us
 
 ---
 
-### UserPlant ↔ organism cardinality *(design decision — deferred)*
+### UserPlant ↔ organism cardinality _(design decision — deferred)_
+
 A `UserPlant` currently represents one logical plant entry (e.g., "Cherry Tomatoes"). In practice a gardener may plant 4 tomato seedlings in one bed — each could have independent observations (disease, harvest yield, death). Allowing multiple `PlantPlacement` records per `UserPlant` would expose this mismatch: which placement does a given observation belong to?
 
 Options when this is revisited:
+
 - Keep 1 UserPlant = 1 organism (current constraint); users duplicate records for multiples — simplest, no schema change
 - Add a `quantity` field to UserPlant; observations remain at the UserPlant level (imprecise but pragmatic)
 - Introduce an `Organism` or `PlantInstance` model as a child of UserPlant; observations attach to an instance — most expressive, most complex
@@ -181,10 +196,12 @@ Defer until harvest tracking or per-plant health tracking makes the limitation p
 
 ---
 
-### Season *(planned)*
+### Season _(planned)_
+
 Groups planting activity by growing year/season. Enables crop rotation tracking and year-over-year comparisons. Without this, all UserPlants are a flat list scoped only by date, making rotation logic very difficult. Likely owned by a Garden.
 
 ### BedPlacement
+
 Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPlacement` model — same sq-ft grid convention, same x/y/width/height pattern — but one level up in the hierarchy.
 
 - id: UUID
@@ -201,29 +218,36 @@ Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPla
 
 ---
 
-### PlantVariety *(planned — design decision pending)*
+### PlantVariety _(planned — design decision pending)_
+
 Distinguishes cultivars ("Cherokee Purple", "Roma") from species ("Tomato"). Could be a field on `UserPlant` (simpler) or a separate model (required if AI or catalog features need variety-specific advice). Decide before building the plant catalog.
 
-### Observation *(planned)*
+### Observation _(planned)_
+
 A unified event log attached to a `UserPlant` or `GardenBed`. Covers pest sightings, watering notes, fertilizing events, and general journal entries — all share the same structure (date, note, type). Prevents proliferating separate models for each tracking feature.
 
-### HarvestLog *(planned)*
+### HarvestLog _(planned)_
+
 Records individual harvest events with a quantity/weight measurement. Distinct from `Observation` because it's a measurement, not a note. Could fold into `Observation` with a type field, or stand alone — decide when building harvest tracking.
 
-### Task *(planned)*
+### Task _(planned)_
+
 Reminders and to-dos optionally linked to a Garden, GardenBed, or UserPlant. Has a due date and a completed flag. The notification/scheduling side is handled by Celery (already planned).
 
-### Photo *(planned)*
+### Photo _(planned)_
+
 Generic image attachment linkable to multiple entity types (Garden, GardenBed, UserPlant). Implementation options: Django content type framework (`GenericForeignKey`) or explicit nullable FKs per entity — decide when building image uploads.
 
-### AIConversation *(planned)*
+### AIConversation _(planned)_
+
 - user: ForeignKey(User)
 - prompt: text
 - response: text
 
 ---
 
-### Plant catalog ownership *(design decision)*
+### Plant catalog ownership _(design decision)_
+
 The `Plant` catalog is currently implied to be a global shared catalog (all users reference the same "Tomato" entry). This is the right default for AI features and companion planting data, but requires a curation/seeding strategy. A hybrid (global catalog + user-created custom varieties) is common but more complex — defer unless needed.
 
 ---
@@ -232,29 +256,29 @@ Ownership is enforced at the queryset level — users only see and modify their 
 
 ### Garden API contract
 
-- `GET    /api/gardens/`                    → 200 `[{ id, name, description, created_at, updated_at, owner }]`
-- `POST   /api/gardens/`                    → 201 `{ id, name, description, created_at, updated_at, owner }`
-- `GET    /api/gardens/:id/`               → 200 `{ id, ... }`
-- `PATCH  /api/gardens/:id/`               → 200 `{ id, ... }`
-- `DELETE /api/gardens/:id/`               → 204
+- `GET    /api/gardens/` → 200 `[{ id, name, description, created_at, updated_at, owner }]`
+- `POST   /api/gardens/` → 201 `{ id, name, description, created_at, updated_at, owner }`
+- `GET    /api/gardens/:id/` → 200 `{ id, ... }`
+- `PATCH  /api/gardens/:id/` → 200 `{ id, ... }`
+- `DELETE /api/gardens/:id/` → 204
 
 ### GardenBed API contract
 
 Nested under a garden — ownership enforced via the parent garden's owner check.
 
-- `GET    /api/gardens/:id/beds/`          → 200 `[{ id, garden, name, length, width, depth, unit, facing, avg_sunlight_hours, soil_type, notes, created_at, updated_at }]`
-- `POST   /api/gardens/:id/beds/`          → 201 `{ id, ... }`
-- `GET    /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
-- `PATCH  /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
-- `DELETE /api/gardens/:id/beds/:bedId/`   → 204
+- `GET    /api/gardens/:id/beds/` → 200 `[{ id, garden, name, length, width, depth, unit, facing, avg_sunlight_hours, soil_type, notes, created_at, updated_at }]`
+- `POST   /api/gardens/:id/beds/` → 201 `{ id, ... }`
+- `GET    /api/gardens/:id/beds/:bedId/` → 200 `{ id, ... }`
+- `PATCH  /api/gardens/:id/beds/:bedId/` → 200 `{ id, ... }`
+- `DELETE /api/gardens/:id/beds/:bedId/` → 204
 
 ### BedPlacement API contract
 
 Nested under a garden. Requires garden to have `length`, `width`, and `unit` set.
 
-- `GET    /api/gardens/:id/bed-placements/`                        → 200 `[{ id, bed, garden, x, y, width, height, created_at, updated_at }]`
-- `POST   /api/gardens/:id/bed-placements/`                        → 201 `{ id, ... }`
-- `DELETE /api/gardens/:id/bed-placements/:bedPlacementId/`        → 204
+- `GET    /api/gardens/:id/bed-placements/` → 200 `[{ id, bed, garden, x, y, width, height, created_at, updated_at }]`
+- `POST   /api/gardens/:id/bed-placements/` → 201 `{ id, ... }`
+- `DELETE /api/gardens/:id/bed-placements/:bedPlacementId/` → 204
 
 ---
 
@@ -278,6 +302,7 @@ Nested under a garden. Requires garden to have `length`, `width`, and `unit` set
 # 🏁 MVP Definition
 
 The MVP is considered complete when:
+
 - Users can create accounts and log in
 - Users can manage gardens, beds, and plants
 - AI recommendations are functional
@@ -290,6 +315,7 @@ The MVP is considered complete when:
 # 🚫 Non-Goals
 
 These are explicitly out of scope, at least initially:
+
 - Kubernetes
 - Microservices architecture
 - Multi-tenant / enterprise support
@@ -379,15 +405,18 @@ These are explicitly out of scope, at least initially:
 
 ## 📋 Planned
 
-### UI / Branding *(deferred — functionality first)*
+### UI / Branding _(deferred — functionality first)_
+
 - Branding pass — define a color palette, typography scale, and visual identity; the app is currently unstyled beyond Tailwind defaults; revisit once core functionality is stable
 - Inline editing on detail pages — replace edit/move dialogs with inline forms on Garden, Bed, and Plant detail pages; each page has different field shapes and action complexity so evaluate per page rather than applying a single pattern blindly; move wizard (two-step pick/create) may still warrant a dialog even when edit goes inline
 
 ### Authentication & Accounts
+
 - User profile (timezone, locale settings, first/last name)
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
+
 - Visual garden layout management
 - Customizable garden dimensions and grids
 - Drag-and-drop garden design interface
@@ -395,6 +424,7 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
+
 - Transplant tracking — auto-log an observation when a plant is moved between beds; primary use case is moving from an indoor bed (window/artificial light) to an outdoor bed; a dedicated `transplant` observation type is likely the right approach but deferred until the move-log UX is designed
 - Dedicated plant detail page (`/plants/:plantId`) — full observation timeline, status history, and plant metadata on its own bookmarkable page; currently the timeline is only accessible as a collapsible section within the bed detail page; consistent with the Garden → Bed → Plant hierarchy where every level has a detail page
 - Add plants to garden layouts
@@ -404,6 +434,7 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Testing
+
 - **Backend unit tests** — serializer validation logic, model methods, helper functions (e.g. `bed_grid_dimensions`); use DRF's `APITestCase` against a real test DB; no mocking
 - **Backend integration tests** — full API endpoint coverage (auth, gardens, beds, plants, placements, observations); assert status codes, response shapes, and ownership enforcement
 - **Frontend unit/component tests** — Vitest + React Testing Library; test user-facing behaviour (form validation, conditional rendering, interactions); not implementation details
@@ -411,6 +442,7 @@ These are explicitly out of scope, at least initially:
 - **CI pipeline** — GitHub Actions: lint (`ruff`, `eslint`), type check (`tsc --noEmit`), unit tests on every PR; e2e on merge to `main`; Vercel/Railway auto-deploy runs after CI passes
 
 ### Deployment & Infrastructure
+
 - CI/CD pipeline (GitHub Actions) — lint, type check, and unit tests gate every PR; Vercel/Railway auto-deploy already handles the deploy step
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
@@ -419,6 +451,7 @@ These are explicitly out of scope, at least initially:
 - **Preview environments per PR** — Vercel already creates a frontend preview URL per PR, but it points at prod backend so it only works for pure UI changes; full preview requires Railway PR Environments (ephemeral backend + DB per PR) wired together via a GitHub Action that sets `VITE_API_URL` on the Vercel preview to point at the Railway PR environment URL; needed for any PR that crosses the stack (new model, migration, endpoint, or serializer field)
 
 ### Tracking & Journaling
+
 - Garden notes and journaling
 - Harvest tracking
 - Yield estimation and tracking
@@ -426,6 +459,7 @@ These are explicitly out of scope, at least initially:
 - Progress photo timelines
 
 ### Garden Health
+
 - Companion planting recommendations
 - Crop rotation tracking and recommendations
 - Pest and disease tracking
@@ -435,6 +469,7 @@ These are explicitly out of scope, at least initially:
 - Sunlight and shade mapping
 
 ### Planning & Reminders
+
 - Task management and reminders
 - Notification system for gardening tasks
 - Frost date awareness and seasonal guidance
@@ -442,12 +477,14 @@ These are explicitly out of scope, at least initially:
 - Integration with external plant/weather data sources
 
 ### Discovery & Sharing
+
 - Smart search and filtering
 - Sharing gardens with other users
 - Data visualization dashboards
 - Garden analytics and historical trends
 
 ### Mobile App
+
 - Port to iOS and Android using React Native (shared ecosystem with existing React codebase)
 - Shared API layer and TypeScript types between web and mobile
 - Native-feeling navigation and gestures
@@ -456,6 +493,7 @@ These are explicitly out of scope, at least initially:
 - Offline-first support with sync when reconnected
 
 ### AI Integration
+
 - OpenAI API integration (backend-controlled, not exposed directly to frontend)
 - AI chat endpoint with conversation history (AIConversation model)
 - Prompt builder and dynamic context assembly system
@@ -466,6 +504,9 @@ These are explicitly out of scope, at least initially:
 - Vector search / RAG for plant knowledge retrieval
 
 ### Admin & Infrastructure
+
 - Admin dashboard and moderation tools
 - Role-based permissions
 - Offline-friendly support
+
+this a test. making a change to a file to test workflows in git.
