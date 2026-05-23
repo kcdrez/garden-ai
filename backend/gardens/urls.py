@@ -14,7 +14,7 @@ all_beds = AllGardenBedsViewSet.as_view({"get": "list"})
 bed_placement_list = BedPlacementViewSet.as_view({"get": "list", "post": "create"})
 bed_placement_detail = BedPlacementViewSet.as_view({"delete": "destroy"})
 
-urlpatterns = router.urls + [
+urlpatterns = [*router.urls,
     path("beds/", all_beds, name="all-beds"),
     path("gardens/<uuid:garden_id>/beds/", bed_list, name="garden-beds-list"),
     path("gardens/<uuid:garden_id>/beds/<uuid:bed_id>/", bed_detail, name="garden-beds-detail"),

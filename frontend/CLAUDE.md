@@ -19,7 +19,7 @@
 
 # 🧰 Tooling
 
-- ESLint + Prettier — linting and formatting; must pass before commit
+- ESLint + Prettier — linting and formatting; config in `eslint.config.js`; rules include `react-hooks`, `react-refresh`, `@typescript-eslint` (no-explicit-any, consistent-type-imports, no-unused-vars), and `no-console`; must pass before commit
 - shadcn CLI — `npx shadcn add <component>` to add UI components
   - **Gotcha:** generated files import from `"src/lib/utils"` — always fix to `"@/lib/utils"` after generating
 
@@ -63,6 +63,7 @@ Testing is a planned learning goal. As features mature, add:
 
 # 🎯 Conventions
 
+- Follow the ESLint rules configured in `eslint.config.js` — new code should introduce zero errors and zero warnings; treat warnings as errors-in-waiting, not acceptable noise; if a rule fires on intentional code, disable it inline with `// eslint-disable-next-line <rule>` and a comment explaining why
 - All imports use the `@/` alias (maps to `src/`) — never use `../` relative imports
 - API calls go through the `api/` layer — never call Axios directly from components
 - Server state (API data) is managed via TanStack Query — do not use `useState` + `useEffect` for fetching

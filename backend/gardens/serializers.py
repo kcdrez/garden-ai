@@ -146,7 +146,7 @@ class BedPlacementSerializer(serializers.ModelSerializer):
         try:
             garden = Garden.objects.get(pk=garden_id, owner=self.context["request"].user)
         except Garden.DoesNotExist:
-            raise serializers.ValidationError("Garden not found.")
+            raise serializers.ValidationError("Garden not found.") from None
 
         if garden.width is None or garden.length is None:
             raise serializers.ValidationError("Garden dimensions must be set before placing beds.")
