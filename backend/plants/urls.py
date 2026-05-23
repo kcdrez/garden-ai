@@ -11,6 +11,7 @@ user_plant_detail = UserPlantViewSet.as_view(
     {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
 )
 all_user_plants = AllUserPlantsViewSet.as_view({"get": "list"})
+all_user_plant_detail = AllUserPlantsViewSet.as_view({"get": "retrieve"})
 observation_list = ObservationViewSet.as_view({"get": "list", "post": "create"})
 observation_detail = ObservationViewSet.as_view({"delete": "destroy"})
 placement_list = PlantPlacementViewSet.as_view({"get": "list", "post": "create"})
@@ -18,6 +19,7 @@ placement_detail = PlantPlacementViewSet.as_view({"patch": "partial_update", "de
 
 urlpatterns = router.urls + [
     path("userplants/", all_user_plants, name="all-user-plants"),
+    path("userplants/<uuid:pk>/", all_user_plant_detail, name="all-user-plant-detail"),
     path(
         "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/",
         user_plant_list,
