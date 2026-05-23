@@ -23,7 +23,7 @@ export default function StatusChips({ gardenId, bedId, plant }: Props) {
 
   return (
     <div>
-      <p className="text-xs text-muted-foreground mb-2">Status</p>
+      <p className="text-xs text-muted-foreground pb-2">Status</p>
       <div className="flex flex-wrap gap-1.5">
         {USER_PLANT_STATUSES.map((s) => {
           const isActive = plant.status === s.value;

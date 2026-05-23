@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlusIcon, LeafIcon, ChevronDownIcon } from 'lucide-react';
 import { deleteUserPlant } from '@/api/plants';
+import { routes } from '@/lib/routes';
 import type { UserPlant } from '@/types/plants';
 import { Button } from '@/components/ui/button';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
@@ -69,21 +71,26 @@ export default function PlantListSection({
             return (
               <li key={plant.id}>
                 <div className="flex items-center justify-between text-sm py-1">
-                  <button
-                    className="flex items-center gap-2 flex-1 text-left hover:text-foreground text-foreground"
-                    onClick={() => setExpandedPlantId(isExpanded ? undefined : plant.id)}
-                  >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     <LeafIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                    <span>
+                    <Link
+                      to={routes.plantDetail(plant.id)}
+                      className="truncate hover:underline"
+                    >
                       {plant.plantName}
                       {plant.variety && (
                         <span className="text-muted-foreground"> — {plant.variety}</span>
                       )}
-                    </span>
-                    <ChevronDownIcon
-                      className={`size-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
-                  </button>
+                    </Link>
+                    <button
+                      className="text-muted-foreground hover:text-foreground shrink-0"
+                      onClick={() => setExpandedPlantId(isExpanded ? undefined : plant.id)}
+                    >
+                      <ChevronDownIcon
+                        className={`size-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  </div>
                   <CardActionsMenu
                     label="Plant actions"
                     onEdit={() => { setEditingPlant(plant); setAddPlantOpen(true); }}
