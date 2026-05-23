@@ -4,7 +4,7 @@ import { fetchBedPlacements, createBedPlacement, deleteBedPlacement } from '@/ap
 import { gardenGridDimensions, bedPlacementDimensions, formatDimensions } from '@/lib/beds';
 import type { BedPlacement, Garden, GardenBed } from '@/types/gardens';
 import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
-import PlacementGrid from '@/components/ui/PlacementGrid';
+import PlacementGrid from '@/components/shared/PlacementGrid';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface GardenGridProps {

@@ -37,6 +37,7 @@
     /ui         → shadcn UI primitives (button, card, form, dropdown-menu, etc.) plus custom utilities:
                   form-fields.tsx — TextField, TextAreaField, NativeSelectField wrappers
                   query-state.tsx — QueryState, LoadingSpinner
+    /shared     → cross-domain components used by multiple feature folders (e.g. PlacementGrid.tsx)
     NavBar.tsx  → layout component, not feature-specific
   /lib          → Utilities (utils.ts, errors.ts, dates.ts, zod.ts — shared Zod validators `posInt`/`optPosInt`)
   /pages        → Feature-based page folders
