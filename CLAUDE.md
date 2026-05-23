@@ -508,5 +508,3 @@ These are explicitly out of scope, at least initially:
 - Admin dashboard and moderation tools
 - Role-based permissions
 - Offline-friendly support
-
-this a test. making a change to a file to test workflows in git.2

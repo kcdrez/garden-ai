@@ -5,6 +5,7 @@
 # 🏗️ Tech Stack
 
 **Current:**
+
 - Python 3.x
 - Django
 - Django REST Framework (DRF)
@@ -12,6 +13,7 @@
 - SQLite (dev)
 
 **Planned:**
+
 - PostgreSQL (production database)
 - Celery (background jobs — scheduled tasks, reminders, weather checks)
 - Redis (Celery broker + cache)
@@ -72,6 +74,9 @@ Django monolith with modular apps:
 # 🧫 Testing
 
 Testing is a learning goal for this project. As features mature, add:
+
 - Unit tests for serializers and model logic
 - Integration tests for API endpoints (use DRF's `APITestCase`)
 - Avoid mocking the database — tests should hit a real test DB
+
+testing. ignore me.
