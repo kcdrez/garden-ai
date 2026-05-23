@@ -24,10 +24,10 @@ export const observationSchema = z.object({
   newStatus: z.enum(statusValues),
 }).superRefine((data, ctx) => {
   if (data.type === "status_change" && !data.newStatus?.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Status is required", path: ["newStatus"] });
+    ctx.addIssue({ code: "custom", message: "Status is required", path: ["newStatus"] });
   }
   if (data.type !== "status_change" && !data.note?.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Note is required", path: ["note"] });
+    ctx.addIssue({ code: "custom", message: "Note is required", path: ["note"] });
   }
 });
 

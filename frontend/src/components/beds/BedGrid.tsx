@@ -5,7 +5,7 @@ import { bedGridDimensions } from '@/lib/beds';
 import type { GardenBed } from '@/types/gardens';
 import type { PlantPlacement, UserPlant } from '@/types/plants';
 import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
-import PlacementGrid from '@/components/ui/PlacementGrid';
+import PlacementGrid from '@/components/shared/PlacementGrid';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface BedGridProps {
