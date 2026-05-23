@@ -154,6 +154,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_RENDERER_CLASSES": (
         "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
