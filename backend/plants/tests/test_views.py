@@ -1,10 +1,12 @@
+import uuid
+
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from gardens.models import Garden, GardenBed
-from plants.models import Plant, PlantPlacement, UserPlant
+from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
 
 class UserPlantAPITests(APITestCase):
@@ -124,6 +126,24 @@ class UserPlantAPITests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # --- All user plants flat list ---
+
+    def test_all_user_plants_list(self):
+        res = self.client.get(reverse("all-user-plants"))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    # --- Timezone fallback ---
+
+    def test_create_plant_with_invalid_profile_timezone_falls_back_to_utc(self):
+        from users.models import UserProfile
+        UserProfile.objects.filter(user=self.user).update(timezone="Invalid/Timezone")
+        res = self.client.post(
+            self._list_url(self.garden.id, self.bed.id),
+            {"plant": str(self.plant.id), "status": "planned"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
     def test_move_plant_deletes_existing_placement(self):
         second_bed = GardenBed.objects.create(
             name="Bed 2", garden=self.garden, length=4, width=8
@@ -182,6 +202,43 @@ class PlantPlacementAPITests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_placement_y_out_of_bounds_is_rejected(self):
+        # bed is 4ft long = 4 rows (0–3); y=4 is out of bounds
+        res = self.client.post(
+            self._list_url(),
+            {"userPlant": str(self.user_plant.id), "x": 0, "y": 4},
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_placement_for_plant_from_different_bed_rejected(self):
+        second_bed = GardenBed.objects.create(
+            name="Bed 2", garden=self.garden, length=4, width=8
+        )
+        plant_in_second_bed = UserPlant.objects.create(
+            bed=second_bed, plant=self.plant, status="planted"
+        )
+        # URL targets self.bed but the plant lives in second_bed
+        res = self.client.post(
+            self._list_url(),
+            {"userPlant": str(plant_in_second_bed.id), "x": 0, "y": 0},
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_placement_for_other_users_plant_rejected(self):
+        other_user = User.objects.create_user(username="charlie", password="testpass123")
+        other_garden = Garden.objects.create(name="Charlie's Garden", owner=other_user)
+        other_bed = GardenBed.objects.create(
+            name="Charlie's Bed", garden=other_garden, length=4, width=8
+        )
+        other_plant = UserPlant.objects.create(
+            bed=other_bed, plant=self.plant, status="planted"
+        )
+        res = self.client.post(
+            self._list_url(),
+            {"userPlant": str(other_plant.id), "x": 0, "y": 0},
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_delete_placement(self):
         placement = PlantPlacement.objects.create(
             user_plant=self.user_plant, bed=self.bed, x=0, y=0
@@ -189,3 +246,141 @@ class PlantPlacementAPITests(APITestCase):
         res = self.client.delete(self._detail_url(placement.id))
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(PlantPlacement.objects.filter(id=placement.id).exists())
+
+
+class ObservationAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.other = User.objects.create_user(username="bob", password="testpass123")
+        self.client.force_authenticate(user=self.user)
+
+        self.garden = Garden.objects.create(name="Alice's Garden", owner=self.user)
+        self.bed = GardenBed.objects.create(name="Bed 1", garden=self.garden, length=4, width=8)
+        self.plant = Plant.objects.first()
+        self.user_plant = UserPlant.objects.create(
+            bed=self.bed, plant=self.plant, status="planted"
+        )
+
+        other_garden = Garden.objects.create(name="Bob's Garden", owner=self.other)
+        other_bed = GardenBed.objects.create(
+            name="Bob's Bed", garden=other_garden, length=4, width=8
+        )
+        self.other_plant = UserPlant.objects.create(
+            bed=other_bed, plant=self.plant, status="planted"
+        )
+
+    def _list_url(self, user_plant=None):
+        up = user_plant or self.user_plant
+        return reverse(
+            "observations-list",
+            kwargs={
+                "garden_id": up.bed.garden.id,
+                "bed_id": up.bed.id,
+                "plant_id": up.id,
+            },
+        )
+
+    def _detail_url(self, observation_id, user_plant=None):
+        up = user_plant or self.user_plant
+        return reverse(
+            "observations-detail",
+            kwargs={
+                "garden_id": up.bed.garden.id,
+                "bed_id": up.bed.id,
+                "plant_id": up.id,
+                "observation_id": observation_id,
+            },
+        )
+
+    # --- Auth ---
+
+    def test_list_requires_auth(self):
+        self.client.force_authenticate(user=None)
+        res = self.client.get(self._list_url())
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    # --- List ---
+
+    def test_list_observations_for_own_plant(self):
+        Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date="2026-01-01",
+            type=Observation.Type.GENERAL,
+        )
+        res = self.client.get(self._list_url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_list_observations_other_users_plant_returns_404(self):
+        res = self.client.get(self._list_url(user_plant=self.other_plant))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    # --- Create ---
+
+    def test_create_observation(self):
+        res = self.client.post(
+            self._list_url(),
+            {"observedDate": "2026-01-15", "type": "general", "note": "Looking healthy"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["type"], "general")
+
+    def test_create_observation_requires_type_and_date(self):
+        res = self.client.post(self._list_url(), {"note": "Missing required fields"})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_observation_other_users_plant_returns_404(self):
+        res = self.client.post(
+            self._list_url(user_plant=self.other_plant),
+            {"observedDate": "2026-01-15", "type": "general"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    # --- Delete ---
+
+    def test_delete_observation(self):
+        obs = Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date="2026-01-01",
+            type=Observation.Type.GENERAL,
+        )
+        res = self.client.delete(self._detail_url(obs.id))
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Observation.objects.filter(id=obs.id).exists())
+
+    def test_delete_nonexistent_observation_returns_404(self):
+        res = self.client.delete(self._detail_url(uuid.uuid4()))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class PlantModelTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.garden = Garden.objects.create(name="Garden", owner=self.user)
+        self.bed = GardenBed.objects.create(name="Bed", garden=self.garden, length=4, width=8)
+        self.plant = Plant.objects.first()
+
+    def test_plant_str(self):
+        self.assertEqual(str(self.plant), self.plant.common_name)
+
+    def test_user_plant_str_without_variety(self):
+        up = UserPlant.objects.create(bed=self.bed, plant=self.plant, status="planted")
+        self.assertEqual(str(up), self.plant.common_name)
+
+    def test_user_plant_str_with_variety(self):
+        up = UserPlant.objects.create(
+            bed=self.bed, plant=self.plant, status="planted", variety="Roma"
+        )
+        self.assertEqual(str(up), f"{self.plant.common_name} (Roma)")
+
+    def test_observation_str(self):
+        up = UserPlant.objects.create(bed=self.bed, plant=self.plant, status="planted")
+        obs = Observation.objects.create(
+            user_plant=up, observed_date="2026-01-01", type=Observation.Type.GENERAL
+        )
+        self.assertIn("general", str(obs))
+
+    def test_plant_placement_str(self):
+        up = UserPlant.objects.create(bed=self.bed, plant=self.plant, status="planted")
+        pp = PlantPlacement.objects.create(user_plant=up, bed=self.bed, x=1, y=2)
+        self.assertIn("@ (1, 2)", str(pp))
