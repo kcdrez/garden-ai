@@ -17,7 +17,7 @@ observation_detail = ObservationViewSet.as_view({"delete": "destroy"})
 placement_list = PlantPlacementViewSet.as_view({"get": "list", "post": "create"})
 placement_detail = PlantPlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
 
-urlpatterns = router.urls + [
+urlpatterns = [*router.urls,
     path("userplants/", all_user_plants, name="all-user-plants"),
     path("userplants/<uuid:pk>/", all_user_plant_detail, name="all-user-plant-detail"),
     path(

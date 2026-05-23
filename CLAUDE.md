@@ -210,7 +210,8 @@ These are explicitly out of scope, at least initially:
 - All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
-- Backend tests — 35 tests covering garden, bed, plant, placement, and observation endpoints; CI via GitHub Actions blocks merges on failure
+- Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
+- CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 
 ## 📋 Planned
 
@@ -239,13 +240,10 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Testing
-- **Backend test coverage gaps** — auth endpoints (register, login) and observation endpoints not yet covered; expand before adding new features
 - **Frontend unit/component tests** — Vitest + React Testing Library; test user-facing behaviour (form validation, conditional rendering, interactions); not implementation details
-- **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation
-- **CI pipeline expansion** — add lint (`ruff`, `eslint`) and type check (`tsc --noEmit`) steps to GitHub Actions; e2e on merge to `main`
+- **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation; run in CI on merge to `main`
 
 ### Deployment & Infrastructure
-- CI/CD pipeline expansion — lint and type check gates on every PR; Vercel/Railway auto-deploy already handles the deploy step
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)

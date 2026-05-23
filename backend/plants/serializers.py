@@ -59,7 +59,10 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "bed_name", "garden_id", "garden_name", "plant_name", "plant_category", "placement_id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id", "bed_name", "garden_id", "garden_name", "plant_name",
+            "plant_category", "placement_id", "created_at", "updated_at",
+        ]
         extra_kwargs = {"bed": {"required": False}}
 
     def _local_date(self):

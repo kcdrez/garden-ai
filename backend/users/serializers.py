@@ -15,7 +15,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         try:
             ZoneInfo(value)
         except (ZoneInfoNotFoundError, KeyError):
-            raise serializers.ValidationError("Invalid timezone.")
+            raise serializers.ValidationError("Invalid timezone.") from None
         return value
 
 

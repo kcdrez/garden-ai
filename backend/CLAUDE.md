@@ -20,7 +20,7 @@
 
 # 🧰 Tooling
 
-- Ruff — linting + autofix
+- Ruff — linting + autofix; config in `ruff.toml`; rules: `E`, `F`, `W`, `I`, `B`, `UP`, `RUF`, `T20`; line length 120; migrations excluded
 - Black — formatting
 
 ---
@@ -51,6 +51,7 @@ Django monolith with modular apps:
 
 # 🧪 Conventions
 
+- Follow the ruff rules configured in `ruff.toml` — new code should introduce zero errors and zero warnings; if a rule fires on intentional code, suppress it with `# noqa: <code>` and a comment explaining why
 - Use Django REST Framework ViewSets where possible
 - Serializers define all API output — no raw JSON construction in views
 - Keep business logic out of views when possible
