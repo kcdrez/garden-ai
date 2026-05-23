@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc -p tsconfig.app.json",
     "prepare": "husky"
   },
   "dependencies": {
