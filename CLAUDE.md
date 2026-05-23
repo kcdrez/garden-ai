@@ -25,6 +25,15 @@ A lightweight session journal — one entry per work session, focused on what sh
 **Next up:** One-line summary of what to tackle next
 ```
 
+## Time tracking
+
+The devlog records session duration. Since the AI has no clock, time must come from the user:
+
+- **Session start** — if the user doesn't mention a start time, ask before doing anything else
+- **Session end** — if the user doesn't provide an end time when wrapping up, ask before writing the devlog entry
+- **Pauses** — if the user mentions stepping away (lunch, break, etc.), ask for the pause time if not given; when they return, ask for the resume time; subtract all pauses from the total when calculating duration
+- Calculate duration as: (end time − start time) − (sum of all pauses)
+
 ## Consumption (start of session)
 
 At the start of every session, read the most recent devlog entry before doing anything else. Use it to:
@@ -34,11 +43,13 @@ At the start of every session, read the most recent devlog entry before doing an
 
 ## Adding a new entry (end of session)
 
-At the end of a session — or when the user asks — append a new dated entry to `/docs/devlog.md`. Rules:
-- One entry per session, appended at the top (newest first)
-- **Completed** bullets are high-level; skip internal refactors and tooling noise unless they unblock something
-- **Next up** is a single line, not a list — the most important thing to tackle next
-- After appending, cross-check the ✅ Completed list in this file and update it if anything is missing or stale
+When the user says they are done or ending the session, do all of the following:
+
+1. **Devlog** — append a new dated entry to `/docs/devlog.md` (newest first). Rules:
+   - **Completed** bullets are high-level; skip internal refactors and tooling noise unless they unblock something
+   - **Next up** is a single line, not a list — the most important thing to tackle next
+2. **✅ Completed list** — if a major deliverable shipped this session, add it as a high-level bullet (feature or system, not implementation detail)
+3. **📋 Planned list** — if anything completed this session was previously in the planned list, remove it
 
 ---
 
@@ -93,179 +104,41 @@ This is primarily a **portfolio project** built to deepen experience across the 
 
 # 🌱 Core Domain Model
 
-Fields marked *(planned)* exist in the schema design but are not yet built.
+Field definitions live in `models.py` and serializers — read the code directly. What follows are design decisions and non-obvious constraints that aren't visible from the code.
 
-### User *(extended)*
-Django's default User plus:
-- timezone *(planned)*
-- locale *(planned)*
+**Ownership** is enforced at the queryset level — users only see and modify their own gardens.
 
-### Garden
-- id: UUID or AutoField
-- name: string (required)
-- description: text (optional)
-- location: string *(planned)*
-- hardiness_zone: string *(planned)*
-- timezone: string *(planned — IANA timezone name, e.g. "America/Denver"; when present, use this instead of the user's timezone for observation dates, since the garden's physical location is the correct reference point for "what day is it here")*
-- length: positive integer (optional — required for garden-level grid layout; same unit as `unit` field)
-- width: positive integer (optional — required for garden-level grid layout)
-- unit: enum — `in`, `ft`, `cm`, `m` (default: ft; mirrors GardenBed.unit; required before BedPlacement can be built)
-- created_at: datetime (auto)
-- updated_at: datetime (auto)
-- owner: ForeignKey(User)
+**User** has a `UserProfile` (auto-created via post_save signal) that stores `timezone`. Frontend sends browser timezone on login/register.
 
-### GardenBed
-- id: UUID
-- garden: ForeignKey(Garden)
-- name: string (required)
-- length: positive integer (required)
-- width: positive integer (required)
-- depth: positive integer (optional — wall height for raised beds)
-- unit: enum — `in`, `ft`, `cm`, `m` (default: ft)
-- facing: enum — `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW` (optional)
-- avg_sunlight_hours: positive integer 0–24 (optional)
-- soil_type: string (optional — freeform, e.g. "loamy clay with amendments")
-- notes: text (optional)
-- created_at: datetime (auto)
-- updated_at: datetime (auto)
+**Garden** `timezone` field *(planned)* — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
-### Plant
-- id: UUID
-- common_name: string
-- scientific_name: string
-- category: enum — `vegetable`, `herb`, `fruit`, `flower`, `other`
-- description: text
-- Global seeded catalog (41 plants); read-only via API (`GET /api/plants/`)
+**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
 
-### UserPlant — plant placement in a bed
-- id: UUID
-- bed: ForeignKey(GardenBed)
-- plant: ForeignKey(Plant)
-- variety: string (optional — e.g. "Cherry Tomato")
-- start_date: date (optional)
-- status: enum — `planned`, `planted`, `growing`, `fruiting`, `dormant`, `removed`
-- notes: text (optional)
-- placement_id: UUID or null (read-only; UUID of the associated `PlantPlacement` if one exists)
-- created_at / updated_at: datetime (auto)
+**PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
 
-**Move behaviour:** when `bed` is changed via PATCH, any existing `PlantPlacement` for this `UserPlant` is automatically deleted. The plant arrives in the new bed unplaced.
+**PlantPlacement** is decoupled from `UserPlant` so a plant can exist without a placement. Moving a `UserPlant` to a new bed (PATCH `bed`) automatically deletes its existing `PlantPlacement` — the plant arrives in the new bed unplaced.
 
-### PlantPlacement
-Spatial placement of a `UserPlant` within a `GardenBed` grid. Decoupled from `UserPlant` so a plant can exist without a placement, and placement can be deleted/moved without touching the plant record.
+**Resize protection:** resizing a garden is blocked if any `BedPlacement` would go out of bounds; resizing a bed is blocked if any `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors`.
 
-- id: UUID
-- user_plant: ForeignKey(UserPlant)
-- bed: ForeignKey(GardenBed) — denormalized for easier querying; must match `user_plant.bed`
-- x: integer — column (0-indexed); 1 cell = 1 square foot regardless of the bed's display unit
-- y: integer — row (0-indexed)
-- width: integer (default 1) — cells wide; supports plants that span multiple cells
-- height: integer (default 1) — cells tall
+**UserPlant ↔ organism cardinality *(deferred)*:** 1 UserPlant = 1 PlantPlacement (deliberate simplification). A gardener planting 4 tomato seedlings should create 4 UserPlant records. Revisit if per-plant health tracking or harvest tracking makes this painful — options are a `quantity` field (pragmatic) or a child `PlantInstance` model (most expressive).
 
-**Unit normalization:** the grid always uses square feet as the cell unit. Bed dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`), then rounded up to the nearest integer to get grid dimensions. This means a 240 cm × 120 cm bed and a 8 ft × 4 ft bed both render as an 8 × 4 grid. Odd dimensions (e.g. 66 in × 101 in) round up to the nearest foot; the last row/column is slightly smaller in reality but acceptable at this resolution.
-
-**Grid resolution:** currently fixed at 1 ft × 1 ft per cell. The schema intentionally does not encode this assumption — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer. If sub-foot resolution is needed in the future (e.g. 6-inch cells for plants with 18-inch spacing), a single migration multiplies all stored values by a scale factor and the renderer is updated. No schema shape change required.
-
-**Current constraint:** each `UserPlant` may have at most one `PlantPlacement`. Users who want to track multiple physical instances of the same variety should create separate `UserPlant` records. This is a deliberate simplification — see the design note below.
-
----
-
-### UserPlant ↔ organism cardinality *(design decision — deferred)*
-A `UserPlant` currently represents one logical plant entry (e.g., "Cherry Tomatoes"). In practice a gardener may plant 4 tomato seedlings in one bed — each could have independent observations (disease, harvest yield, death). Allowing multiple `PlantPlacement` records per `UserPlant` would expose this mismatch: which placement does a given observation belong to?
-
-Options when this is revisited:
-- Keep 1 UserPlant = 1 organism (current constraint); users duplicate records for multiples — simplest, no schema change
-- Add a `quantity` field to UserPlant; observations remain at the UserPlant level (imprecise but pragmatic)
-- Introduce an `Organism` or `PlantInstance` model as a child of UserPlant; observations attach to an instance — most expressive, most complex
-
-Defer until harvest tracking or per-plant health tracking makes the limitation painful.
-
----
-
-### Season *(planned)*
-Groups planting activity by growing year/season. Enables crop rotation tracking and year-over-year comparisons. Without this, all UserPlants are a flat list scoped only by date, making rotation logic very difficult. Likely owned by a Garden.
-
-### BedPlacement
-Spatial placement of a `GardenBed` within a `Garden` grid. Mirrors the `PlantPlacement` model — same sq-ft grid convention, same x/y/width/height pattern — but one level up in the hierarchy.
-
-- id: UUID
-- bed: OneToOneField(GardenBed) — one placement per bed
-- garden: ForeignKey(Garden) — denormalized; must match `bed.garden`
-- x: integer — column (0-indexed, 1 cell = 1 sq ft)
-- y: integer — row
-- width: integer — derived from `bed.width` converted to feet (computed and sent by the frontend at create time)
-- height: integer — derived from `bed.length` converted to feet
-
-**Grid convention:** same sq-ft normalization as `PlantPlacement` — convert garden dimensions to feet at render time, round up. See `PlantPlacement` for the full unit conversion table.
-
-**Resize protection:** `GardenSerializer.validate()` blocks resizing a garden if any existing `BedPlacement` would go out of bounds; `GardenBedSerializer.validate()` blocks resizing a bed if any existing `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors` → `form.setError('root')` in the dialog.
-
----
-
-### PlantVariety *(planned — design decision pending)*
-Distinguishes cultivars ("Cherokee Purple", "Roma") from species ("Tomato"). Could be a field on `UserPlant` (simpler) or a separate model (required if AI or catalog features need variety-specific advice). Decide before building the plant catalog.
-
-### Observation *(planned)*
-A unified event log attached to a `UserPlant` or `GardenBed`. Covers pest sightings, watering notes, fertilizing events, and general journal entries — all share the same structure (date, note, type). Prevents proliferating separate models for each tracking feature.
-
-### HarvestLog *(planned)*
-Records individual harvest events with a quantity/weight measurement. Distinct from `Observation` because it's a measurement, not a note. Could fold into `Observation` with a type field, or stand alone — decide when building harvest tracking.
-
-### Task *(planned)*
-Reminders and to-dos optionally linked to a Garden, GardenBed, or UserPlant. Has a due date and a completed flag. The notification/scheduling side is handled by Celery (already planned).
-
-### Photo *(planned)*
-Generic image attachment linkable to multiple entity types (Garden, GardenBed, UserPlant). Implementation options: Django content type framework (`GenericForeignKey`) or explicit nullable FKs per entity — decide when building image uploads.
-
-### AIConversation *(planned)*
-- user: ForeignKey(User)
-- prompt: text
-- response: text
-
----
-
-### Plant catalog ownership *(design decision)*
-The `Plant` catalog is currently implied to be a global shared catalog (all users reference the same "Tomato" entry). This is the right default for AI features and companion planting data, but requires a curation/seeding strategy. A hybrid (global catalog + user-created custom varieties) is common but more complex — defer unless needed.
-
----
-
-Ownership is enforced at the queryset level — users only see and modify their own gardens.
-
-### Garden API contract
-
-- `GET    /api/gardens/`                    → 200 `[{ id, name, description, created_at, updated_at, owner }]`
-- `POST   /api/gardens/`                    → 201 `{ id, name, description, created_at, updated_at, owner }`
-- `GET    /api/gardens/:id/`               → 200 `{ id, ... }`
-- `PATCH  /api/gardens/:id/`               → 200 `{ id, ... }`
-- `DELETE /api/gardens/:id/`               → 204
-
-### GardenBed API contract
-
-Nested under a garden — ownership enforced via the parent garden's owner check.
-
-- `GET    /api/gardens/:id/beds/`          → 200 `[{ id, garden, name, length, width, depth, unit, facing, avg_sunlight_hours, soil_type, notes, created_at, updated_at }]`
-- `POST   /api/gardens/:id/beds/`          → 201 `{ id, ... }`
-- `GET    /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
-- `PATCH  /api/gardens/:id/beds/:bedId/`   → 200 `{ id, ... }`
-- `DELETE /api/gardens/:id/beds/:bedId/`   → 204
-
-### BedPlacement API contract
-
-Nested under a garden. Requires garden to have `length`, `width`, and `unit` set.
-
-- `GET    /api/gardens/:id/bed-placements/`                        → 200 `[{ id, bed, garden, x, y, width, height, created_at, updated_at }]`
-- `POST   /api/gardens/:id/bed-placements/`                        → 201 `{ id, ... }`
-- `DELETE /api/gardens/:id/bed-placements/:bedPlacementId/`        → 204
+**Planned models** (design context only — fields in code when built):
+- `Season` — groups planting by growing year; needed for crop rotation logic
+- `PlantVariety` — distinguishes cultivars from species; field on UserPlant (simpler) vs separate model (needed for AI/catalog features) — decide before building
+- `HarvestLog` — measurement record; may fold into `Observation` with a type field or stand alone
+- `Task` — reminders with due date + completed flag; notification side handled by Celery
+- `Photo` — image attachments; `GenericForeignKey` vs explicit nullable FKs — decide when building
+- `AIConversation` — prompt/response log per user
 
 ---
 
 # 🌐 API Conventions
 
-- Base URL: `/api/`
-- Auth endpoints: `/api/auth/*`
-- Responses are JSON
+- Base URL: `/api/`, auth endpoints at `/api/auth/*`
+- All JSON field names are camelCase — converted automatically by `djangorestframework-camel-case`; Django serializers and models stay snake_case
 - Timestamps in ISO 8601 format
-- All JSON field names are camelCase (e.g. `avgSunlightHours`, `createdAt`) — converted automatically by `djangorestframework-camel-case`. Django serializers and models remain snake_case; the conversion happens at the HTTP boundary.
-- JWT access tokens expire in 5 minutes (SimpleJWT default). The frontend client silently refreshes using the stored refresh token on 401 and retries the original request.
+- JWT access tokens expire in 5 minutes; the frontend silently refreshes on 401 and retries the original request
+- Endpoint URLs and response shapes live in `urls.py` and serializers — read the code directly
 
 ---
 
@@ -324,58 +197,20 @@ These are explicitly out of scope, at least initially:
 
 ## ✅ Completed
 
-- User authentication (login/logout, JWT tokens, protected routes)
-- User registration (`POST /api/auth/register/` — creates user and returns JWT tokens; frontend at `/register` with link from login page)
-- Dark mode toggle (persisted to localStorage, synced with OS preference)
-- Create, delete, and view multiple gardens
-- Edit existing gardens (name and description, via inline dialog)
-- Garden list as responsive card grid
-- Field-level server error mapping on forms
-- Garden detail page (`/gardens/:id`) — dedicated page per garden
-- Garden bed CRUD — create, edit, delete beds nested under a garden; beds display name, dimensions, facing, sunlight, soil type, and notes on the card
-- Abstract `BaseModel` in `core/` app — all models inherit `id` (UUID), `created_at`, `updated_at`
-- Plant catalog (`GET /api/plants/`) — global seeded catalog of 41 common plants across vegetable, herb, fruit, flower, and other categories; read-only via API
-- UserPlant CRUD — add, edit, delete plants within a garden bed (`/api/gardens/:id/beds/:bedId/plants/`); supports variety, planted date, status, and notes
-- Garden bed detail page (`/gardens/:id/beds/:bedId`) — dedicated bookmarkable page per bed; shows full metadata (facing, sunlight, soil type, notes) and plant list with full CRUD; bed metadata editable via modal
-- Plant catalog picker UI — replaces native select in the add/edit plant flow; searchable by name, filterable by category pills; selected plant shown as a persistent chip so context is clear when switching filters
-- Bed cards on the garden detail page simplified to summary view — clicking the card navigates to the bed detail page; edit/delete still accessible from the card's dropdown
-- camelCase API responses — `djangorestframework-camel-case` converts snake_case at the HTTP boundary; frontend types and Zod schemas updated to match
-- JWT silent refresh — on 401, frontend retries the original request with a fresh token; redirects to login if refresh fails
-- Feature-based folder structure for `/components` and `/pages` — organized by domain (gardens, plants, shared, etc.)
-- PostgreSQL (local) — replaced SQLite with PostgreSQL; environment variables managed via `python-decouple`
-- Docker + Docker Compose — full local dev stack (frontend, backend, PostgreSQL) runs with `docker compose up -d`; hot reload via volume mounts; DB healthcheck ensures startup order
-- Vercel deployment — frontend live at `https://garden-ai-gamma.vercel.app`; auto-deploys on push to `main`; `VITE_API_URL` env var for backend URL; `vercel.json` rewrite rule for React Router SPA routing
-- Railway deployment — Django backend live at `https://garden-ai-production-6a57.up.railway.app`; managed PostgreSQL on Railway; gunicorn + whitenoise for production serving; `dj-database-url` parses `DATABASE_URL`
-- View all beds page (`/beds`) — flat list grouped by garden; `GET /api/beds/` flat-list endpoint; `gardenName` added to bed serializer
-- View all plants page (`/plants`) — flat list with status badges and links to bed/garden; `GET /api/userplants/` flat-list endpoint; `bedName`, `gardenId`, `gardenName` added to user plant serializer
-- `BedDetails` shared component — facing, sunlight, soil, notes icon rows; `showNotes` prop; `formatDimensions`/`facingLabel`/`bedHasDetails` extracted to `src/lib/beds.ts`
-- TanStack Query cache optimization — prefix-based invalidation, `initialData` seeding across list→detail navigation; zero redundant API calls when navigating between all-beds, garden detail, and bed detail pages
-- `CardActionsMenu` shared component in `components/ui/` — edit/delete/move dropdown; accepts `onEdit`, `onDelete`, `onMove` (optional), `isDeleting`, `label` props; used by `GardenItem`, `BedItem`, and plant lists
-- Move plant between beds — PATCH `bed` field on `UserPlant`; `validate_bed` in serializer enforces target bed ownership; `MovePlantDialog` two-step wizard (pick bed or create a new one inline without stacking dialogs); wired into `BedDetail` and `AllPlants`
-- Full edit/delete/move actions on `AllPlants` page — `UserPlantDialog` and `MovePlantDialog` both accessible from the list
-- `NativeSelectField` custom chevron — `appearance-none` removes browser arrow; custom `ChevronDownIcon` absolutely positioned in a wrapper div; `pr-7` reserves space
-- `Observation` model — tracks plant events; `user_plant` FK, `observed_date` (date), `type` enum (`status_change`, `harvest`, `pest`, `weather`, `disease`, `general`), `note`, `previous_status`, `new_status`; ordered chronologically; full CRUD API nested under UserPlant
-- Auto-observation on status change — `UserPlantSerializer.create()`/`update()` creates a `status_change` observation using the user's local date derived from `UserProfile.timezone`
-- `UserProfile` model — `timezone` CharField (default `UTC`), auto-created via `post_save` signal on User; `GET/PATCH /api/auth/profile/`; frontend sends browser timezone on login and register
-- `dormant` and `fruiting` statuses — `harvested` removed (harvest is an observation event, not a status); `harvest` observation type added
-- `planted_date` renamed to `start_date` on `UserPlant`; dialog label updated to "Start Date"
-- `PlantTimeline` component — expandable per-plant section on bed detail; quick status chips, chronological history with type icons and alternating row shading, inline "Add Observation" form; manual `status_change` type for correcting erroneous auto-generated entries
-- `PlantPlacement` model — `OneToOneField` → `UserPlant`, FK → `GardenBed`, `x/y/width/height`; sq-ft grid normalization; full CRUD API at `/api/gardens/:id/beds/:bedId/placements/`
-- `BedGrid` component — 96px sq-ft grid on bed detail page; click empty cell to place a plant, hover occupied cell to remove; self-contained (owns placements query, mutations, `PlacePlantDialog`); shows loading state until placements are fetched to prevent stale unplaced list
-- Docker migration hook — `PostToolUse` Bash hook auto-runs `docker compose exec backend python manage.py migrate` after any `makemigrations` command
-- Garden dimensions — `length`, `width`, `unit` added to `Garden` model; shown on garden cards; prerequisite for `BedPlacement` grid view
-- `bed_count` on `GardenSerializer`, `plant_count` on `GardenBedSerializer` — computed via `source="<related_manager>.count"`; shown on garden and bed cards
-- `placement_id` on `UserPlantSerializer` — `SerializerMethodField` returning the UUID of the associated `PlantPlacement` or null; cascade delete of placement when `bed` changes
-- Move plant fix — `UserPlantSerializer.update()` deletes existing `PlantPlacement` when bed changes; `MovePlantDialog` warns user when moving a placed plant; original bed's placements cache invalidated on move
-- UI consistency pass — `GardenDialog` (merged create/edit); inline form removed from gardens page; Add buttons on all three "all" pages; `BedDialog`/`UserPlantDialog` accept optional `gardenId`/`bedId` with inline selectors; `AllGardens.tsx` rename; "Your X" headings everywhere; `PlantItem` component; `MovePlantDialog` refactored into `PickBedStep`/`CreateBedStep`; `BedItem` reused on `AllBeds` page; `posInt`/`optPosInt` extracted to `src/lib/zod.ts`
-- `PlacementGrid` generic UI component in `components/ui/` — shared by `BedGrid` and `GardenGrid`; owns CSS grid rendering, cell iteration, multi-cell span (`gridTemplateRows` + explicit `gridColumnStart`/`gridRowStart`), empty cell button, hover-to-remove overlay; `renderCell` render prop for domain-specific cell content
-- `BedPlacement` model, serializer, viewset, URLs — `GET/POST /api/gardens/:id/bed-placements/`, `DELETE /api/gardens/:id/bed-placements/:id/`; bounds validation in serializer; `GardenScopedMixin` extracted and shared by `GardenBedViewSet` and `BedPlacementViewSet`
-- `GardenGrid` component — wraps `PlacementGrid`; computes bed footprint from dimensions at create time; shows bed name, dimensions, and plant count per cell; rendered on garden detail page when garden has dimensions set
-- `PlaceBedDialog` — two-section layout ("Select a bed" / "Won't fit here"); pre-filters by bounds + overlap at the clicked cell; shows dimensions inline; disabled beds shown with section label explaining why
-- Edit and delete garden from garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens`; matches `BedDetail` button pattern
-- `FormRootError` component — styled callout (border, background tint, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages; `nonFieldErrors` camelCase bug fixed in `errors.ts`; fallback no longer leaks field key names to users
-- Heading hierarchy — `h1` for page titles, `h2` for section headings across all pages; `h1` size reduced from 56px to 36px (28px mobile) to fit app context rather than marketing hero
-- `useConfirm` hook — `ConfirmProvider` in `main.tsx` mounts one global dialog; `useConfirm()` returns `confirm(options) => Promise<boolean>`; all destructive deletes (garden, bed, plant) use `await confirm(...)` before firing the mutation; no per-component dialog state or JSX needed
+> High-level deliverables only. Implementation detail lives in the code and git history.
+
+- User authentication — registration, login/logout, JWT tokens, silent refresh, protected routes
+- Dark mode toggle — persisted to localStorage, synced with OS preference
+- Full garden CRUD — list, detail page, create, edit, delete; responsive card grid
+- Full garden bed CRUD — nested under gardens; detail page with metadata, layout grid, and plant list
+- Full plant management — add/edit/delete plants per bed; move between beds; plant detail page (`/plants/:plantId`) with full timeline
+- Plant catalog — global seeded catalog of 41 plants; searchable/filterable picker UI
+- Observation timeline — per-plant event log (status changes, harvest, pest, weather, disease, general); auto-logged on status change
+- Visual grid layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementGrid` component
+- All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
+- Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
+- Deployed to production — frontend on Vercel, backend + DB on Railway
+- Backend tests — 35 tests covering garden, bed, plant, placement, and observation endpoints; CI via GitHub Actions blocks merges on failure
 
 ## 📋 Planned
 
@@ -385,6 +220,7 @@ These are explicitly out of scope, at least initially:
 
 ### Authentication & Accounts
 - User profile (timezone, locale settings, first/last name)
+- Forgot password — email-based reset flow; Django's built-in password reset views + SimpleJWT; requires email backend (SMTP or SES)
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
@@ -396,7 +232,6 @@ These are explicitly out of scope, at least initially:
 
 ### Plants
 - Transplant tracking — auto-log an observation when a plant is moved between beds; primary use case is moving from an indoor bed (window/artificial light) to an outdoor bed; a dedicated `transplant` observation type is likely the right approach but deferred until the move-log UX is designed
-- Dedicated plant detail page (`/plants/:plantId`) — full observation timeline, status history, and plant metadata on its own bookmarkable page; currently the timeline is only accessible as a collapsible section within the bed detail page; consistent with the Garden → Bed → Plant hierarchy where every level has a detail page
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
@@ -404,14 +239,13 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Testing
-- **Backend unit tests** — serializer validation logic, model methods, helper functions (e.g. `bed_grid_dimensions`); use DRF's `APITestCase` against a real test DB; no mocking
-- **Backend integration tests** — full API endpoint coverage (auth, gardens, beds, plants, placements, observations); assert status codes, response shapes, and ownership enforcement
+- **Backend test coverage gaps** — auth endpoints (register, login) and observation endpoints not yet covered; expand before adding new features
 - **Frontend unit/component tests** — Vitest + React Testing Library; test user-facing behaviour (form validation, conditional rendering, interactions); not implementation details
 - **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation
-- **CI pipeline** — GitHub Actions: lint (`ruff`, `eslint`), type check (`tsc --noEmit`), unit tests on every PR; e2e on merge to `main`; Vercel/Railway auto-deploy runs after CI passes
+- **CI pipeline expansion** — add lint (`ruff`, `eslint`) and type check (`tsc --noEmit`) steps to GitHub Actions; e2e on merge to `main`
 
 ### Deployment & Infrastructure
-- CI/CD pipeline (GitHub Actions) — lint, type check, and unit tests gate every PR; Vercel/Railway auto-deploy already handles the deploy step
+- CI/CD pipeline expansion — lint and type check gates on every PR; Vercel/Railway auto-deploy already handles the deploy step
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
