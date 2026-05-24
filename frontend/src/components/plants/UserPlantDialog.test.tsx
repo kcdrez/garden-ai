@@ -11,11 +11,14 @@ vi.mock('@/api/plants', () => ({
   createUserPlant: vi.fn(),
   updateUserPlant: vi.fn(),
 }));
-vi.mock('@/api/gardens', () => ({ fetchGardens: vi.fn().mockResolvedValue([]) }));
+vi.mock('@/api/gardens', () => ({
+  fetchGardens: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('@/api/beds', () => ({ fetchBeds: vi.fn().mockResolvedValue([]) }));
 
 vi.mock('@/components/plants/PlantPicker', async () => {
-  const { useController } = await vi.importActual<typeof RHF>('react-hook-form');
+  const { useController } =
+    await vi.importActual<typeof RHF>('react-hook-form');
 
   function MockPlantPicker({
     plants,
@@ -47,7 +50,8 @@ const catalogPlant: Plant = {
   id: 'catalog-1',
   commonName: 'Tomato',
   category: 'vegetable',
-  latinName: null,
+  scientificName: '',
+  description: '',
 };
 
 beforeEach(() => {
@@ -59,11 +63,18 @@ beforeEach(() => {
 describe('UserPlantDialog', () => {
   it('shows the Add Plant submit button in create mode', async () => {
     render(
-      <UserPlantDialog gardenId="garden-1" bedId="bed-1" open onOpenChange={onOpenChange} />,
+      <UserPlantDialog
+        gardenId="garden-1"
+        bedId="bed-1"
+        open
+        onOpenChange={onOpenChange}
+      />,
     );
     // await the query to settle so we don't get the async act() warning
     await screen.findByRole('button', { name: /tomato/i });
-    expect(screen.getByRole('button', { name: /add plant/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /add plant/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows "Edit Plant" title in edit mode', () => {
@@ -81,7 +92,12 @@ describe('UserPlantDialog', () => {
 
   it('submit is disabled until a plant is selected', async () => {
     render(
-      <UserPlantDialog gardenId="garden-1" bedId="bed-1" open onOpenChange={onOpenChange} />,
+      <UserPlantDialog
+        gardenId="garden-1"
+        bedId="bed-1"
+        open
+        onOpenChange={onOpenChange}
+      />,
     );
     await screen.findByRole('button', { name: /tomato/i });
     expect(screen.getByRole('button', { name: /add plant/i })).toBeDisabled();
@@ -90,18 +106,30 @@ describe('UserPlantDialog', () => {
   it('enables submit after selecting a plant', async () => {
     const user = userEvent.setup();
     render(
-      <UserPlantDialog gardenId="garden-1" bedId="bed-1" open onOpenChange={onOpenChange} />,
+      <UserPlantDialog
+        gardenId="garden-1"
+        bedId="bed-1"
+        open
+        onOpenChange={onOpenChange}
+      />,
     );
 
     await user.click(await screen.findByRole('button', { name: /tomato/i }));
 
-    expect(screen.getByRole('button', { name: /add plant/i })).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /add plant/i }),
+    ).not.toBeDisabled();
   });
 
   it('calls createUserPlant on submit in create mode', async () => {
     const user = userEvent.setup();
     render(
-      <UserPlantDialog gardenId="garden-1" bedId="bed-1" open onOpenChange={onOpenChange} />,
+      <UserPlantDialog
+        gardenId="garden-1"
+        bedId="bed-1"
+        open
+        onOpenChange={onOpenChange}
+      />,
     );
 
     await user.click(await screen.findByRole('button', { name: /tomato/i }));

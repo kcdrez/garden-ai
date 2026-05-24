@@ -9,14 +9,27 @@ import PlantPicker from './PlantPicker';
 const schema = z.object({ plant: z.string() });
 
 function TestWrapper({ plants }: { plants: Plant[] }) {
-  const { control } = useForm({ resolver: zodResolver(schema), defaultValues: { plant: '' } });
+  const { control } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { plant: '' },
+  });
   return <PlantPicker control={control} name="plant" plants={plants} />;
 }
 
 const mockPlants: Plant[] = [
-  { id: 'p1', commonName: 'Tomato', category: 'vegetable', latinName: null },
-  { id: 'p2', commonName: 'Basil', category: 'herb', latinName: null },
-  { id: 'p3', commonName: 'Sunflower', category: 'flower', latinName: null },
+  {
+    id: 'p1',
+    commonName: 'Tomato',
+    category: 'vegetable',
+    scientificName: null,
+  },
+  { id: 'p2', commonName: 'Basil', category: 'herb', scientificName: null },
+  {
+    id: 'p3',
+    commonName: 'Sunflower',
+    category: 'flower',
+    scientificName: null,
+  },
 ];
 
 describe('PlantPicker', () => {
@@ -24,7 +37,9 @@ describe('PlantPicker', () => {
     render(<TestWrapper plants={mockPlants} />);
     expect(screen.getByRole('button', { name: /tomato/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /basil/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sunflower/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /sunflower/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows "None selected" when no plant is chosen', () => {
@@ -48,7 +63,9 @@ describe('PlantPicker', () => {
     await user.type(screen.getByPlaceholderText(/search plants/i), 'bas');
 
     expect(screen.getByRole('button', { name: /basil/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /tomato/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /tomato/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows "No plants found" when search matches nothing', async () => {
@@ -67,7 +84,9 @@ describe('PlantPicker', () => {
     await user.click(screen.getByRole('button', { name: /^herb$/i }));
 
     expect(screen.getByRole('button', { name: /basil/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /tomato/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /tomato/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('resets to all plants when the All chip is clicked', async () => {
