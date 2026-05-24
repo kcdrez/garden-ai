@@ -21,14 +21,22 @@ const mockPlants: Plant[] = [
     id: 'p1',
     commonName: 'Tomato',
     category: 'vegetable',
-    scientificName: null,
+    scientificName: '',
+    description: '',
   },
-  { id: 'p2', commonName: 'Basil', category: 'herb', scientificName: null },
+  {
+    id: 'p2',
+    commonName: 'Basil',
+    category: 'herb',
+    scientificName: '',
+    description: '',
+  },
   {
     id: 'p3',
     commonName: 'Sunflower',
     category: 'flower',
-    scientificName: null,
+    scientificName: '',
+    description: '',
   },
 ];
 

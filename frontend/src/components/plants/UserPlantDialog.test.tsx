@@ -26,7 +26,7 @@ vi.mock('@/components/plants/PlantPicker', async () => {
     name,
   }: {
     plants: Plant[];
-    control: unknown;
+    control: RHF.Control;
     name: string;
   }) {
     const { field } = useController({ control, name });
