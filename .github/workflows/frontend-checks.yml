@@ -34,6 +34,6 @@ jobs:
         working-directory: frontend
         run: npm run typecheck
 
-      - name: Unit tests
+      - name: Unit tests with coverage (90% statements floor)
         working-directory: frontend
-        run: npm run test:run
+        run: npm run coverage

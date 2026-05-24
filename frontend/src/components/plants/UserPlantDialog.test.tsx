@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
 import { mockUserPlant } from '@/test/fixtures';
 import type { Plant } from '@/types/plants';
+import type * as RHF from 'react-hook-form';
 import UserPlantDialog from './UserPlantDialog';
 
 vi.mock('@/api/plants', () => ({
@@ -13,8 +14,10 @@ vi.mock('@/api/plants', () => ({
 vi.mock('@/api/gardens', () => ({ fetchGardens: vi.fn().mockResolvedValue([]) }));
 vi.mock('@/api/beds', () => ({ fetchBeds: vi.fn().mockResolvedValue([]) }));
 
-vi.mock('@/components/plants/PlantPicker', () => ({
-  default: ({
+vi.mock('@/components/plants/PlantPicker', async () => {
+  const { useController } = await vi.importActual<typeof RHF>('react-hook-form');
+
+  function MockPlantPicker({
     plants,
     control,
     name,
@@ -22,8 +25,7 @@ vi.mock('@/components/plants/PlantPicker', () => ({
     plants: Plant[];
     control: unknown;
     name: string;
-  }) => {
-    const { useController } = require('react-hook-form');
+  }) {
     const { field } = useController({ control, name });
     return (
       <div>
@@ -34,8 +36,10 @@ vi.mock('@/components/plants/PlantPicker', () => ({
         ))}
       </div>
     );
-  },
-}));
+  }
+
+  return { default: MockPlantPicker };
+});
 
 const onOpenChange = vi.fn();
 
