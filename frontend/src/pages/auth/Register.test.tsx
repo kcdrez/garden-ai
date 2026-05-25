@@ -14,10 +14,11 @@ beforeEach(() => {
 
 async function fillForm(
   user: ReturnType<typeof userEvent.setup>,
-  overrides: { username?: string; password?: string; confirm?: string } = {},
+  overrides: { username?: string; email?: string; password?: string; confirm?: string } = {},
 ) {
-  const { username = 'alice', password = 'securepass', confirm = 'securepass' } = overrides;
+  const { username = 'alice', email = 'alice@example.com', password = 'securepass', confirm = 'securepass' } = overrides;
   await user.type(screen.getByLabelText(/username/i), username);
+  await user.type(screen.getByLabelText(/email/i), email);
   await user.type(screen.getByLabelText(/^password$/i), password);
   await user.type(screen.getByLabelText(/confirm password/i), confirm);
 }
@@ -62,7 +63,7 @@ describe('Register', () => {
     await fillForm(user);
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(register).toHaveBeenCalledWith('alice', 'securepass', 'securepass', undefined);
+    expect(register).toHaveBeenCalledWith('alice', 'securepass', 'securepass', 'alice@example.com');
   });
 
   it('navigates to gardens on successful registration', async () => {

@@ -20,7 +20,7 @@ export default function Register() {
 
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      await register(values.username, values.password, values.password_confirm, values.email || undefined);
+      await register(values.username, values.password, values.password_confirm, values.email);
       navigate(routes.gardens());
     } catch (err) {
       applyServerErrors(err, form, ['username', 'email', 'password', 'password_confirm']);
@@ -34,12 +34,12 @@ export default function Register() {
 
         <Form form={form} onSubmit={onSubmit}>
           <TextField control={form.control} name="username" label="Username" placeholder="username" />
-          <TextField control={form.control} name="email" label="Email (optional)" placeholder="you@example.com" type="email" />
+          <TextField control={form.control} name="email" label="Email" placeholder="you@example.com" type="email" />
           <TextField control={form.control} name="password" label="Password" placeholder="password" type="password" />
           <TextField control={form.control} name="password_confirm" label="Confirm Password" placeholder="confirm password" type="password" />
 
           <Button type="submit" className="w-full" disabled={!form.formState.isValid || form.formState.isSubmitting}>
-            Create Account
+            Create account
           </Button>
 
           <FormRootError message={form.formState.errors.root?.message} />
