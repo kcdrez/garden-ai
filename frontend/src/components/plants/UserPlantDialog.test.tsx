@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
-import { mockUserPlant } from '@/test/fixtures';
+import { fetchGardens } from '@/api/gardens';
+import { mockUserPlant, mockGarden } from '@/test/fixtures';
 import type { Plant } from '@/types/plants';
 import type * as RHF from 'react-hook-form';
 import UserPlantDialog from './UserPlantDialog';
@@ -185,5 +186,27 @@ describe('UserPlantDialog', () => {
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
+  it('renders garden and bed pickers when neither gardenId nor bedId is provided', async () => {
+    render(<UserPlantDialog open onOpenChange={onOpenChange} />);
+
+    await screen.findByRole('button', { name: /tomato/i });
+
+    expect(screen.getByRole('combobox', { name: /garden/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /bed/i })).toBeInTheDocument();
+  });
+
+  it('removes the opacity class from the bed picker once a garden is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchGardens).mockResolvedValueOnce([mockGarden]);
+    render(<UserPlantDialog open onOpenChange={onOpenChange} />);
+
+    await screen.findByRole('button', { name: /tomato/i });
+
+    const gardenSelect = screen.getByRole('combobox', { name: /garden/i });
+    await user.selectOptions(gardenSelect, 'garden-1');
+
+    expect(screen.getByRole('combobox', { name: /bed/i })).not.toHaveClass('opacity-50');
   });
 });

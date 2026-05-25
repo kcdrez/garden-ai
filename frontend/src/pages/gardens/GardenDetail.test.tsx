@@ -1,4 +1,7 @@
 import { render, screen, waitFor } from '@/test/test-utils';
+import { render as rtlRender } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { fetchGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
@@ -6,6 +9,22 @@ import { mockUseParams } from '@/test/test-setup';
 import { mockGarden, mockBed } from '@/test/fixtures';
 import type { Garden, GardenBed } from '@/types/gardens';
 import GardenDetail from './GardenDetail';
+
+function renderWithCache(entries: Array<[unknown[], unknown]>) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  });
+  for (const [key, data] of entries) {
+    queryClient.setQueryData(key, data);
+  }
+  return rtlRender(<GardenDetail />, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>{children}</MemoryRouter>
+      </QueryClientProvider>
+    ),
+  });
+}
 
 vi.mock('@/api/gardens', () => ({ fetchGarden: vi.fn() }));
 vi.mock('@/api/beds', () => ({ fetchBeds: vi.fn() }));
@@ -60,5 +79,37 @@ describe('GardenDetail', () => {
     await user.click(screen.getByRole('button', { name: /add bed/i }));
 
     expect(screen.getByRole('dialog', { name: /add bed dialog/i })).toBeInTheDocument();
+  });
+
+  it('shows an error message when the garden fails to load', async () => {
+    vi.mocked(fetchGarden).mockRejectedValue(new Error('Network error'));
+    render(<GardenDetail />);
+
+    expect(await screen.findByText(/network error/i)).toBeInTheDocument();
+  });
+
+  it('renders the garden layout section when the garden has dimensions', async () => {
+    vi.mocked(fetchGarden).mockResolvedValue({ ...mockGarden, length: 10, width: 8 });
+    render(<GardenDetail />);
+
+    await screen.findByText('Header: Front Yard');
+    expect(screen.getByText('Garden Grid')).toBeInTheDocument();
+  });
+
+  it('renders null when the garden is not found', async () => {
+    vi.mocked(fetchGarden).mockResolvedValue(undefined as never);
+    render(<GardenDetail />);
+
+    await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument());
+    expect(screen.queryByText(/header:/i)).not.toBeInTheDocument();
+  });
+
+  it('uses cached garden and beds when the all-gardens and all-beds caches are populated', async () => {
+    renderWithCache([
+      [['gardens'], [mockGarden]],
+      [['beds', 'all'], [mockBed]],
+    ]);
+
+    expect(await screen.findByText('Header: Front Yard')).toBeInTheDocument();
   });
 });

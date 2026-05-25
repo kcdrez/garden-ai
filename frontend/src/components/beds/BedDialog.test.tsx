@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { createBed, updateBed } from '@/api/beds';
-import { mockBed } from '@/test/fixtures';
+import { fetchGardens } from '@/api/gardens';
+import { mockBed, mockGarden } from '@/test/fixtures';
 import BedDialog from './BedDialog';
 
 vi.mock('@/api/beds', () => ({ createBed: vi.fn(), updateBed: vi.fn() }));
@@ -76,5 +77,58 @@ describe('BedDialog', () => {
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
+  it('submits with depth and avgSunlightHours when provided', async () => {
+    const user = userEvent.setup();
+    render(<BedDialog gardenId="garden-1" open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText(/^name$/i), 'Herb Bed');
+    await user.type(screen.getByLabelText(/^length$/i), '4');
+    await user.type(screen.getByLabelText(/^width$/i), '4');
+    await user.type(screen.getByLabelText(/depth/i), '12');
+    await user.type(screen.getByLabelText(/avg. sunlight/i), '6');
+    await user.click(screen.getByRole('button', { name: /add bed/i }));
+
+    await waitFor(() =>
+      expect(createBed).toHaveBeenCalledWith(
+        'garden-1',
+        expect.objectContaining({ depth: 12, avgSunlightHours: 6 }),
+      ),
+    );
+  });
+
+  it('shows garden picker with options when gardenId is not provided', async () => {
+    vi.mocked(fetchGardens).mockResolvedValueOnce([mockGarden]);
+    render(<BedDialog open onOpenChange={onOpenChange} />);
+
+    expect(screen.getByRole('combobox', { name: /garden/i })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: /front yard/i })).toBeInTheDocument();
+  });
+
+  it('shows a field validation error when a required field is emptied', async () => {
+    const user = userEvent.setup();
+    render(<BedDialog gardenId="garden-1" open onOpenChange={onOpenChange} />);
+
+    const nameInput = screen.getByLabelText(/^name$/i);
+    await user.type(nameInput, 'a');
+    await user.clear(nameInput);
+
+    await waitFor(() =>
+      expect(screen.getByText(/name is required/i)).toBeInTheDocument(),
+    );
+  });
+
+  it('applies server errors to the form on failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createBed).mockRejectedValue(new Error('Server error'));
+    render(<BedDialog gardenId="garden-1" open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText(/^name$/i), 'Herb Bed');
+    await user.type(screen.getByLabelText(/^length$/i), '4');
+    await user.type(screen.getByLabelText(/^width$/i), '4');
+    await user.click(screen.getByRole('button', { name: /add bed/i }));
+
+    await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
   });
 });

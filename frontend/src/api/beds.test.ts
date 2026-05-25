@@ -1,5 +1,5 @@
 import {
-  fetchAllBeds, fetchBeds, createBed, updateBed, deleteBed,
+  fetchAllBeds, fetchBeds, fetchBed, createBed, updateBed, deleteBed,
   fetchBedPlacements, createBedPlacement, deleteBedPlacement,
 } from './beds';
 import { api } from './client';
@@ -27,6 +27,20 @@ describe('fetchBeds', () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
     await fetchBeds('g1');
     expect(api.get).toHaveBeenCalledWith('/gardens/g1/beds/');
+  });
+
+  it('returns an empty array when data is null', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: null });
+    expect(await fetchBeds('g1')).toEqual([]);
+  });
+});
+
+describe('fetchBed', () => {
+  it('calls GET /gardens/:gardenId/beds/:bedId/ and returns the data', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { id: 'b1' } });
+    const result = await fetchBed('g1', 'b1');
+    expect(api.get).toHaveBeenCalledWith('/gardens/g1/beds/b1/');
+    expect(result).toEqual({ id: 'b1' });
   });
 });
 

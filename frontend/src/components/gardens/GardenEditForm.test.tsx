@@ -59,4 +59,41 @@ describe('GardenEditForm', () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
+
+  it('pre-fills length and width when the garden has dimensions', async () => {
+    const gardenWithDims = { ...mockGarden, length: 10, width: 8 };
+    render(<GardenEditForm garden={gardenWithDims} open={true} onOpenChange={onOpenChange} />);
+
+    expect(await screen.findByDisplayValue('10')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('8')).toBeInTheDocument();
+  });
+
+  it('submits with length and width parsed as integers', async () => {
+    const user = userEvent.setup();
+    const gardenWithDims = { ...mockGarden, length: 10, width: 8 };
+    render(<GardenEditForm garden={gardenWithDims} open={true} onOpenChange={onOpenChange} />);
+
+    await screen.findByDisplayValue('10');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() =>
+      expect(updateGarden).toHaveBeenCalledWith(
+        'garden-1',
+        expect.objectContaining({ length: 10, width: 8 }),
+      ),
+    );
+  });
+
+  it('applies server errors to the form on failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateGarden).mockRejectedValue(new Error('Server error'));
+    render(<GardenEditForm garden={mockGarden} open={true} onOpenChange={onOpenChange} />);
+
+    const nameInput = await screen.findByRole('textbox', { name: /name/i });
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Back Yard');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
+  });
 });

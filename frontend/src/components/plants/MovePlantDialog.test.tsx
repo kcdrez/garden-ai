@@ -73,4 +73,33 @@ describe('MovePlantDialog', () => {
       expect(moveUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1', 'bed-2'),
     );
   });
+
+  it('shows a placement warning when the plant has a placementId', async () => {
+    const plantWithPlacement = { ...mockUserPlant, placementId: 'place-1' };
+    render(<MovePlantDialog userPlant={plantWithPlacement} open onOpenChange={onOpenChange} />);
+
+    expect(
+      await screen.findByText(/this plant is currently placed on the grid/i),
+    ).toBeInTheDocument();
+  });
+
+  it('creates a new bed and returns to the pick step', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchGardens).mockResolvedValue([
+      { id: 'garden-1', name: 'Front Yard', description: null, length: null, width: null, unit: 'ft', bedCount: 1, createdAt: '', updatedAt: '', owner: 1 },
+    ]);
+    render(<MovePlantDialog userPlant={mockUserPlant} open onOpenChange={onOpenChange} />);
+
+    await screen.findByRole('button', { name: /back raised bed/i });
+    await user.click(screen.getByRole('button', { name: /create new bed/i }));
+
+    await user.type(screen.getByRole('textbox', { name: /name/i }), 'New Bed');
+    await user.type(screen.getByRole('textbox', { name: /length/i }), '4');
+    await user.type(screen.getByRole('textbox', { name: /width/i }), '4');
+
+    await user.click(screen.getByRole('button', { name: /create bed/i }));
+
+    await waitFor(() => expect(createBed).toHaveBeenCalled());
+    expect(screen.getByText(/move tomato/i)).toBeInTheDocument();
+  });
 });
