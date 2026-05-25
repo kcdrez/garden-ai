@@ -29,7 +29,7 @@ describe('useDialogFormReset', () => {
       ({ open }) => useDialogFormReset(form, open, getValues),
       { initialProps: { open: true } },
     );
-    form.reset.mockClear();
+    vi.mocked(form.reset).mockClear();
 
     rerender({ open: false });
 
