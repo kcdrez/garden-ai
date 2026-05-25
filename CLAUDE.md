@@ -223,6 +223,7 @@ These are explicitly out of scope, at least initially:
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 - Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
+- Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
 
 ## 📋 Planned
 
@@ -233,7 +234,7 @@ These are explicitly out of scope, at least initially:
 ### Authentication & Accounts
 
 - User profile (timezone, locale settings, first/last name)
-- Forgot password — email-based reset flow; Django's built-in password reset views + SimpleJWT; requires email backend (SMTP or SES)
+- ~~Forgot password~~ ✅ shipped
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
