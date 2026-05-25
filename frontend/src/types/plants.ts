@@ -2,7 +2,7 @@ export type PlantCategory = "vegetable" | "herb" | "fruit" | "flower" | "other";
 
 export type UserPlantStatus = "planned" | "planted" | "growing" | "fruiting" | "dormant" | "removed";
 
-export type ObservationType = "status_change" | "harvest" | "pest" | "weather" | "disease" | "general";
+export type ObservationType = "status_change" | "transplant" | "harvest" | "pest" | "weather" | "disease" | "general";
 
 export interface Observation {
   id: string;
@@ -86,4 +86,5 @@ export const OBSERVATION_TYPES: { value: ObservationType; label: string }[] = [
   { value: "disease", label: "Disease" },
   { value: "general", label: "General" },
   { value: "status_change", label: "Status Change" },
+  { value: "transplant", label: "Transplant" },
 ];
