@@ -94,6 +94,33 @@ class LoginAPITests(APITestCase):
         self.assertEqual(profile.timezone, "UTC")
 
 
+class EmailLoginAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", email="alice@example.com", password="testpass123")
+
+    def test_login_with_email(self):
+        res = self.client.post(
+            reverse("token_obtain_pair"),
+            {"username": "alice@example.com", "password": "testpass123"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("access", res.data)
+
+    def test_login_with_username_still_works(self):
+        res = self.client.post(
+            reverse("token_obtain_pair"),
+            {"username": "alice", "password": "testpass123"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_login_with_wrong_email_rejected(self):
+        res = self.client.post(
+            reverse("token_obtain_pair"),
+            {"username": "nobody@example.com", "password": "testpass123"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class TokenRefreshAPITests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="alice", password="testpass123")
