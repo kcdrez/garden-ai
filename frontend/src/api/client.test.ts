@@ -86,4 +86,20 @@ describe('response interceptor', () => {
 
     expect(axiosMock.history.post).toHaveLength(0);
   });
+
+  it('does not attempt refresh when the failing request is the login endpoint', async () => {
+    mock.onPost('/auth/token/').reply(401);
+
+    await expect(api.post('/auth/token/', {})).rejects.toBeDefined();
+
+    expect(axiosMock.history.post).toHaveLength(0);
+  });
+
+  it('does not attempt refresh when the failing request is a password reset endpoint', async () => {
+    mock.onPost('/auth/password/reset/').reply(401);
+
+    await expect(api.post('/auth/password/reset/', {})).rejects.toBeDefined();
+
+    expect(axiosMock.history.post).toHaveLength(0);
+  });
 });

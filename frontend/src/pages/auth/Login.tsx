@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -14,6 +15,12 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const passwordReset = (location.state as { passwordReset?: boolean } | null)?.passwordReset;
+
+  useEffect(() => {
+    if (passwordReset) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [passwordReset, navigate, location.pathname]);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: '', password: '' },
@@ -39,7 +46,7 @@ export default function Login() {
         )}
 
         <Form form={form} onSubmit={onSubmit}>
-          <TextField control={form.control} name="username" label="Username" placeholder="username" />
+          <TextField control={form.control} name="username" label="Username or email" placeholder="username or email" />
           <div className="space-y-1">
             <TextField control={form.control} name="password" label="Password" placeholder="password" type="password" />
             <div className="text-right">
