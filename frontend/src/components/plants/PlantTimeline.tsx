@@ -18,7 +18,7 @@ export default function PlantTimeline({ gardenId, bedId, plant }: Props) {
   const [showForm, setShowForm] = useState(false);
 
   const { data: observations = [], isLoading, error } = useQuery({
-    queryKey: ['observations', plant.id],
+    queryKey: ['observations', plant.id, gardenId, bedId],
     queryFn: () => fetchObservations(gardenId, bedId, plant.id),
   });
 

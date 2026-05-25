@@ -119,6 +119,20 @@ class UserPlantAPITests(APITestCase):
         self.user_plant.refresh_from_db()
         self.assertEqual(self.user_plant.bed, second_bed)
 
+    def test_move_plant_creates_transplant_observation(self):
+        second_bed = GardenBed.objects.create(
+            name="Bed 2", garden=self.garden, length=4, width=8
+        )
+        self.client.patch(
+            self._detail_url(self.garden.id, self.bed.id, self.user_plant.id),
+            {"bed": str(second_bed.id)},
+        )
+        obs = Observation.objects.filter(
+            user_plant=self.user_plant, type=Observation.Type.TRANSPLANT
+        )
+        self.assertEqual(obs.count(), 1)
+        self.assertEqual(obs.first().note, f"Moved from {self.bed.name} to {second_bed.name}")
+
     def test_move_plant_to_other_users_bed_is_rejected(self):
         res = self.client.patch(
             self._detail_url(self.garden.id, self.bed.id, self.user_plant.id),
