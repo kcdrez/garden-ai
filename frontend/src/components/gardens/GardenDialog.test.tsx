@@ -79,4 +79,31 @@ describe('GardenDialog', () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
+
+  it('submits with length and width parsed as integers', async () => {
+    const user = userEvent.setup();
+    render(<GardenDialog open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText(/name/i), 'Big Garden');
+    await user.type(screen.getByLabelText(/length/i), '20');
+    await user.type(screen.getByLabelText(/width/i), '15');
+    await user.click(screen.getByRole('button', { name: /add garden/i }));
+
+    await waitFor(() =>
+      expect(createGarden).toHaveBeenCalledWith(
+        expect.objectContaining({ length: 20, width: 15 }),
+      ),
+    );
+  });
+
+  it('applies server errors to the form on failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createGarden).mockRejectedValue(new Error('Server error'));
+    render(<GardenDialog open onOpenChange={onOpenChange} />);
+
+    await user.type(screen.getByLabelText(/name/i), 'My Garden');
+    await user.click(screen.getByRole('button', { name: /add garden/i }));
+
+    await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
+  });
 });

@@ -60,4 +60,42 @@ describe('BedEditForm', () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
+
+  it('pre-fills depth when the bed has one', async () => {
+    const bedWithDepth = { ...mockBed, depth: 12, avgSunlightHours: 6 };
+    render(<BedEditForm bed={bedWithDepth} open={true} onOpenChange={onOpenChange} />);
+
+    expect(await screen.findByDisplayValue('12')).toBeInTheDocument();
+  });
+
+  it('applies server errors to the form on failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateBed).mockRejectedValue(new Error('Server error'));
+    render(<BedEditForm bed={mockBed} open={true} onOpenChange={onOpenChange} />);
+
+    const nameInput = await screen.findByRole('textbox', { name: /name/i });
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Main Bed');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
+  });
+
+  it('updates the facing field when a direction is selected', async () => {
+    const user = userEvent.setup();
+    render(<BedEditForm bed={mockBed} open={true} onOpenChange={onOpenChange} />);
+
+    const facingSelect = await screen.findByRole('combobox', { name: /facing/i });
+    await user.selectOptions(facingSelect, 'N');
+
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() =>
+      expect(updateBed).toHaveBeenCalledWith(
+        'garden-1',
+        'bed-1',
+        expect.objectContaining({ facing: 'N' }),
+      ),
+    );
+  });
 });

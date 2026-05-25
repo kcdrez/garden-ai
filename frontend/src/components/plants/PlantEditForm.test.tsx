@@ -67,4 +67,16 @@ describe('PlantEditForm', () => {
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
+
+  it('applies server errors to the form on failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateUserPlant).mockRejectedValue(new Error('Server error'));
+    render(<PlantEditForm userPlant={mockUserPlant} open={true} onOpenChange={onOpenChange} />);
+
+    const varietyInput = await screen.findByRole('textbox', { name: /variety/i });
+    await user.type(varietyInput, 'Cherry');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
+  });
 });

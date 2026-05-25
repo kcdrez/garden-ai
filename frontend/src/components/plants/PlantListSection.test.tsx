@@ -38,13 +38,33 @@ vi.mock('@/components/plants/PlantTimeline', () => ({
 }));
 
 vi.mock('@/components/plants/UserPlantDialog', () => ({
-  default: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="Plant dialog" /> : null,
+  default: ({
+    open,
+    onOpenChange,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Plant dialog">
+        <button onClick={() => onOpenChange(false)}>Close plant dialog</button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('@/components/plants/MovePlantDialog', () => ({
-  default: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="Move Plant dialog" /> : null,
+  default: ({
+    open,
+    onOpenChange,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Move Plant dialog">
+        <button onClick={() => onOpenChange(false)}>Close move dialog</button>
+      </div>
+    ) : null,
 }));
 
 function renderSection(
@@ -141,5 +161,62 @@ describe('PlantListSection', () => {
 
     await waitFor(() => expect(mockConfirm).toHaveBeenCalled());
     expect(deleteUserPlant).not.toHaveBeenCalled();
+  });
+
+  it('closes the plant dialog and clears editingPlant', async () => {
+    const user = userEvent.setup();
+    renderSection({ userPlants: [mockUserPlant] });
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
+    expect(screen.getByRole('dialog', { name: /plant dialog/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /close plant dialog/i }));
+    expect(screen.queryByRole('dialog', { name: /plant dialog/i })).not.toBeInTheDocument();
+  });
+
+  it('closes the move dialog when cancelled', async () => {
+    const user = userEvent.setup();
+    renderSection({ userPlants: [mockUserPlant] });
+
+    await user.click(screen.getByRole('button', { name: /^move$/i }));
+    expect(screen.getByRole('dialog', { name: /move plant dialog/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /close move dialog/i }));
+    expect(screen.queryByRole('dialog', { name: /move plant dialog/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the variety when the plant has one', () => {
+    const plantWithVariety = { ...mockUserPlant, variety: 'Cherry' };
+    renderSection({ userPlants: [plantWithVariety] });
+
+    expect(screen.getByText(/cherry/i)).toBeInTheDocument();
+  });
+
+  it('collapses the timeline when the chevron is clicked twice', async () => {
+    const user = userEvent.setup();
+    renderSection({ userPlants: [mockUserPlant] });
+
+    const chevron = screen.getByRole('button', { name: '' });
+    await user.click(chevron);
+    expect(screen.getByTestId('plant-timeline')).toBeInTheDocument();
+
+    await user.click(chevron);
+    expect(screen.queryByTestId('plant-timeline')).not.toBeInTheDocument();
+  });
+
+  it('includes variety in the delete confirmation description', async () => {
+    const user = userEvent.setup();
+    const plantWithVariety = { ...mockUserPlant, variety: 'Cherry' };
+    renderSection({ userPlants: [plantWithVariety] });
+
+    await user.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    await waitFor(() =>
+      expect(mockConfirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: expect.stringContaining('Cherry'),
+        }),
+      ),
+    );
   });
 });
