@@ -205,7 +205,7 @@ These are explicitly out of scope, at least initially:
 - Full garden bed CRUD — nested under gardens; detail page with metadata, layout grid, and plant list
 - Full plant management — add/edit/delete plants per bed; move between beds; plant detail page (`/plants/:plantId`) with full timeline
 - Plant catalog — global seeded catalog of 41 plants; searchable/filterable picker UI
-- Observation timeline — per-plant event log (status changes, harvest, pest, weather, disease, general); auto-logged on status change
+- Observation timeline — per-plant event log (status changes, transplants, harvest, pest, weather, disease, general); auto-logged on status change and bed move
 - Visual grid layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementGrid` component
 - All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
@@ -233,7 +233,7 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
-- Transplant tracking — auto-log an observation when a plant is moved between beds; primary use case is moving from an indoor bed (window/artificial light) to an outdoor bed; a dedicated `transplant` observation type is likely the right approach but deferred until the move-log UX is designed
+- Observation date editing — allow editing `observed_date` and `note` on any observation; the real pain point is logging an event the day after it happened (e.g. noticed disease on day 1, logged on day 2); skip editing `type` (delete and re-add is sufficient for misclicks); system-generated observations (status_change, transplant) should also be editable since the date is still user-meaningful; if type locking is ever needed, add a boolean `auto_generated` flag to `Observation` rather than inferring from type
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
