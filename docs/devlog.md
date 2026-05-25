@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-24 — ~1.5 hours
+
+**Completed:**
+- Transplant tracking — new `Observation.Type.TRANSPLANT` choice, `_record_transplant` helper in `UserPlantSerializer.update()` auto-logs "Moved from X to Y" when a plant's bed changes; migration applied; `ObservationList` renders transplant entries with an arrow icon
+- Fixed gunicorn hot-reload gap — identified that the dev backend runs gunicorn (not `runserver`), so Python file changes require a container restart to take effect
+- Fixed observations cache race condition — included `gardenId`/`bedId` in the PlantTimeline observations query key so a bed change naturally triggers a fresh fetch with the correct URL instead of racing with stale data
+- Unit tests — backend `test_move_plant_creates_transplant_observation`; frontend `ObservationList` transplant rendering test
+
+**Next up:** Observation date editing — allow editing `observed_date` and `note` on any observation so events logged after the fact can be backdated accurately
+
+---
+
 ## 2026-05-23–24 — ~2.5 hours
 
 **Completed:**
