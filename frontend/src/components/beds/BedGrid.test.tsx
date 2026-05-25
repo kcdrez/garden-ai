@@ -18,19 +18,22 @@ vi.mock('@/components/shared/PlacementGrid', () => ({
     placements,
     onEmptyCellClick,
     onRemove,
+    renderCell,
   }: {
     cols: number;
     rows: number;
     placements: GridPlacement[];
     onEmptyCellClick: (x: number, y: number) => void;
     onRemove: (id: string) => void;
+    renderCell: (p: GridPlacement) => React.ReactNode;
   }) => (
     <div data-testid="placement-grid" data-cols={cols} data-rows={rows}>
       <button onClick={() => onEmptyCellClick(1, 2)}>Click cell</button>
       {placements.map((p) => (
-        <button key={p.id} onClick={() => onRemove(p.id)}>
-          Remove {p.id}
-        </button>
+        <div key={p.id}>
+          <button onClick={() => onRemove(p.id)}>Remove {p.id}</button>
+          <div data-testid={`cell-${p.id}`}>{renderCell(p)}</div>
+        </div>
       ))}
     </div>
   ),
@@ -138,5 +141,44 @@ describe('BedGrid', () => {
     await waitFor(() =>
       expect(deletePlacement).toHaveBeenCalledWith('garden-1', 'bed-1', 'pl-1'),
     );
+  });
+
+  it('renders plant name inside a placed cell', async () => {
+    vi.mocked(fetchPlacements).mockResolvedValue([mockPlacement]);
+    render(<BedGrid gardenId="garden-1" bedId="bed-1" bed={mockBed} userPlants={[mockUserPlant]} />);
+    await screen.findByTestId('placement-grid');
+
+    expect(screen.getByText('Tomato')).toBeInTheDocument();
+  });
+
+  it('renders plant variety inside a placed cell when present', async () => {
+    const plantWithVariety = { ...mockUserPlant, variety: 'Cherry' };
+    vi.mocked(fetchPlacements).mockResolvedValue([mockPlacement]);
+    render(
+      <BedGrid gardenId="garden-1" bedId="bed-1" bed={mockBed} userPlants={[plantWithVariety]} />,
+    );
+    await screen.findByTestId('placement-grid');
+
+    expect(screen.getByText('Cherry')).toBeInTheDocument();
+  });
+
+  it('renders an empty cell when no matching userPlant is found', async () => {
+    vi.mocked(fetchPlacements).mockResolvedValue([mockPlacement]);
+    render(<BedGrid gardenId="garden-1" bedId="bed-1" bed={mockBed} userPlants={[]} />);
+
+    const cell = await screen.findByTestId('cell-pl-1');
+    expect(cell).toBeInTheDocument();
+  });
+
+  it('closes the dialog when Cancel is clicked', async () => {
+    const user = userEvent.setup();
+    render(<BedGrid gardenId="garden-1" bedId="bed-1" bed={mockBed} userPlants={[]} />);
+    await screen.findByTestId('placement-grid');
+
+    await user.click(screen.getByRole('button', { name: /click cell/i }));
+    expect(screen.getByRole('dialog', { name: /place plant/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

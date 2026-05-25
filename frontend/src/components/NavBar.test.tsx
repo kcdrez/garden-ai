@@ -8,8 +8,11 @@ vi.mock('@/auth/auth', () => ({
   auth: { clearTokens: vi.fn() },
 }));
 
+const mockToggleTheme = vi.fn();
+let mockIsDark = false;
+
 vi.mock('@/hooks/useTheme', () => ({
-  useTheme: () => ({ isDark: false, toggleTheme: vi.fn() }),
+  useTheme: () => ({ isDark: mockIsDark, toggleTheme: mockToggleTheme }),
 }));
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
@@ -27,6 +30,10 @@ vi.mock('@/components/ui/dropdown-menu', () => ({
   }) => <button onClick={onClick}>{children}</button>,
   DropdownMenuSeparator: () => <hr />,
 }));
+
+beforeEach(() => {
+  mockIsDark = false;
+});
 
 describe('NavBar', () => {
   it('renders the app name link', () => {
@@ -49,5 +56,12 @@ describe('NavBar', () => {
 
     expect(auth.clearTokens).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('shows Light mode option when dark mode is active', () => {
+    mockIsDark = true;
+    render(<NavBar />);
+
+    expect(screen.getByText('Light mode')).toBeInTheDocument();
   });
 });
