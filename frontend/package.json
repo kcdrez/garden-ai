@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.app.json",
     "test": "vitest",
     "test:run": "vitest run",
+    "coverage": "vitest run --coverage",
     "prepare": "husky"
   },
   "dependencies": {
@@ -45,7 +46,9 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.7",
     "autoprefixer": "^10.5.0",
+    "axios-mock-adapter": "^2.1.0",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",

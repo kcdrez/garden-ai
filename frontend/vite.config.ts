@@ -15,5 +15,12 @@ export default defineConfig({
     setupFiles: ['src/test/test-setup.ts'],
     globals: true,
     env: { TZ: 'UTC' },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary'],
+      thresholds: {
+        statements: 90,
+      },
+    },
   },
 })

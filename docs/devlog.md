@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-05-23–24 — ~2.5 hours
+
+**Completed:**
+- Frontend unit tests — 23 test files, 331 tests covering all components: `GardenItem`, `BedItem`, `PlantItem`, `PlacementGrid`, `BedGrid`, `GardenGrid`, `PlantTimeline`, `PlantPicker`, `PlantListSection`, `ObservationList`, `ObservationForm`, `StatusChips`, `StatusBadge`, `BedDetails`, `CardActionsMenu`, `QueryState`, all dialog components (`GardenDialog`, `BedDialog`, `UserPlantDialog`, `MovePlantDialog`, `PlacePlantDialog`, `PlaceBedDialog`), and `NavBar`
+- Coverage reporting — `text-summary` reporter added to vitest config; CI enforces 90% statement floor via `npm run coverage`
+
+**Next up:** Raise coverage floor to 90% across all metrics (branches at 78% and functions at 88% are the gaps), or move to frontend e2e tests with Playwright
+
+---
+
 ## 2026-05-22 — ~2.5 hours
 
 **Completed:**

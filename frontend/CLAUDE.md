@@ -53,7 +53,7 @@
 
 # 🧫 Testing
 
-Unit tests use Vitest + React Testing Library. Run with `npm run test:run`; coverage enforced in CI via `npm run coverage` (90% statement floor). Test files are colocated with the component or page they cover.
+Unit tests use Vitest + React Testing Library. Run with `npm run test:run`; coverage enforced in CI via `npm run coverage` (90% statement floor); branches (78%), functions (88%), and lines (92%) tracked but not yet gated. Test files are colocated with the component or page they cover.
 
 Conventions:
 - Test user-facing behaviour (renders, interactions, form validation, loading/error states) — not implementation details
