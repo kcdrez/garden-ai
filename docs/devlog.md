@@ -2,6 +2,15 @@
 
 ---
 
+## 2026-05-25 — ~0.5 hours
+
+**Completed:**
+- Observation editing — backend PATCH endpoint (`observed_date` + `note` only, type locked); inline edit form in `ObservationList` with date + note fields side by side, save/cancel buttons right-aligned to match display mode; note shown for all observation types including `status_change`; 3 new backend tests
+
+**Next up:** Raise frontend coverage floor — branches (78%) and functions (88%) are below the planned 90% gate
+
+---
+
 ## 2026-05-24 — ~1.5 hours
 
 **Completed:**

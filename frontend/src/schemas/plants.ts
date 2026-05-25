@@ -32,3 +32,10 @@ export const observationSchema = z.object({
 });
 
 export type ObservationFormValues = z.infer<typeof observationSchema>;
+
+export const observationEditSchema = z.object({
+  observedDate: z.string().min(1, 'Date is required'),
+  note: z.string().optional(),
+});
+
+export type ObservationEditFormValues = z.infer<typeof observationEditSchema>;
