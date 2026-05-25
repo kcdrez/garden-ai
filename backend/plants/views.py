@@ -4,7 +4,13 @@ from rest_framework.exceptions import NotFound, ValidationError
 from gardens.models import Garden, GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
-from .serializers import ObservationSerializer, ObservationUpdateSerializer, PlantPlacementSerializer, PlantSerializer, UserPlantSerializer
+from .serializers import (
+    ObservationSerializer,
+    ObservationUpdateSerializer,
+    PlantPlacementSerializer,
+    PlantSerializer,
+    UserPlantSerializer,
+)
 
 
 class BedScopedMixin:
