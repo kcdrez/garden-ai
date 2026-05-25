@@ -4,7 +4,13 @@ from rest_framework.exceptions import NotFound, ValidationError
 from gardens.models import Garden, GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
-from .serializers import ObservationSerializer, PlantPlacementSerializer, PlantSerializer, UserPlantSerializer
+from .serializers import (
+    ObservationSerializer,
+    ObservationUpdateSerializer,
+    PlantPlacementSerializer,
+    PlantSerializer,
+    UserPlantSerializer,
+)
 
 
 class BedScopedMixin:
@@ -79,12 +85,17 @@ class PlantPlacementViewSet(
 class ObservationViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = ObservationSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_url_kwarg = "observation_id"
+
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return ObservationUpdateSerializer
+        return ObservationSerializer
 
     def _get_user_plant(self):
         try:

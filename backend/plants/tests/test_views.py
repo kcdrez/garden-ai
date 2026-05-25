@@ -366,6 +366,46 @@ class ObservationAPITests(APITestCase):
         res = self.client.delete(self._detail_url(uuid.uuid4()))
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
+    # --- Update ---
+
+    def test_patch_observation_updates_date_and_note(self):
+        obs = Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date="2026-01-01",
+            type=Observation.Type.GENERAL,
+            note="original note",
+        )
+        res = self.client.patch(
+            self._detail_url(obs.id),
+            {"observedDate": "2026-03-15", "note": "updated note"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        obs.refresh_from_db()
+        self.assertEqual(str(obs.observed_date), "2026-03-15")
+        self.assertEqual(obs.note, "updated note")
+
+    def test_patch_observation_cannot_change_type(self):
+        obs = Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date="2026-01-01",
+            type=Observation.Type.GENERAL,
+        )
+        self.client.patch(self._detail_url(obs.id), {"type": "pest"})
+        obs.refresh_from_db()
+        self.assertEqual(obs.type, Observation.Type.GENERAL)
+
+    def test_patch_observation_other_users_plant_returns_404(self):
+        obs = Observation.objects.create(
+            user_plant=self.other_plant,
+            observed_date="2026-01-01",
+            type=Observation.Type.GENERAL,
+        )
+        res = self.client.patch(
+            self._detail_url(obs.id, user_plant=self.other_plant),
+            {"observedDate": "2026-03-15"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class PlantModelTests(APITestCase):
     def setUp(self):
