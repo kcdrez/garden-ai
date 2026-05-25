@@ -57,6 +57,7 @@ Testing is a planned learning goal. As features mature, add:
 - **Unit tests:** Vitest + React Testing Library (natural fit with Vite)
   - Test components in isolation — user interactions, conditional rendering, form validation
   - Do not test implementation details; test behaviour from the user's perspective
+  - Coverage floor: 90% statements (enforced in CI via `npm run coverage`); branches (78%), functions (88%), and lines (92%) are tracked but not yet gated — raise all four to 90% as a future improvement
 - **E2e tests:** Playwright (see root CLAUDE.md — spans full stack)
 
 ---

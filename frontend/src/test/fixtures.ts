@@ -1,0 +1,63 @@
+import type { Garden, GardenBed } from '@/types/gardens';
+import type { UserPlant } from '@/types/plants';
+
+export const mockGarden: Garden = {
+  id: 'garden-1',
+  name: 'Front Yard',
+  description: 'My main garden',
+  length: null,
+  width: null,
+  unit: 'ft',
+  bedCount: 0,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+  owner: 1,
+};
+
+export const mockBed: GardenBed = {
+  id: 'bed-1',
+  garden: 'garden-1',
+  gardenName: 'Front Yard',
+  name: 'Raised Bed 1',
+  length: 4,
+  width: 4,
+  depth: null,
+  unit: 'ft',
+  facing: null,
+  avgSunlightHours: null,
+  soilType: null,
+  notes: null,
+  plantCount: 0,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
+
+export const mockUserPlant: UserPlant = {
+  id: 'plant-1',
+  bed: 'bed-1',
+  bedName: 'Raised Bed 1',
+  gardenId: 'garden-1',
+  gardenName: 'Front Yard',
+  plant: 'catalog-1',
+  plantName: 'Tomato',
+  plantCategory: 'vegetable',
+  placementId: null,
+  variety: '',
+  startDate: null,
+  status: 'growing',
+  notes: '',
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+};
+
+export const mockBeds: GardenBed[] = [
+  mockBed,
+  { ...mockBed, id: 'bed-2', name: 'Raised Bed 2' },
+  {
+    ...mockBed,
+    id: 'bed-3',
+    garden: 'garden-2',
+    gardenName: 'Back Yard',
+    name: 'Back Bed',
+  },
+];

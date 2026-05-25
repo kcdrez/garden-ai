@@ -1,0 +1,83 @@
+import { render, screen, waitFor } from '@/test/test-utils';
+import userEvent from '@testing-library/user-event';
+import { deleteObservation } from '@/api/plants';
+import type { Observation } from '@/types/plants';
+import ObservationList from './ObservationList';
+
+vi.mock('@/api/plants', () => ({ deleteObservation: vi.fn() }));
+
+const mockObservation: Observation = {
+  id: 'obs-1',
+  userPlant: 'plant-1',
+  type: 'general',
+  observedDate: '2024-06-01',
+  note: 'Looks healthy',
+  previousStatus: '',
+  newStatus: '',
+  createdAt: '2024-06-01T00:00:00Z',
+  updatedAt: '2024-06-01T00:00:00Z',
+};
+
+const mockStatusChange: Observation = {
+  id: 'obs-2',
+  userPlant: 'plant-1',
+  type: 'status_change',
+  observedDate: '2024-06-02',
+  note: '',
+  previousStatus: 'planned',
+  newStatus: 'growing',
+  createdAt: '2024-06-02T00:00:00Z',
+  updatedAt: '2024-06-02T00:00:00Z',
+};
+
+function renderList(props: Partial<React.ComponentProps<typeof ObservationList>> = {}) {
+  return render(
+    <ObservationList
+      gardenId="garden-1"
+      bedId="bed-1"
+      plantId="plant-1"
+      observations={[]}
+      isLoading={false}
+      error={null}
+      {...props}
+    />,
+  );
+}
+
+beforeEach(() => {
+  vi.mocked(deleteObservation).mockResolvedValue(undefined);
+});
+
+describe('ObservationList', () => {
+  it('shows loading state', () => {
+    renderList({ isLoading: true });
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  });
+
+  it('shows empty message when there are no observations', () => {
+    renderList({ observations: [] });
+    expect(screen.getByText('No history yet.')).toBeInTheDocument();
+  });
+
+  it('renders a general observation note and date', () => {
+    renderList({ observations: [mockObservation] });
+    expect(screen.getByText('Looks healthy')).toBeInTheDocument();
+    expect(screen.getByText(/Jun 1, 2024/i)).toBeInTheDocument();
+  });
+
+  it('renders the label for a status_change observation', () => {
+    renderList({ observations: [mockStatusChange] });
+    expect(screen.getByText(/moved to growing/i)).toBeInTheDocument();
+  });
+
+  it('calls deleteObservation when the delete button is clicked', async () => {
+    const user = userEvent.setup();
+    renderList({ observations: [mockObservation] });
+
+    await user.click(screen.getByRole('button', { name: /delete observation/i }));
+
+    await waitFor(() =>
+      expect(deleteObservation).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1', 'obs-1'),
+    );
+  });
+});
