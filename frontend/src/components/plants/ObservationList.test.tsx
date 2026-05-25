@@ -70,6 +70,23 @@ describe('ObservationList', () => {
     expect(screen.getByText(/moved to growing/i)).toBeInTheDocument();
   });
 
+  it('renders the heading and note for a transplant observation', () => {
+    const transplant: Observation = {
+      id: 'obs-3',
+      userPlant: 'plant-1',
+      type: 'transplant',
+      observedDate: '2024-06-03',
+      note: 'Moved from Bed 1 to Bed 2',
+      previousStatus: '',
+      newStatus: '',
+      createdAt: '2024-06-03T00:00:00Z',
+      updatedAt: '2024-06-03T00:00:00Z',
+    };
+    renderList({ observations: [transplant] });
+    expect(screen.getByText('Transplant')).toBeInTheDocument();
+    expect(screen.getByText('Moved from Bed 1 to Bed 2')).toBeInTheDocument();
+  });
+
   it('calls deleteObservation when the delete button is clicked', async () => {
     const user = userEvent.setup();
     renderList({ observations: [mockObservation] });

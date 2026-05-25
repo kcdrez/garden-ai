@@ -51,6 +51,7 @@ class UserPlant(BaseModel):
 class Observation(BaseModel):
     class Type(models.TextChoices):
         STATUS_CHANGE = "status_change", "Status Change"
+        TRANSPLANT = "transplant", "Transplant"
         HARVEST = "harvest", "Harvest"
         PEST = "pest", "Pest"
         WEATHER = "weather", "Weather"

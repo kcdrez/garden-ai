@@ -83,6 +83,14 @@ class UserPlantSerializer(serializers.ModelSerializer):
             new_status=new_status,
         )
 
+    def _record_transplant(self, user_plant, old_bed):
+        Observation.objects.create(
+            user_plant=user_plant,
+            observed_date=self._local_date(),
+            type=Observation.Type.TRANSPLANT,
+            note=f"Moved from {old_bed.name} to {user_plant.bed.name}",
+        )
+
     def create(self, validated_data):
         instance = super().create(validated_data)
         self._record_status_change(instance, None, instance.status)
@@ -94,6 +102,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         if instance.bed != old_bed:
             PlantPlacement.objects.filter(user_plant=instance).delete()
+            self._record_transplant(instance, old_bed)
         if old_status != instance.status:
             self._record_status_change(instance, old_status, instance.status)
         return instance

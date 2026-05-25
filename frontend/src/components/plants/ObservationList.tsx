@@ -6,6 +6,7 @@ import {
   CircleIcon,
   ShoppingBasketIcon,
   Trash2Icon,
+  ArrowRightIcon,
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteObservation } from '@/api/plants';
@@ -20,6 +21,7 @@ import { QueryState } from '@/components/ui/query-state';
 
 const OBSERVATION_ICONS: Record<ObservationType, React.ComponentType<{ className?: string }>> = {
   status_change: CircleIcon,
+  transplant: ArrowRightIcon,
   harvest: ShoppingBasketIcon,
   pest: BugIcon,
   weather: CloudIcon,
