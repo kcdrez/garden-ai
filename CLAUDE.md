@@ -214,6 +214,7 @@ These are explicitly out of scope, at least initially:
 - Frontend unit tests — Vitest + React Testing Library; CI enforces a 90% statement floor; branches (78%) and functions (88%) tracked but not yet gated; tests colocated with components
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
+- Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
 
 ## 📋 Planned
 
@@ -233,7 +234,6 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
-- Observation date editing — allow editing `observed_date` and `note` on any observation; the real pain point is logging an event the day after it happened (e.g. noticed disease on day 1, logged on day 2); skip editing `type` (delete and re-add is sufficient for misclicks); system-generated observations (status_change, transplant) should also be editable since the date is still user-meaningful; if type locking is ever needed, add a boolean `auto_generated` flag to `Observation` rather than inferring from type
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking

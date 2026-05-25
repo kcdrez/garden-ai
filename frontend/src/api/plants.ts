@@ -100,6 +100,20 @@ export async function createObservation(
   return res.data;
 }
 
+export async function updateObservation(
+  gardenId: string,
+  bedId: string,
+  plantId: string,
+  observationId: string,
+  data: { observedDate: string; note?: string },
+): Promise<Observation> {
+  const res = await api.patch(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/${observationId}/`,
+    data,
+  );
+  return res.data;
+}
+
 export async function deleteObservation(
   gardenId: string,
   bedId: string,

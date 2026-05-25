@@ -153,3 +153,10 @@ class ObservationSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "user_plant", "previous_status", "created_at", "updated_at"]
+
+
+class ObservationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Observation
+        fields = ["id", "observed_date", "note"]
+        read_only_fields = ["id"]
