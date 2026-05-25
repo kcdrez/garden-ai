@@ -211,7 +211,7 @@ These are explicitly out of scope, at least initially:
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
 - Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
-- Frontend unit tests — Vitest + React Testing Library; CI enforces a 90% statement floor; tests colocated with components
+- Frontend unit tests — Vitest + React Testing Library; CI enforces a 90% statement floor; branches (78%) and functions (88%) tracked but not yet gated; tests colocated with components
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 
@@ -241,8 +241,8 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Testing
-- **Frontend unit/component tests** — Vitest + React Testing Library; test user-facing behaviour (form validation, conditional rendering, interactions); not implementation details
 - **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation; run in CI on merge to `main`
+- **Frontend coverage floor** — raise branches and functions to 90% (currently 78% and 88% respectively); statements and lines already gate at 90%
 
 ### Deployment & Infrastructure
 - Playwright e2e tests running in CI against the full stack
