@@ -53,11 +53,16 @@
 
 # 🧫 Testing
 
-Testing is a planned learning goal. As features mature, add:
-- **Unit tests:** Vitest + React Testing Library (natural fit with Vite)
-  - Test components in isolation — user interactions, conditional rendering, form validation
-  - Do not test implementation details; test behaviour from the user's perspective
-- **E2e tests:** Playwright (see root CLAUDE.md — spans full stack)
+Unit tests use Vitest + React Testing Library. Run with `npm run test:run`; coverage enforced in CI via `npm run coverage` (90% statement floor). Test files are colocated with the component or page they cover.
+
+Conventions:
+- Test user-facing behaviour (renders, interactions, form validation, loading/error states) — not implementation details
+- Mock heavy child components (grids, dialogs, timelines, pickers) to keep tests focused on the component under test
+- Mock `@/components/ui/sheet` in edit form tests so form fields render and are accessible in jsdom
+- Mock `useConfirm` as `vi.fn()` in tests that cover delete flows; assert on both the confirm-accepted and confirm-cancelled paths
+- Edit form stub pattern for header tests: `({ open }) => open ? <div role="dialog" aria-label="Edit X Form" /> : null`
+
+E2e tests: Playwright — planned, not yet implemented (see root CLAUDE.md).
 
 ---
 
@@ -77,7 +82,8 @@ Testing is a planned learning goal. As features mature, add:
 - Integer/numeric inputs use `inputMode="numeric"` (not `type="number"`) and store their value as a **string** in RHF — use `{...field}` directly, validate with `.refine()` in the schema, and convert to numbers with `parseInt` only at submit time. Do NOT store numbers in RHF state for text-based inputs — controlled inputs break when the value transitions through `undefined`
 - Optional enum selects use an empty string as the "none" state and `onChange` converts `''` → `undefined` before calling `field.onChange`
 - Use `TextField`, `TextAreaField`, and `NativeSelectField` from `@/components/ui/form-fields` to avoid repeating `FormField`/`FormItem`/`FormLabel`/`FormControl`/`FormMessage` boilerplate. Each accepts `control`, `name`, `label` plus the props of the underlying element. `NativeSelectField` takes an `optional` prop that activates the `value ?? ''` / `onChange → undefined` pattern for optional enum fields.
-- A single dialog component handles both create and edit when the form shape is identical (e.g. `BedDialog` — `bed` prop present = edit mode, absent = create mode)
+- A single dialog component handles both create and edit when the form shape is identical (e.g. `BedDialog` — `bed` prop present = edit mode, absent = create mode); this applies to list-card edits only — detail pages use the EditForm pattern below
+- Detail pages follow a three-layer split: `<EntityDetail>` owns queries and layout; `<EntityDetailHeader>` owns delete mutation, confirm, navigate, edit open state, metadata display, and renders `<EntityEditForm>`; `<EntityEditForm>` owns form state, update mutation, and the Sheet. Name edit form components after what they do (`GardenEditForm`), not the presentation (`GardenEditSheet`), so the name stays accurate if the Sheet is replaced. Use `useDialogFormReset` in edit form components to reset on open even though they use Sheet not Dialog — the hook is presentation-agnostic.
 - Feature-based structure preferred over type-based structure — components and pages are grouped by domain (`/beds`, `/gardens`, `/plants`), not by kind (`/dialogs`, `/cards`). The `/ui` folder is the exception: it holds generic design-system primitives only.
 - For complex custom inputs that don't fit `TextField`/`TextAreaField`/`NativeSelectField` (e.g. `PlantPicker`), use `useController` from RHF directly and render label + error manually — same visual pattern as FormItem/FormLabel/FormMessage but without the FormControl wrapper
 - Clickable entity cards (e.g. `BedItem`) use an `onClick` on the card with an early return guard — `if ((e.target as HTMLElement).closest('[data-radix-popper-content-wrapper], [role="menu"], button')) return;` — so dropdown triggers and buttons inside the card still work without navigating
