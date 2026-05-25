@@ -1,43 +1,22 @@
 import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftIcon, PlusIcon, PencilIcon, Trash2Icon } from 'lucide-react';
-import { fetchGarden, deleteGarden } from '@/api/gardens';
+import { useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { PlusIcon } from 'lucide-react';
+import { fetchGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
 import type { Garden, GardenBed } from '@/types/gardens';
 import { getErrorMessage } from '@/lib/errors';
-import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
-import GardenDialog from '@/components/gardens/GardenDialog';
+import GardenDetailHeader from '@/components/gardens/GardenDetailHeader';
 import GardenGrid from '@/components/gardens/GardenGrid';
 import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
-import { useConfirm } from '@/hooks/useConfirm';
 
 export default function GardenDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const confirm = useConfirm();
   const [createOpen, setCreateOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteGarden(id!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gardens'] });
-      navigate(routes.gardens());
-    },
-  });
-
-  async function handleDelete() {
-    const ok = await confirm({
-      title: 'Delete garden?',
-      description: `"${garden?.name}" and all its beds and plants will be permanently deleted.`,
-    });
-    if (ok) deleteMutation.mutate();
-  }
 
   const {
     data: garden,
@@ -76,36 +55,7 @@ export default function GardenDetail() {
   return (
     <div className="p-5">
       <div className="mb-6">
-        <Link
-          to={routes.gardens()}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeftIcon className="size-4" />
-          Your Gardens
-        </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1>{garden.name}</h1>
-            {garden.description && (
-              <p className="text-muted-foreground mt-1">{garden.description}</p>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <PencilIcon className="size-4" />
-              Edit
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={deleteMutation.isPending}
-              onClick={handleDelete}
-            >
-              <Trash2Icon className="size-4" />
-              Delete
-            </Button>
-          </div>
-        </div>
+        <GardenDetailHeader garden={garden} />
       </div>
 
       <div className="flex items-center justify-between mb-3">
@@ -131,16 +81,7 @@ export default function GardenDetail() {
         </div>
       )}
 
-      <BedDialog
-        gardenId={id!}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
-      <GardenDialog
-        garden={garden}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <BedDialog gardenId={id!} open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

@@ -211,14 +211,14 @@ These are explicitly out of scope, at least initially:
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
 - Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
-- Frontend unit tests — 331 tests at 91% statement coverage across all components, hooks, and pages; CI enforces a 90% statement floor; branches (78%) and functions (88%) tracked but not yet gated
+- Frontend unit tests — Vitest + React Testing Library; CI enforces a 90% statement floor; branches (78%) and functions (88%) tracked but not yet gated; tests colocated with components
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
+- Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 
 ## 📋 Planned
 
 ### UI / Branding *(deferred — functionality first)*
 - Branding pass — define a color palette, typography scale, and visual identity; the app is currently unstyled beyond Tailwind defaults; revisit once core functionality is stable
-- Inline editing on detail pages — replace edit/move dialogs with inline forms on Garden, Bed, and Plant detail pages; each page has different field shapes and action complexity so evaluate per page rather than applying a single pattern blindly; move wizard (two-step pick/create) may still warrant a dialog even when edit goes inline
 
 ### Authentication & Accounts
 - User profile (timezone, locale settings, first/last name)
