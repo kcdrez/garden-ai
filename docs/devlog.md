@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-05-25 — ~1.25 hours
+
+**Completed:**
+- Frontend branch coverage raised from 85.1% → 90.23% — added tests across BedGrid, GardenGrid, GardenDialog, BedDialog, UserPlantDialog, MovePlantDialog, BedEditForm, GardenDetail, BedDetail, PlantDetail, and API layers
+- CI coverage gates expanded — branches (85%), functions (90%), and lines (90%) now enforced alongside existing statements (90%) threshold
+
+**Next up:** Forgot password — email-based reset flow (Django built-in reset views + SimpleJWT, requires email backend)
+
+---
+
 ## 2026-05-25 — ~0.5 hours
 
 **Completed:**

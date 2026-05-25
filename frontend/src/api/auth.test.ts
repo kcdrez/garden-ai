@@ -1,4 +1,4 @@
-import { login, register } from './auth';
+import { login, register, forgotPassword, resetPassword } from './auth';
 import { api } from './client';
 import { auth } from '@/auth/auth';
 
@@ -57,5 +57,29 @@ describe('register', () => {
     await register('alice', 'password1', 'password1');
 
     expect(auth.setTokens).toHaveBeenCalledWith('acc', 'ref');
+  });
+});
+
+describe('forgotPassword', () => {
+  it('posts email to the password reset endpoint', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { detail: 'ok' } });
+
+    await forgotPassword('alice@example.com');
+
+    expect(api.post).toHaveBeenCalledWith('/auth/password/reset/', { email: 'alice@example.com' });
+  });
+});
+
+describe('resetPassword', () => {
+  it('posts uid, token, and new password to the confirm endpoint', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { detail: 'ok' } });
+
+    await resetPassword('abc123', 'tok456', 'newpassword');
+
+    expect(api.post).toHaveBeenCalledWith('/auth/password/reset/confirm/', {
+      uid: 'abc123',
+      token: 'tok456',
+      newPassword: 'newpassword',
+    });
   });
 });
