@@ -214,7 +214,7 @@ These are explicitly out of scope, at least initially:
 - Full plant management — add/edit/delete plants per bed; move between beds; plant detail page (`/plants/:plantId`) with full timeline
 - Plant catalog — global seeded catalog of 41 plants; searchable/filterable picker UI
 - Observation timeline — per-plant event log (status changes, transplants, harvest, pest, weather, disease, general); auto-logged on status change and bed move
-- Visual grid layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementGrid` component
+- Visual grid layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementGrid` component; drag-and-drop placement added (`@dnd-kit/core`) with footprint highlighting and click-to-place dialog fallback
 - All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
@@ -241,7 +241,7 @@ These are explicitly out of scope, at least initially:
 
 - Visual garden layout management
 - Customizable garden dimensions and grids
-- Drag-and-drop garden design interface
+- Drag-and-drop garden design interface _(the grid-based DnD is intentionally left as-is; do not invest further in polishing it — the grid system will eventually be replaced with a freeform canvas layout where items are positioned by pixel coordinates rather than snapping to a grid)_
 - Garden templates and presets
 - Export/import garden plans
 
