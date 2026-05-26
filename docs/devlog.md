@@ -2,6 +2,32 @@
 
 ---
 
+## 2026-05-25 — ~1.5 hours
+
+**Completed:**
+- Forgot password flow — email-based reset via Django's token generator; two new endpoints (`POST /api/auth/password/reset/` and `/api/auth/password/reset/confirm/`); `ForgotPassword` and `ResetPassword` pages; "Forgot password?" link on login
+- Email sending via Resend — domain verified on kcdrez.com, SMTP configured in Railway; console backend for local dev with clean URL logging
+- Email required on registration — backend serializer + frontend schema updated
+- Login accepts email or username — custom `EmailOrUsernameBackend`; one field, works either way
+- Bug fix: login 401 no longer triggers token refresh interceptor, error stays on screen
+- Bug fix: "password reset" success banner clears on page refresh via history state replacement
+- Sentence case pass on auth buttons — "Log in", "Create account", "Send reset link"
+- Full test coverage — 29 backend tests, 438 frontend tests; all passing
+
+**Next up:** User profile page — timezone, first/last name settings
+
+---
+
+## 2026-05-25 — ~1.25 hours
+
+**Completed:**
+- Frontend branch coverage raised from 85.1% → 90.23% — added tests across BedGrid, GardenGrid, GardenDialog, BedDialog, UserPlantDialog, MovePlantDialog, BedEditForm, GardenDetail, BedDetail, PlantDetail, and API layers
+- CI coverage gates expanded — branches (85%), functions (90%), and lines (90%) now enforced alongside existing statements (90%) threshold
+
+**Next up:** Forgot password — email-based reset flow (Django built-in reset views + SimpleJWT, requires email backend)
+
+---
+
 ## 2026-05-25 — ~0.5 hours
 
 **Completed:**

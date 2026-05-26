@@ -17,7 +17,7 @@ describe('loginSchema', () => {
 describe('registerSchema', () => {
   const valid = {
     username: 'alice',
-    email: '',
+    email: 'alice@example.com',
     password: 'password1',
     password_confirm: 'password1',
   };
@@ -38,8 +38,8 @@ describe('registerSchema', () => {
     expect(registerSchema.safeParse({ ...valid, password_confirm: 'different' }).success).toBe(false);
   });
 
-  it('accepts missing email (optional field)', () => {
-    expect(registerSchema.safeParse({ ...valid, email: '' }).success).toBe(true);
+  it('rejects empty email', () => {
+    expect(registerSchema.safeParse({ ...valid, email: '' }).success).toBe(false);
   });
 
   it('accepts valid email', () => {

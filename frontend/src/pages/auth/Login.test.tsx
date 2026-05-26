@@ -21,7 +21,7 @@ describe('Login', () => {
 
   it('submit button is disabled when fields are empty', () => {
     render(<Login />);
-    expect(screen.getByRole('button', { name: /login/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /log in/i })).toBeDisabled();
   });
 
   it('submit button enables once both fields are filled', async () => {
@@ -31,7 +31,7 @@ describe('Login', () => {
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'secret');
 
-    expect(screen.getByRole('button', { name: /login/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /log in/i })).toBeEnabled();
   });
 
   it('calls login() with username and password on submit', async () => {
@@ -41,7 +41,7 @@ describe('Login', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'secret');
-    await user.click(screen.getByRole('button', { name: /login/i }));
+    await user.click(screen.getByRole('button', { name: /log in/i }));
 
     expect(login).toHaveBeenCalledWith('alice', 'secret');
   });
@@ -53,7 +53,7 @@ describe('Login', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'secret');
-    await user.click(screen.getByRole('button', { name: /login/i }));
+    await user.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/gardens'));
   });
@@ -65,7 +65,7 @@ describe('Login', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'wrongpass');
-    await user.click(screen.getByRole('button', { name: /login/i }));
+    await user.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => expect(screen.getByText('Invalid credentials.')).toBeInTheDocument());
   });
