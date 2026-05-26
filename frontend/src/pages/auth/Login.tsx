@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth';
 import { routes } from '@/lib/routes';
 import { login } from '@/api/auth';
@@ -12,6 +13,14 @@ import { FormRootError } from '@/components/ui/form-root-error';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const passwordReset = (location.state as { passwordReset?: boolean } | null)?.passwordReset;
+
+  useEffect(() => {
+    if (passwordReset) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [passwordReset, navigate, location.pathname]);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: '', password: '' },
@@ -32,12 +41,23 @@ export default function Login() {
       <div className="w-full max-w-sm space-y-6 p-8">
         <h1 className="text-2xl font-semibold">Garden AI Login</h1>
 
+        {passwordReset && (
+          <p className="text-sm text-green-600 dark:text-green-400">Password reset successfully. You can now log in.</p>
+        )}
+
         <Form form={form} onSubmit={onSubmit}>
-          <TextField control={form.control} name="username" label="Username" placeholder="username" />
-          <TextField control={form.control} name="password" label="Password" placeholder="password" type="password" />
+          <TextField control={form.control} name="username" label="Username or email" placeholder="username or email" />
+          <div className="space-y-1">
+            <TextField control={form.control} name="password" label="Password" placeholder="password" type="password" />
+            <div className="text-right">
+              <Link to={routes.forgotPassword()} className="text-muted-foreground text-xs underline">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
           <Button type="submit" className="w-full" disabled={!form.formState.isValid || form.formState.isSubmitting}>
-            Login
+            Log in
           </Button>
 
           <FormRootError message={form.formState.errors.root?.message} />

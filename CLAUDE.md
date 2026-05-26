@@ -1,6 +1,7 @@
 # Garden AI — Agent Context File
 
 This file provides project-wide context. Stack, conventions, and tooling details live in the directory-level files:
+
 - Frontend: `/frontend/CLAUDE.md`
 - Backend: `/backend/CLAUDE.md`
 
@@ -37,6 +38,7 @@ The devlog records session duration. Since the AI has no clock, time must come f
 ## Consumption (start of session)
 
 At the start of every session, read the most recent devlog entry before doing anything else. Use it to:
+
 - Understand what was just finished so you don't re-explain or redo it
 - Pick up the **Next up** item as the default starting point if the user hasn't given a specific direction
 - Cross-reference against the ✅ Completed list below if something seems missing
@@ -68,16 +70,19 @@ The long-term goal is to evolve into a system that can:
 This is primarily a **portfolio project** built to deepen experience across the full stack and support a job search. It may grow into something more, but learning and demonstrable depth are the primary goals.
 
 **The developer brings:**
+
 - 10+ years of frontend experience (primarily Vue)
 - ~1.5 years of Django backend experience
 - Little to no DevOps experience
 
 **Learning goals for this project:**
+
 - React (TypeScript) — applying existing frontend expertise in a new ecosystem
 - Full-stack development — owning the entire feature lifecycle end-to-end
 - DevOps — hands-on experience with deployment, CI/CD, and cloud infrastructure (Vercel + AWS)
 
 **Implications for AI agents:**
+
 - React patterns and idioms are a learning surface — prefer explaining non-obvious choices rather than just implementing them
 - Django patterns may be familiar but assume React/TypeScript idioms are being actively learned
 - DevOps tooling should be introduced gradually with clear rationale; don't assume prior AWS/CI knowledge
@@ -86,9 +91,9 @@ This is primarily a **portfolio project** built to deepen experience across the 
 
 # 📁 Repository Structure
 
-/frontend  → React application (see /frontend/CLAUDE.md)
-/backend   → Django REST API (see /backend/CLAUDE.md)
-/docs      → Optional documentation
+/frontend → React application (see /frontend/CLAUDE.md)
+/backend → Django REST API (see /backend/CLAUDE.md)
+/docs → Optional documentation
 /CLAUDE.md → This file
 
 ---
@@ -110,7 +115,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **User** has a `UserProfile` (auto-created via post_save signal) that stores `timezone`. Frontend sends browser timezone on login/register.
 
-**Garden** `timezone` field *(planned)* — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
+**Garden** `timezone` field _(planned)_ — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
 **Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
 
@@ -120,9 +125,10 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Resize protection:** resizing a garden is blocked if any `BedPlacement` would go out of bounds; resizing a bed is blocked if any `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors`.
 
-**UserPlant ↔ organism cardinality *(deferred)*:** 1 UserPlant = 1 PlantPlacement (deliberate simplification). A gardener planting 4 tomato seedlings should create 4 UserPlant records. Revisit if per-plant health tracking or harvest tracking makes this painful — options are a `quantity` field (pragmatic) or a child `PlantInstance` model (most expressive).
+**UserPlant ↔ organism cardinality _(deferred)_:** 1 UserPlant = 1 PlantPlacement (deliberate simplification). A gardener planting 4 tomato seedlings should create 4 UserPlant records. Revisit if per-plant health tracking or harvest tracking makes this painful — options are a `quantity` field (pragmatic) or a child `PlantInstance` model (most expressive).
 
 **Planned models** (design context only — fields in code when built):
+
 - `Season` — groups planting by growing year; needed for crop rotation logic
 - `PlantVariety` — distinguishes cultivars from species; field on UserPlant (simpler) vs separate model (needed for AI/catalog features) — decide before building
 - `HarvestLog` — measurement record; may fold into `Observation` with a type field or stand alone
@@ -151,6 +157,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 # 🏁 MVP Definition
 
 The MVP is considered complete when:
+
 - Users can create accounts and log in
 - Users can manage gardens, beds, and plants
 - AI recommendations are functional
@@ -163,6 +170,7 @@ The MVP is considered complete when:
 # 🚫 Non-Goals
 
 These are explicitly out of scope, at least initially:
+
 - Kubernetes
 - Microservices architecture
 - Multi-tenant / enterprise support
@@ -211,22 +219,26 @@ These are explicitly out of scope, at least initially:
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
 - Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
-- Frontend unit tests — Vitest + React Testing Library; CI enforces a 90% statement floor; branches (78%) and functions (88%) tracked but not yet gated; tests colocated with components
+- Frontend unit tests — Vitest + React Testing Library; CI enforces 90% statements/functions/lines and 85% branches; 90.23% branch coverage achieved; tests colocated with components
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 - Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
+- Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
 
 ## 📋 Planned
 
-### UI / Branding *(deferred — functionality first)*
+### UI / Branding _(deferred — functionality first)_
+
 - Branding pass — define a color palette, typography scale, and visual identity; the app is currently unstyled beyond Tailwind defaults; revisit once core functionality is stable
 
 ### Authentication & Accounts
+
 - User profile (timezone, locale settings, first/last name)
-- Forgot password — email-based reset flow; Django's built-in password reset views + SimpleJWT; requires email backend (SMTP or SES)
+- ~~Forgot password~~ ✅ shipped
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
+
 - Visual garden layout management
 - Customizable garden dimensions and grids
 - Drag-and-drop garden design interface
@@ -234,6 +246,7 @@ These are explicitly out of scope, at least initially:
 - Export/import garden plans
 
 ### Plants
+
 - Add plants to garden layouts
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
@@ -241,10 +254,11 @@ These are explicitly out of scope, at least initially:
 - Seasonal planting schedules
 
 ### Testing
+
 - **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation; run in CI on merge to `main`
-- **Frontend coverage floor** — raise branches and functions to 90% (currently 78% and 88% respectively); statements and lines already gate at 90%
 
 ### Deployment & Infrastructure
+
 - Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
@@ -252,6 +266,7 @@ These are explicitly out of scope, at least initially:
 - **Preview environments per PR** — Vercel already creates a frontend preview URL per PR, but it points at prod backend so it only works for pure UI changes; full preview requires Railway PR Environments (ephemeral backend + DB per PR) wired together via a GitHub Action that sets `VITE_API_URL` on the Vercel preview to point at the Railway PR environment URL; needed for any PR that crosses the stack (new model, migration, endpoint, or serializer field)
 
 ### Tracking & Journaling
+
 - Garden notes and journaling
 - Harvest tracking
 - Yield estimation and tracking
@@ -259,6 +274,7 @@ These are explicitly out of scope, at least initially:
 - Progress photo timelines
 
 ### Garden Health
+
 - Companion planting recommendations
 - Crop rotation tracking and recommendations
 - Pest and disease tracking
@@ -268,6 +284,7 @@ These are explicitly out of scope, at least initially:
 - Sunlight and shade mapping
 
 ### Planning & Reminders
+
 - Task management and reminders
 - Notification system for gardening tasks
 - Frost date awareness and seasonal guidance
@@ -275,12 +292,14 @@ These are explicitly out of scope, at least initially:
 - Integration with external plant/weather data sources
 
 ### Discovery & Sharing
+
 - Smart search and filtering
 - Sharing gardens with other users
 - Data visualization dashboards
 - Garden analytics and historical trends
 
 ### Mobile App
+
 - Port to iOS and Android using React Native (shared ecosystem with existing React codebase)
 - Shared API layer and TypeScript types between web and mobile
 - Native-feeling navigation and gestures
@@ -289,6 +308,7 @@ These are explicitly out of scope, at least initially:
 - Offline-first support with sync when reconnected
 
 ### AI Integration
+
 - OpenAI API integration (backend-controlled, not exposed directly to frontend)
 - AI chat endpoint with conversation history (AIConversation model)
 - Prompt builder and dynamic context assembly system
@@ -299,6 +319,7 @@ These are explicitly out of scope, at least initially:
 - Vector search / RAG for plant knowledge retrieval
 
 ### Admin & Infrastructure
+
 - Admin dashboard and moderation tools
 - Role-based permissions
 - Offline-friendly support

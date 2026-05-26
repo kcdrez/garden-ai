@@ -8,6 +8,8 @@ import AllPlants from './pages/plants/AllPlants';
 import PlantDetail from './pages/plants/PlantDetail';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import { auth } from './auth/auth';
 import { LoadingSpinner } from './components/ui/query-state';
 
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
     element: <Register />,
     loader: () => (auth.isLoggedIn() ? redirect('/gardens') : null),
   },
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPassword /> },
   {
     path: '/',
     element: <App />,
