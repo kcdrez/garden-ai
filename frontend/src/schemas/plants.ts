@@ -19,6 +19,17 @@ export const userPlantSchema = z.object({
 
 export type UserPlantFormValues = z.infer<typeof userPlantSchema>;
 
+export const userPlantCreateSchema = z.object({
+  plant: z.string().min(1, 'Plant is required'),
+  variety: z.string().optional(),
+  startDate: z.string().optional(),
+  status: z.enum(statusValues),
+  notes: z.string().optional(),
+  quantity: posInt.refine((v) => parseInt(v, 10) <= 50, 'Max 50'),
+});
+
+export type UserPlantCreateFormValues = z.infer<typeof userPlantCreateSchema>;
+
 export const observationSchema = z.object({
   type: z.enum(observationTypeValues),
   observedDate: z.string().min(1, "Date is required"),
