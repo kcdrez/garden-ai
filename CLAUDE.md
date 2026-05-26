@@ -197,7 +197,7 @@ These are explicitly out of scope, at least initially:
 - Prioritize working end-to-end features
 - Ask before introducing new dependencies
 - Assume simplicity over scalability unless stated otherwise
-- Follow the single responsibility principle — components and functions should do one thing; flag components that are growing too large and suggest splitting them rather than continuing to add to them
+- Follow the single responsibility principle — components and functions should do one thing; whenever a component or function is found to violate SRP (whether it's growing, being refactored, or just noticed), do NOT silently proceed — flag it, explain why it violates SRP, then ask the user whether to split it now or document it as a planned improvement; never perform an SRP-motivated refactor without explicit user confirmation
 
 ---
 
