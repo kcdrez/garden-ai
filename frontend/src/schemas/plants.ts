@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { USER_PLANT_STATUSES, OBSERVATION_TYPES } from '@/types/plants';
 import type { UserPlantStatus, ObservationType } from '@/types/plants';
+import { posInt } from '@/lib/zod';
 
 const statusValues = USER_PLANT_STATUSES.map(s => s.value) as [UserPlantStatus, ...UserPlantStatus[]];
 const observationTypeValues = OBSERVATION_TYPES.map(t => t.value) as [ObservationType, ...ObservationType[]];
@@ -13,6 +14,7 @@ export const userPlantSchema = z.object({
   startDate: z.string().optional(),
   status: z.enum(statusValues),
   notes: z.string().optional(),
+  quantity: posInt.refine((v) => parseInt(v, 10) <= 50, 'Max 50'),
 });
 
 export type UserPlantFormValues = z.infer<typeof userPlantSchema>;
