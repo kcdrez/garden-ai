@@ -37,6 +37,7 @@ vi.mock('@/components/shared/PlacementGrid', () => ({
       ))}
     </div>
   ),
+  DraggableChip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/plants/PlacePlantDialog', () => ({
