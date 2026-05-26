@@ -1,3 +1,4 @@
+import { DndContext } from '@dnd-kit/core';
 import { render, screen } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import PlacementGrid, { type GridPlacement } from './PlacementGrid';
@@ -22,7 +23,11 @@ function renderGrid(
     onRemove,
     ...overrides,
   };
-  return render(<PlacementGrid {...props} />);
+  return render(
+    <DndContext>
+      <PlacementGrid {...props} />
+    </DndContext>,
+  );
 }
 
 describe('PlacementGrid', () => {

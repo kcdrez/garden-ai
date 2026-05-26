@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-25 — ~1 hour
+
+**Completed:**
+- Drag-and-drop placement for garden grid — unplaced beds drag from a panel onto the grid; placed beds can be repositioned by dragging; click-to-place dialog retained as fallback
+- DnD UX improvements — bed footprint highlights green/red on hover cells; self-occupancy bug fixed (dragged bed's cells become valid drop targets); reposition blink fixed (single invalidation after delete+create)
+- Decided to leave grid DnD as-is and not invest further — eventual plan is to replace the grid system with a freeform canvas layout
+
+**Next up:** Research AI integration before building — review OpenAI API, decide on conversation model and backend approach
+
+---
+
 ## 2026-05-25 — ~1.5 hours
 
 **Completed:**
