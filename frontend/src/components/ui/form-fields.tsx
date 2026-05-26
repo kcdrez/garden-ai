@@ -17,6 +17,11 @@ type TextFieldProps<
   TName extends FieldPath<TFieldValues>,
 > = BaseProps<TFieldValues, TName> & Omit<React.ComponentProps<'input'>, 'name'>
 
+type NumberFieldProps<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+> = BaseProps<TFieldValues, TName> & Omit<React.ComponentProps<'input'>, 'name' | 'type'>
+
 function TextField<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -36,6 +41,32 @@ function TextField<
       )}
     />
   )
+}
+
+function NumberField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({ control, name, label, onKeyDown, ...inputProps }: NumberFieldProps<TFieldValues, TName>) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+    onKeyDown?.(e);
+  };
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input type="number" {...inputProps} {...field} onKeyDown={handleKeyDown} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 }
 
 type TextAreaFieldProps<
@@ -128,4 +159,4 @@ function NativeSelectField<
   )
 }
 
-export { TextField, TextAreaField, NativeSelectField }
+export { TextField, NumberField, TextAreaField, NativeSelectField }

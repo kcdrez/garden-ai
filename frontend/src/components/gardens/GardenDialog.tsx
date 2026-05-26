@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { FormRootError } from '@/components/ui/form-root-error';
 
 type Props = {
@@ -75,8 +75,8 @@ export default function GardenDialog({ garden, open, onOpenChange }: Props) {
           <TextField control={form.control} name="name" label="Name" placeholder="My Garden" />
           <TextAreaField control={form.control} name="description" label="Description" rows={3} />
           <div className="flex gap-3">
-            <TextField control={form.control} name="length" label="Length" inputMode="numeric" placeholder="e.g. 20" />
-            <TextField control={form.control} name="width" label="Width" inputMode="numeric" placeholder="e.g. 15" />
+            <NumberField control={form.control} name="length" label="Length" placeholder="e.g. 20" />
+            <NumberField control={form.control} name="width" label="Width" placeholder="e.g. 15" />
             <NativeSelectField control={form.control} name="unit" label="Unit">
               {BED_UNITS.map((u) => (
                 <option key={u.value} value={u.value}>{u.label}</option>
