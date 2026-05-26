@@ -39,7 +39,9 @@ class RegisterAPITests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_short_password_rejected(self):
-        res = self.client.post(reverse("register"), {**REGISTER_PAYLOAD, "password": "short", "passwordConfirm": "short"})
+        res = self.client.post(
+            reverse("register"), {**REGISTER_PAYLOAD, "password": "short", "passwordConfirm": "short"}
+        )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_stores_timezone(self):
