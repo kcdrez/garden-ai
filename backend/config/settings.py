@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "users",
     "gardens",
     "plants",
+    "ai",
 ]
 
 MIDDLEWARE = [
