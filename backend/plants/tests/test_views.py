@@ -57,7 +57,17 @@ class UserPlantAPITests(APITestCase):
             {"plant": str(self.plant.id), "status": "planned"},
         )
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(res.data["plant_name"], self.plant.common_name)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]["plant_name"], self.plant.common_name)
+
+    def test_create_user_plant_with_quantity(self):
+        res = self.client.post(
+            self._list_url(self.garden.id, self.bed.id),
+            {"plant": str(self.plant.id), "status": "planned", "quantity": 3},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(res.data), 3)
+        self.assertTrue(UserPlant.objects.filter(bed=self.bed, plant=self.plant).count() >= 3)
 
     def test_create_plant_in_other_users_bed_returns_404(self):
         res = self.client.post(

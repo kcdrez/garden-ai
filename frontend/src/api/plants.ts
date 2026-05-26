@@ -26,7 +26,7 @@ export async function createUserPlant(
   gardenId: string,
   bedId: string,
   data: UserPlantPayload,
-): Promise<UserPlant> {
+): Promise<UserPlant[]> {
   const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/`, data);
   return res.data;
 }

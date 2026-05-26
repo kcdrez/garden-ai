@@ -44,6 +44,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     startDate: userPlant?.startDate ?? '',
     status: userPlant?.status ?? 'planned',
     notes: userPlant?.notes ?? '',
+    quantity: '1',
   });
 
   const form = useForm<UserPlantFormValues>({
@@ -85,7 +86,10 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
       };
       return isEditing
         ? updateUserPlant(values.gardenId, values.bedId, userPlant.id, payload)
-        : createUserPlant(values.gardenId, values.bedId, payload);
+        : createUserPlant(values.gardenId, values.bedId, {
+            ...payload,
+            quantity: parseInt(values.quantity, 10),
+          });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
@@ -140,7 +144,14 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
 
           <PlantPicker control={form.control} name="plant" plants={plants} />
 
-          <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
+          {isEditing ? (
+            <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
+              <TextField control={form.control} name="quantity" label="Quantity" inputMode="numeric" placeholder="1" />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <TextField control={form.control} name="startDate" label="Start Date" type="date" />
