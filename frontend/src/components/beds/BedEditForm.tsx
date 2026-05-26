@@ -8,7 +8,7 @@ import { updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { FormRootError } from '@/components/ui/form-root-error';
 import {
   Sheet,
@@ -80,9 +80,9 @@ export default function BedEditForm({ bed, open, onOpenChange }: Props) {
           <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
             <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
             <div className="grid grid-cols-3 gap-3">
-              <TextField control={form.control} name="length" label="Length" inputMode="numeric" />
-              <TextField control={form.control} name="width" label="Width" inputMode="numeric" />
-              <TextField control={form.control} name="depth" label="Depth" inputMode="numeric" placeholder="–" />
+              <NumberField control={form.control} name="length" label="Length" />
+              <NumberField control={form.control} name="width" label="Width" />
+              <NumberField control={form.control} name="depth" label="Depth" placeholder="–" />
             </div>
             <NativeSelectField control={form.control} name="unit" label="Unit">
               {BED_UNITS.map((u) => (
@@ -96,11 +96,10 @@ export default function BedEditForm({ bed, open, onOpenChange }: Props) {
                   <option key={f.value} value={f.value}>{f.label}</option>
                 ))}
               </NativeSelectField>
-              <TextField
+              <NumberField
                 control={form.control}
                 name="avgSunlightHours"
                 label="Avg. Sunlight (hrs/day)"
-                inputMode="numeric"
                 placeholder="–"
               />
             </div>

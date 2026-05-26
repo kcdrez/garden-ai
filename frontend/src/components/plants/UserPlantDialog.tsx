@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import PlantPicker from '@/components/plants/PlantPicker';
 
 type Props = {
@@ -149,7 +149,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
-              <TextField control={form.control} name="quantity" label="Quantity" inputMode="numeric" placeholder="1" />
+              <NumberField control={form.control} name="quantity" label="Quantity" placeholder="1" />
             </div>
           )}
 
