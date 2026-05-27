@@ -1,4 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 export interface CanvasItem {
   id: string;
@@ -8,6 +13,13 @@ export interface CanvasItem {
   heightFt: number;
 }
 
+export interface CanvasMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: () => void;
+  variant?: 'destructive';
+}
+
 interface PlacementCanvasProps {
   widthFt: number;
   heightFt: number;
@@ -15,14 +27,16 @@ interface PlacementCanvasProps {
   renderItem: (item: CanvasItem) => React.ReactNode;
   onEmptyClick: (xFt: number, yFt: number) => void;
   onMove: (id: string, xFt: number, yFt: number) => void;
-  onRemove: (id: string) => void;
-  isRemoving?: boolean;
+  getMenuItems: (id: string) => CanvasMenuItem[];
 }
 
 const PAD = 0.4;
 const CLICK_THRESHOLD_FT = 0.15;
 
-function toSVGPoint(e: PointerEvent | MouseEvent, svg: SVGSVGElement): { x: number; y: number } {
+function toSVGPoint(
+  e: PointerEvent | MouseEvent,
+  svg: SVGSVGElement,
+): { x: number; y: number } {
   const pt = svg.createSVGPoint();
   pt.x = e.clientX;
   pt.y = e.clientY;
@@ -36,19 +50,26 @@ function DraggableItem({
   containerHeightFt,
   renderItem,
   onMove,
-  onRemove,
+  onMenuOpen,
+  isMenuActive,
 }: {
   item: CanvasItem;
   containerWidthFt: number;
   containerHeightFt: number;
   renderItem: (item: CanvasItem) => React.ReactNode;
   onMove: (id: string, x: number, y: number) => void;
-  onRemove: (id: string) => void;
+  onMenuOpen: (id: string, x: number, y: number) => void;
+  isMenuActive: boolean;
 }) {
   const [pos, setPos] = useState({ x: item.x, y: item.y });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const dragStart = useRef<{ svgX: number; svgY: number; itemX: number; itemY: number } | null>(null);
+  const dragStart = useRef<{
+    svgX: number;
+    svgY: number;
+    itemX: number;
+    itemY: number;
+  } | null>(null);
   const gRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
@@ -59,7 +80,12 @@ function DraggableItem({
     e.stopPropagation();
     const svg = gRef.current!.ownerSVGElement!;
     const coords = toSVGPoint(e.nativeEvent, svg);
-    dragStart.current = { svgX: coords.x, svgY: coords.y, itemX: pos.x, itemY: pos.y };
+    dragStart.current = {
+      svgX: coords.x,
+      svgY: coords.y,
+      itemX: pos.x,
+      itemY: pos.y,
+    };
     setIsDragging(true);
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   }
@@ -68,14 +94,20 @@ function DraggableItem({
     if (!isDragging || !dragStart.current) return;
     const svg = gRef.current!.ownerSVGElement!;
     const coords = toSVGPoint(e.nativeEvent, svg);
-    const newX = Math.max(0, Math.min(
-      dragStart.current.itemX + (coords.x - dragStart.current.svgX),
-      containerWidthFt - item.widthFt,
-    ));
-    const newY = Math.max(0, Math.min(
-      dragStart.current.itemY + (coords.y - dragStart.current.svgY),
-      containerHeightFt - item.heightFt,
-    ));
+    const newX = Math.max(
+      0,
+      Math.min(
+        dragStart.current.itemX + (coords.x - dragStart.current.svgX),
+        containerWidthFt - item.widthFt,
+      ),
+    );
+    const newY = Math.max(
+      0,
+      Math.min(
+        dragStart.current.itemY + (coords.y - dragStart.current.svgY),
+        containerHeightFt - item.heightFt,
+      ),
+    );
     setPos({ x: newX, y: newY });
   }
 
@@ -88,8 +120,14 @@ function DraggableItem({
     }
   }
 
-  const btnR = Math.min(item.widthFt, item.heightFt) * 0.18;
-  const clampedBtnR = Math.max(0.12, Math.min(btnR, 0.3));
+  const r = Math.min(item.widthFt, item.heightFt) / 2;
+  const cx = item.widthFt / 2;
+  const cy = item.heightFt / 2;
+  const btnOffset = r * 0.707;
+  const btnR = 0.15;
+  const dotR = 0.015;
+  const dotSpacing = btnR * 0.32;
+  const showMenuBtn = (isHovered || isMenuActive) && !isDragging;
 
   return (
     <g
@@ -98,32 +136,38 @@ function DraggableItem({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <g transform={`translate(${pos.x}, ${pos.y})`} opacity={isDragging ? 0.65 : 1}>
+      <g
+        transform={`translate(${pos.x}, ${pos.y})`}
+        opacity={isDragging ? 0.65 : 1}
+        onPointerEnter={() => setIsHovered(true)}
+        onPointerLeave={() => setIsHovered(false)}
+      >
+        {/* Transparent hit rect — gives the <g> a defined area so pointerEnter/Leave fire reliably */}
+        <rect x={0} y={0} width={item.widthFt} height={item.heightFt} fill="transparent" />
+
         {renderItem({ ...item, x: pos.x, y: pos.y })}
-      </g>
-      {isHovered && !isDragging && (
+
+        {/* SVG button — visual only, click calls back to PlacementCanvas to open the HTML menu */}
         <g
-          transform={`translate(${pos.x + item.widthFt}, ${pos.y})`}
-          style={{ cursor: 'pointer' }}
+          transform={`translate(${cx + btnOffset}, ${cy - btnOffset})`}
+          style={{
+            cursor: showMenuBtn ? 'pointer' : 'default',
+            opacity: showMenuBtn ? 1 : 0,
+            pointerEvents: showMenuBtn ? 'all' : 'none',
+          }}
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMenuOpen(item.id, e.clientX, e.clientY);
+          }}
         >
-          <circle r={clampedBtnR} fill="var(--color-destructive)" />
-          <line
-            x1={-clampedBtnR * 0.45} y1={-clampedBtnR * 0.45}
-            x2={clampedBtnR * 0.45} y2={clampedBtnR * 0.45}
-            stroke="white" strokeWidth={clampedBtnR * 0.28} strokeLinecap="round"
-          />
-          <line
-            x1={clampedBtnR * 0.45} y1={-clampedBtnR * 0.45}
-            x2={-clampedBtnR * 0.45} y2={clampedBtnR * 0.45}
-            stroke="white" strokeWidth={clampedBtnR * 0.28} strokeLinecap="round"
-          />
+          <circle r={btnR} fill="rgba(0,0,0,0.55)" />
+          <circle cx={-dotSpacing} cy={0} r={dotR} fill="white" />
+          <circle cx={0} cy={0} r={dotR} fill="white" />
+          <circle cx={dotSpacing} cy={0} r={dotR} fill="white" />
         </g>
-      )}
+      </g>
     </g>
   );
 }
@@ -135,13 +179,13 @@ export default function PlacementCanvas({
   renderItem,
   onEmptyClick,
   onMove,
-  onRemove,
+  getMenuItems,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const bgClickStart = useRef<{ x: number; y: number } | null>(null);
+  const [svgMenu, setSvgMenu] = useState<{ id: string; x: number; y: number } | null>(null);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
-
   const gridCols = Math.ceil(widthFt);
   const gridRows = Math.ceil(heightFt);
 
@@ -153,7 +197,10 @@ export default function PlacementCanvas({
   function handleBgPointerUp(e: React.PointerEvent<SVGRectElement>) {
     if (!bgClickStart.current) return;
     const coords = toSVGPoint(e.nativeEvent, svgRef.current!);
-    const dist = Math.hypot(coords.x - bgClickStart.current.x, coords.y - bgClickStart.current.y);
+    const dist = Math.hypot(
+      coords.x - bgClickStart.current.x,
+      coords.y - bgClickStart.current.y,
+    );
     if (dist < CLICK_THRESHOLD_FT) {
       onEmptyClick(
         Math.max(0, Math.min(coords.x, widthFt)),
@@ -162,6 +209,23 @@ export default function PlacementCanvas({
     }
     bgClickStart.current = null;
   }
+
+  // Virtual anchor so Base UI positions the menu at the SVG button's screen coordinates
+  const menuAnchor = svgMenu
+    ? {
+        getBoundingClientRect: () => ({
+          x: svgMenu.x,
+          y: svgMenu.y,
+          width: 0,
+          height: 0,
+          top: svgMenu.y,
+          left: svgMenu.x,
+          right: svgMenu.x,
+          bottom: svgMenu.y,
+          toJSON: () => ({}),
+        }),
+      }
+    : undefined;
 
   return (
     <div className="overflow-auto">
@@ -173,8 +237,10 @@ export default function PlacementCanvas({
       >
         {/* Background: click-to-place target */}
         <rect
-          x={0} y={0}
-          width={widthFt} height={heightFt}
+          x={0}
+          y={0}
+          width={widthFt}
+          height={heightFt}
           fill="transparent"
           style={{ cursor: 'crosshair' }}
           onPointerDown={handleBgPointerDown}
@@ -210,8 +276,9 @@ export default function PlacementCanvas({
             fontSize={PAD * 0.55}
             className="fill-muted-foreground"
             pointerEvents="none"
+            style={{ letterSpacing: 0 }}
           >
-            {i}ft
+            {i}
           </text>
         ))}
 
@@ -234,10 +301,29 @@ export default function PlacementCanvas({
             containerHeightFt={heightFt}
             renderItem={renderItem}
             onMove={onMove}
-            onRemove={onRemove}
+            onMenuOpen={(id, x, y) => setSvgMenu({ id, x, y })}
+            isMenuActive={svgMenu?.id === item.id}
           />
         ))}
       </svg>
+
+      {/* Menu lives outside the SVG so Base UI's HTML trigger works correctly */}
+      {svgMenu && (
+        <DropdownMenu open onOpenChange={(open) => { if (!open) setSvgMenu(null); }}>
+          <DropdownMenuContent side="bottom" align="end" anchor={menuAnchor}>
+            {getMenuItems(svgMenu.id).map((mi) => (
+              <DropdownMenuItem
+                key={mi.label}
+                variant={mi.variant}
+                onClick={() => { mi.onClick(); setSvgMenu(null); }}
+              >
+                {mi.icon}
+                {mi.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }

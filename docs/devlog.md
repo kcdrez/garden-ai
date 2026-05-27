@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-05-27 — ~3 hours
+
+**Completed:**
+- Migrated from grid-based `PlacementGrid` (`@dnd-kit/core`) to freeform SVG `PlacementCanvas` — items positioned in feet coordinates, drag-and-drop via pointer capture, no grid snapping; replaces the old cell-based DnD system
+- Context menu (`...` hover button) on canvas placement items — replaces the old X remove button
+- BedGrid: Edit (opens UserPlantDialog), Move (opens MovePlantDialog), Delete (deleteUserPlant with confirm)
+- GardenGrid: "Go to bed" (navigate to bed detail), "Remove from layout" (deleteBedPlacement)
+- Fixed hover detection — transparent rect hitbox + always-in-DOM button prevents re-entry flicker
+- Fixed Base UI incompatibility (`Menu.Trigger` has no `asChild`) via virtual anchor approach — SVG button is pure visual, menu rendered outside SVG positioned at click screen coordinates
+- Updated BedGrid and GardenGrid tests; all tests passing
+
+**Next up:** User profile — timezone, locale settings, first/last name
+
+---
+
 ## 2026-05-26 — ~2 hours
 
 **Completed:**

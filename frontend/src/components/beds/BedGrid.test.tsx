@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { fetchPlacements, createPlacement, movePlacement, deletePlacement } from '@/api/plants';
+import { fetchPlacements, createPlacement, movePlacement, deleteUserPlant } from '@/api/plants';
 import { mockBed, mockUserPlant } from '@/test/fixtures';
 import BedGrid from './BedGrid';
 
@@ -8,22 +8,28 @@ vi.mock('@/api/plants', () => ({
   fetchPlacements: vi.fn(),
   createPlacement: vi.fn(),
   movePlacement: vi.fn(),
-  deletePlacement: vi.fn(),
+  deleteUserPlant: vi.fn(),
+}));
+
+vi.mock('@/hooks/useConfirm', () => ({
+  useConfirm: () => vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock('@/components/shared/PlacementCanvas', () => ({
-  default: ({ items, onEmptyClick, onMove, onRemove }: {
+  default: ({ items, onEmptyClick, onMove, getMenuItems }: {
     items: { id: string }[];
     onEmptyClick: (x: number, y: number) => void;
     onMove: (id: string, x: number, y: number) => void;
-    onRemove: (id: string) => void;
+    getMenuItems: (id: string) => { label: string; onClick: () => void }[];
   }) => (
     <div data-testid="placement-canvas">
       <button onClick={() => onEmptyClick(1.5, 2.0)}>Click canvas</button>
       {items.map((item) => (
         <div key={item.id} data-testid={`canvas-item-${item.id}`}>
           <button onClick={() => onMove(item.id, 3.0, 4.0)}>Drag {item.id}</button>
-          <button onClick={() => onRemove(item.id)}>Delete {item.id}</button>
+          {getMenuItems(item.id).map((mi) => (
+            <button key={mi.label} onClick={mi.onClick}>{mi.label} {item.id}</button>
+          ))}
         </div>
       ))}
     </div>
@@ -39,10 +45,20 @@ vi.mock('@/components/plants/PlacePlantDialog', () => ({
     ) : null,
 }));
 
+vi.mock('@/components/plants/UserPlantDialog', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Edit Plant Form" /> : null,
+}));
+
+vi.mock('@/components/plants/MovePlantDialog', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Move Plant Dialog" /> : null,
+}));
+
 const mockFetchPlacements = vi.mocked(fetchPlacements);
 const mockCreatePlacement = vi.mocked(createPlacement);
 const mockMovePlacement = vi.mocked(movePlacement);
-const mockDeletePlacement = vi.mocked(deletePlacement);
+const mockDeleteUserPlant = vi.mocked(deleteUserPlant);
 
 const bed = { ...mockBed, length: 8, width: 4, unit: 'ft' as const };
 const placement = { id: 'pl-1', userPlant: 'plant-1', bed: 'bed-1', x: 0, y: 0, width: 1.5, height: 1.5, createdAt: '', updatedAt: '' };
@@ -58,7 +74,7 @@ describe('BedGrid', () => {
     mockFetchPlacements.mockResolvedValue([]);
     mockCreatePlacement.mockResolvedValue(placement);
     mockMovePlacement.mockResolvedValue(placement);
-    mockDeletePlacement.mockResolvedValue(undefined);
+    mockDeleteUserPlant.mockResolvedValue(undefined);
   });
 
   it('shows loading spinner while placements load', () => {
@@ -133,14 +149,32 @@ describe('BedGrid', () => {
     });
   });
 
-  it('calls deletePlacement when canvas onRemove fires', async () => {
+  it('calls deleteUserPlant when Delete menu item is clicked', async () => {
     const user = userEvent.setup();
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('canvas-item-pl-1');
     await user.click(screen.getByRole('button', { name: /delete pl-1/i }));
     await waitFor(() => {
-      expect(mockDeletePlacement).toHaveBeenCalledWith('garden-1', 'bed-1', 'pl-1');
+      expect(mockDeleteUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1');
     });
+  });
+
+  it('opens UserPlantDialog when Edit menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /edit pl-1/i }));
+    expect(screen.getByRole('dialog', { name: /edit plant form/i })).toBeInTheDocument();
+  });
+
+  it('opens MovePlantDialog when Move menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /move pl-1/i }));
+    expect(screen.getByRole('dialog', { name: /move plant dialog/i })).toBeInTheDocument();
   });
 });

@@ -66,3 +66,22 @@ export function bedPlacementDimensions(bed: GardenBed): { width: number; height:
     height: Math.ceil(bed.length * factor),
   };
 }
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash; // coerce to 32-bit int
+  }
+  return hash;
+}
+
+export function plantColor(plantId: string, variety: string): { fill: string; stroke: string } {
+  const baseHue = Math.abs(hashString(plantId)) % 360;
+  const varietyOffset = variety ? (Math.abs(hashString(variety)) % 61) - 30 : 0;
+  const hue = (baseHue + varietyOffset + 360) % 360;
+  return {
+    fill: `hsl(${hue}, 55%, 75%)`,
+    stroke: `hsl(${hue}, 55%, 45%)`,
+  };
+}

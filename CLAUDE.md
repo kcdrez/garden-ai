@@ -214,7 +214,7 @@ These are explicitly out of scope, at least initially:
 - Full plant management — add/edit/delete plants per bed; move between beds; plant detail page (`/plants/:plantId`) with full timeline
 - Plant catalog — global seeded catalog of 41 plants; searchable/filterable picker UI
 - Observation timeline — per-plant event log (status changes, transplants, harvest, pest, weather, disease, general); auto-logged on status change and bed move
-- Visual grid layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementGrid` component; drag-and-drop placement added (`@dnd-kit/core`) with footprint highlighting and click-to-place dialog fallback
+- Visual canvas layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementCanvas` SVG component; freeform drag-and-drop via pointer capture with items positioned in feet coordinates; click-to-place dialog fallback; migrated from prior grid-based `@dnd-kit/core` system
 - All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
@@ -225,6 +225,7 @@ These are explicitly out of scope, at least initially:
 - Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
 - Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
 - Plant UX improvements — bulk create (quantity spinner, N records per submit), add-new-plant wizard step in placement dialog, observation date bug fixed (auto-logged observation uses `startDate` instead of today)
+- Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
 
 ## 📋 Planned
 
@@ -242,13 +243,14 @@ These are explicitly out of scope, at least initially:
 
 - Visual garden layout management
 - Customizable garden dimensions and grids
-- Drag-and-drop garden design interface _(the grid-based DnD is intentionally left as-is; do not invest further in polishing it — the grid system will eventually be replaced with a freeform canvas layout where items are positioned by pixel coordinates rather than snapping to a grid)_
+- Drag-and-drop garden design interface ✅ shipped (freeform SVG canvas)
 - Garden templates and presets
 - Export/import garden plans
 
 ### Plants
 
 - Add plants to garden layouts
+- Plant canvas icons — replace solid-color circles on `PlacementCanvas` items with veggie/plant images; likely SVG icons or emoji per plant type keyed off the catalog entry
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning

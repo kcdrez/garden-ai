@@ -16,6 +16,7 @@ type Props = {
   unplacedBeds: GardenBed[];
   onPlace: (bedId: string) => void;
   isPlacing: boolean;
+  placeError: string | null;
 };
 
 export default function PlaceBedDialog({
@@ -24,6 +25,7 @@ export default function PlaceBedDialog({
   unplacedBeds,
   onPlace,
   isPlacing,
+  placeError,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,6 +33,10 @@ export default function PlaceBedDialog({
         <DialogHeader>
           <DialogTitle>Place a Bed</DialogTitle>
         </DialogHeader>
+
+        {placeError && (
+          <p className="text-sm text-destructive">{placeError}</p>
+        )}
 
         {unplacedBeds.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">

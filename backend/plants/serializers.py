@@ -129,10 +129,13 @@ class PlantPlacementSerializer(serializers.ModelSerializer):
         width = data.get("width", self.instance.width if self.instance else 1.0)
         height = data.get("height", self.instance.height if self.instance else 1.0)
 
-        if x is not None and (x < 0 or x + width > bed_width_ft):
-            raise serializers.ValidationError({"x": f"Out of bounds (bed is {bed_width_ft} ft wide)."})
-        if y is not None and (y < 0 or y + height > bed_height_ft):
-            raise serializers.ValidationError({"y": f"Out of bounds (bed is {bed_height_ft} ft tall)."})
+        if width > bed_width_ft or height > bed_height_ft:
+            raise serializers.ValidationError("Plant footprint does not fit in this bed.")
+
+        if x is not None:
+            data["x"] = max(0.0, min(x, bed_width_ft - width))
+        if y is not None:
+            data["y"] = max(0.0, min(y, bed_height_ft - height))
 
         return data
 

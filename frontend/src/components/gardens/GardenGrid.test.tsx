@@ -11,19 +11,26 @@ vi.mock('@/api/beds', () => ({
   deleteBedPlacement: vi.fn(),
 }));
 
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: () => vi.fn() };
+});
+
 vi.mock('@/components/shared/PlacementCanvas', () => ({
-  default: ({ items, onEmptyClick, onMove, onRemove }: {
+  default: ({ items, onEmptyClick, onMove, getMenuItems }: {
     items: { id: string }[];
     onEmptyClick: (x: number, y: number) => void;
     onMove: (id: string, x: number, y: number) => void;
-    onRemove: (id: string) => void;
+    getMenuItems: (id: string) => { label: string; onClick: () => void }[];
   }) => (
     <div data-testid="placement-canvas">
       <button onClick={() => onEmptyClick(2.0, 3.0)}>Click canvas</button>
       {items.map((item) => (
         <div key={item.id} data-testid={`canvas-item-${item.id}`}>
           <button onClick={() => onMove(item.id, 5.0, 6.0)}>Drag {item.id}</button>
-          <button onClick={() => onRemove(item.id)}>Delete {item.id}</button>
+          {getMenuItems(item.id).map((mi) => (
+            <button key={mi.label} onClick={mi.onClick}>{mi.label} {item.id}</button>
+          ))}
         </div>
       ))}
     </div>
@@ -125,12 +132,12 @@ describe('GardenGrid', () => {
     });
   });
 
-  it('calls deleteBedPlacement when canvas onRemove fires', async () => {
+  it('calls deleteBedPlacement when Remove from layout menu item is clicked', async () => {
     const user = userEvent.setup();
     mockFetchBedPlacements.mockResolvedValue([placement]);
     renderGardenGrid();
     await screen.findByTestId('canvas-item-bp-1');
-    await user.click(screen.getByRole('button', { name: /delete bp-1/i }));
+    await user.click(screen.getByRole('button', { name: /remove from layout bp-1/i }));
     await waitFor(() => {
       expect(mockDeleteBedPlacement).toHaveBeenCalledWith('garden-1', 'bp-1');
     });
