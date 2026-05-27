@@ -1,13 +1,9 @@
-from django.db.models import ExpressionWrapper, F, IntegerField, Q
+from django.db.models import ExpressionWrapper, F, FloatField, Q
 from rest_framework import serializers
 
-from core.utils import grid_dimensions
+from core.utils import to_feet
 
 from .models import BedPlacement, Garden, GardenBed
-
-
-def garden_grid_dimensions(garden):
-    return grid_dimensions(garden.length, garden.width, garden.unit)
 
 
 class GardenBedSerializer(serializers.ModelSerializer):
@@ -38,15 +34,16 @@ class GardenBedSerializer(serializers.ModelSerializer):
 
         from plants.models import PlantPlacement  # local import to avoid circular dep
 
-        new_cols, new_rows = grid_dimensions(new_length, new_width, new_unit)
+        new_width_ft = to_feet(new_width, new_unit)
+        new_height_ft = to_feet(new_length, new_unit)
 
         out_of_bounds = (
             PlantPlacement.objects.filter(bed=self.instance)
             .annotate(
-                x_end=ExpressionWrapper(F("x") + F("width"), output_field=IntegerField()),
-                y_end=ExpressionWrapper(F("y") + F("height"), output_field=IntegerField()),
+                x_end=ExpressionWrapper(F("x") + F("width"), output_field=FloatField()),
+                y_end=ExpressionWrapper(F("y") + F("height"), output_field=FloatField()),
             )
-            .filter(Q(x_end__gt=new_cols) | Q(y_end__gt=new_rows))
+            .filter(Q(x_end__gt=new_width_ft) | Q(y_end__gt=new_height_ft))
             .select_related("user_plant__plant")
         )
 
@@ -100,22 +97,19 @@ class GardenSerializer(serializers.ModelSerializer):
                 )
             return data
 
-        new_cols, new_rows = grid_dimensions(new_length, new_width, new_unit)
+        new_width_ft = to_feet(new_width, new_unit)
+        new_height_ft = to_feet(new_length, new_unit)
 
-        out_of_bounds = (
-            self.instance.bed_placements
-            .annotate(
-                x_end=ExpressionWrapper(F("x") + F("width"), output_field=IntegerField()),
-                y_end=ExpressionWrapper(F("y") + F("height"), output_field=IntegerField()),
-            )
-            .filter(Q(x_end__gt=new_cols) | Q(y_end__gt=new_rows))
-            .select_related("bed")
-        )
+        out_of_bounds = [
+            p for p in self.instance.bed_placements.select_related("bed")
+            if p.x + to_feet(p.bed.width, p.bed.unit) > new_width_ft
+            or p.y + to_feet(p.bed.length, p.bed.unit) > new_height_ft
+        ]
 
-        if out_of_bounds.exists():
-            names = list(out_of_bounds.values_list("bed__name", flat=True))
+        if out_of_bounds:
+            names = [p.bed.name for p in out_of_bounds]
             raise serializers.ValidationError(
-                f"Resizing would push the following beds outside the grid: {', '.join(names)}."
+                f"Resizing would push the following beds outside the garden: {', '.join(names)}."
                 " Remove or reposition them first."
             )
 
@@ -129,10 +123,19 @@ class GardenSerializer(serializers.ModelSerializer):
 
 
 class BedPlacementSerializer(serializers.ModelSerializer):
+    bed_width_ft = serializers.SerializerMethodField()
+    bed_height_ft = serializers.SerializerMethodField()
+
+    def get_bed_width_ft(self, obj):
+        return to_feet(obj.bed.width, obj.bed.unit)
+
+    def get_bed_height_ft(self, obj):
+        return to_feet(obj.bed.length, obj.bed.unit)
+
     class Meta:
         model = BedPlacement
-        fields = ["id", "bed", "garden", "x", "y", "width", "height", "created_at", "updated_at"]
-        read_only_fields = ["id", "garden", "created_at", "updated_at"]
+        fields = ["id", "bed", "garden", "x", "y", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
+        read_only_fields = ["id", "garden", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
 
     def validate_bed(self, value):
         request = self.context.get("request")
@@ -151,15 +154,19 @@ class BedPlacementSerializer(serializers.ModelSerializer):
         if garden.width is None or garden.length is None:
             raise serializers.ValidationError("Garden dimensions must be set before placing beds.")
 
-        cols, rows = garden_grid_dimensions(garden)
+        garden_width_ft = to_feet(garden.width, garden.unit)
+        garden_height_ft = to_feet(garden.length, garden.unit)
+
+        bed = data.get("bed") or (self.instance.bed if self.instance else None)
+        bed_width_ft = to_feet(bed.width, bed.unit)
+        bed_height_ft = to_feet(bed.length, bed.unit)
+
         x = data.get("x", self.instance.x if self.instance else None)
         y = data.get("y", self.instance.y if self.instance else None)
-        width = data.get("width", self.instance.width if self.instance else 1)
-        height = data.get("height", self.instance.height if self.instance else 1)
 
-        if x is not None and (x < 0 or x + width > cols):
-            raise serializers.ValidationError({"x": f"Out of bounds (grid is {cols} columns wide)."})
-        if y is not None and (y < 0 or y + height > rows):
-            raise serializers.ValidationError({"y": f"Out of bounds (grid is {rows} rows tall)."})
+        if x is not None and (x < 0 or x + bed_width_ft > garden_width_ft):
+            raise serializers.ValidationError({"x": f"Out of bounds (garden is {garden_width_ft} ft wide)."})
+        if y is not None and (y < 0 or y + bed_height_ft > garden_height_ft):
+            raise serializers.ValidationError({"y": f"Out of bounds (garden is {garden_height_ft} ft tall)."})
 
         return data

@@ -55,10 +55,8 @@ class GardenBed(BaseModel):
 class BedPlacement(BaseModel):
     bed = models.OneToOneField(GardenBed, related_name="placement", on_delete=models.CASCADE)
     garden = models.ForeignKey(Garden, related_name="bed_placements", on_delete=models.CASCADE)
-    x = models.IntegerField(validators=[MinValueValidator(0)])
-    y = models.IntegerField(validators=[MinValueValidator(0)])
-    width = models.IntegerField(default=1, validators=[MinValueValidator(1)])
-    height = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+    x = models.FloatField(validators=[MinValueValidator(0)])
+    y = models.FloatField(validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f"{self.bed} @ ({self.x}, {self.y})"

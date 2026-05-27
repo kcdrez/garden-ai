@@ -17,6 +17,7 @@ class Plant(BaseModel):
     scientific_name = models.CharField(max_length=150, blank=True)
     category = models.CharField(max_length=20, choices=Category.choices)
     description = models.TextField(blank=True)
+    default_spacing_ft = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ["common_name"]
@@ -75,10 +76,10 @@ class Observation(BaseModel):
 class PlantPlacement(BaseModel):
     user_plant = models.OneToOneField(UserPlant, related_name="placement", on_delete=models.CASCADE)
     bed = models.ForeignKey(GardenBed, related_name="placements", on_delete=models.CASCADE)
-    x = models.IntegerField(validators=[MinValueValidator(0)])
-    y = models.IntegerField(validators=[MinValueValidator(0)])
-    width = models.IntegerField(default=1, validators=[MinValueValidator(1)])
-    height = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+    x = models.FloatField(validators=[MinValueValidator(0)])
+    y = models.FloatField(validators=[MinValueValidator(0)])
+    width = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
+    height = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
 
     def __str__(self):
         return f"{self.user_plant} @ ({self.x}, {self.y})"
