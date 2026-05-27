@@ -74,10 +74,10 @@ class UserPlantSerializer(serializers.ModelSerializer):
             user_tz = ZoneInfo("UTC")
         return datetime.now(tz=user_tz).date()
 
-    def _record_status_change(self, user_plant, previous_status, new_status):
+    def _record_status_change(self, user_plant, previous_status, new_status, observed_date=None):
         Observation.objects.create(
             user_plant=user_plant,
-            observed_date=self._local_date(),
+            observed_date=observed_date or self._local_date(),
             type=Observation.Type.STATUS_CHANGE,
             previous_status=previous_status or "",
             new_status=new_status,
@@ -93,7 +93,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        self._record_status_change(instance, None, instance.status)
+        self._record_status_change(instance, None, instance.status, observed_date=instance.start_date)
         return instance
 
     def update(self, instance, validated_data):
