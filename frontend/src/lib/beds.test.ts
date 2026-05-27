@@ -7,6 +7,7 @@ import {
   bedPlacementDimensions,
   bedHasDetails,
   groupByGarden,
+  plantColor,
 } from './beds';
 
 describe('formatDimensions', () => {
@@ -88,6 +89,20 @@ describe('bedHasDetails', () => {
 
   it('returns false when the bed has only notes and includeNotes is false', () => {
     expect(bedHasDetails({ ...mockBed, notes: 'Rich soil' }, false)).toBe(false);
+  });
+});
+
+describe('plantColor', () => {
+  it('returns hsl fill and stroke for a plant with a variety', () => {
+    const { fill, stroke } = plantColor('plant-1', 'Cherry');
+    expect(fill).toMatch(/^hsl\(/);
+    expect(stroke).toMatch(/^hsl\(/);
+  });
+
+  it('returns hsl fill and stroke when variety is empty (no offset applied)', () => {
+    const { fill, stroke } = plantColor('plant-1', '');
+    expect(fill).toMatch(/^hsl\(/);
+    expect(stroke).toMatch(/^hsl\(/);
   });
 });
 

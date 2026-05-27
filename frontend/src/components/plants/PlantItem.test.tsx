@@ -120,4 +120,19 @@ describe('PlantItem', () => {
 
     await waitFor(() => expect(deleteUserPlant).not.toHaveBeenCalled());
   });
+
+  it('includes the variety in the delete confirmation when present', async () => {
+    const user = userEvent.setup();
+    const plantWithVariety: UserPlant = { ...mockUserPlant, variety: 'Cherry' };
+    vi.mocked(mockConfirm).mockResolvedValueOnce(false);
+    render(<ul><PlantItem plant={plantWithVariety} /></ul>);
+
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    await waitFor(() =>
+      expect(mockConfirm).toHaveBeenCalledWith(
+        expect.objectContaining({ description: expect.stringContaining('Cherry') }),
+      ),
+    );
+  });
 });
