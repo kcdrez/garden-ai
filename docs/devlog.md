@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-05-27 — ~45 min
+
+**Completed:**
+- User profile page — `/profile` route with inline edit form (no slide-out drawer); fields: first name, last name, email, timezone (all IANA timezones in select)
+- Backend `UserProfileSerializer` — exposes User fields (`first_name`, `last_name`, `email`, `username` read-only) + `UserProfile.timezone` in one endpoint; email uniqueness validated on PATCH; `ProfileView` now targets `User` directly with `select_related('userprofile')`
+- NavBar account dropdown gets a "Profile" link
+- Fixed Zod `.optional().default('')` type error — caused RHF's `TTransformedValues` to be unresolvable; fixed by using plain `z.string()` and defaulting at the `toFormValues` layer
+
+**Next up:** Frontend e2e tests (Playwright) — cover critical paths: register, create garden/bed/plant, place plant on grid, add observation
+
+---
+
 ## 2026-05-27 — ~3 hours
 
 **Completed:**

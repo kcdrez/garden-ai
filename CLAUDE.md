@@ -226,6 +226,7 @@ These are explicitly out of scope, at least initially:
 - Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
 - Plant UX improvements — bulk create (quantity spinner, N records per submit), add-new-plant wizard step in placement dialog, observation date bug fixed (auto-logged observation uses `startDate` instead of today)
 - Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
+- User profile page — `/profile` with inline edit form (first name, last name, email, timezone); backend `UserProfileSerializer` combines `User` + `UserProfile` fields in one endpoint; NavBar account dropdown links to it
 
 ## 📋 Planned
 
@@ -235,15 +236,13 @@ These are explicitly out of scope, at least initially:
 
 ### Authentication & Accounts
 
-- User profile (timezone, locale settings, first/last name)
-- ~~Forgot password~~ ✅ shipped
 - Social login (Google, Facebook, etc.) via `django-allauth` + `dj-rest-auth` — add alongside existing username/password auth, not as a replacement
 
 ### Garden Organization (core)
 
 - Visual garden layout management
 - Customizable garden dimensions and grids
-- Drag-and-drop garden design interface ✅ shipped (freeform SVG canvas)
+- Drag-and-drop garden design interface
 - Garden templates and presets
 - Export/import garden plans
 
