@@ -14,7 +14,6 @@ export const userPlantSchema = z.object({
   startDate: z.string().optional(),
   status: z.enum(statusValues),
   notes: z.string().optional(),
-  quantity: posInt.refine((v) => parseInt(v, 10) <= 50, 'Max 50'),
 });
 
 export type UserPlantFormValues = z.infer<typeof userPlantSchema>;

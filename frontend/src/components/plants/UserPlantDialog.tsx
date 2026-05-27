@@ -48,7 +48,6 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     startDate: userPlant?.startDate ?? '',
     status: userPlant?.status ?? 'planned',
     notes: userPlant?.notes ?? '',
-    quantity: '1',
   });
 
   const editForm = useForm<UserPlantFormValues>({
@@ -170,9 +169,10 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
               <div className="grid grid-cols-2 gap-3">
                 {needsGardenPicker && (
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium leading-none">Garden</label>
+                    <label htmlFor="garden-select" className="text-sm font-medium leading-none">Garden</label>
                     <div className="relative">
                       <select
+                        id="garden-select"
                         className={selectClass}
                         value={selectedGardenId}
                         onChange={(e) => {
@@ -191,9 +191,10 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
                 )}
                 {needsBedPicker && (
                   <div className={cn('flex flex-col gap-1.5', !selectedGardenId && 'opacity-50 pointer-events-none')}>
-                    <label className="text-sm font-medium leading-none">Bed</label>
+                    <label htmlFor="bed-select" className="text-sm font-medium leading-none">Bed</label>
                     <div className="relative">
                       <select
+                        id="bed-select"
                         className={selectClass}
                         value={selectedBedId}
                         onChange={(e) => setSelectedBedId(e.target.value)}
