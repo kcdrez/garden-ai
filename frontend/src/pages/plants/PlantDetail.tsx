@@ -34,6 +34,8 @@ export default function PlantDetail() {
         <h2 className="mb-3">Timeline</h2>
         <PlantTimeline gardenId={plant.gardenId} bedId={plant.bed} plant={plant} />
       </div>
+
+
     </div>
   );
 }

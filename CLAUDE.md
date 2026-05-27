@@ -227,6 +227,7 @@ These are explicitly out of scope, at least initially:
 - Plant UX improvements — bulk create (quantity spinner, N records per submit), add-new-plant wizard step in placement dialog, observation date bug fixed (auto-logged observation uses `startDate` instead of today)
 - Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
 - User profile page — `/profile` with inline edit form (first name, last name, email, timezone); backend `UserProfileSerializer` combines `User` + `UserProfile` fields in one endpoint; NavBar account dropdown links to it
+- AI integration — OpenAI-powered chat at garden/bed/plant scope; `AIConversation` + `AIMessage` models; context builder serializes garden hierarchy into system prompt; conversation history (last 20 msgs); global floating chat widget with per-entity history and markdown rendering
 
 ## 📋 Planned
 
@@ -311,9 +312,10 @@ These are explicitly out of scope, at least initially:
 
 ### AI Integration
 
-- OpenAI API integration (backend-controlled, not exposed directly to frontend)
-- AI chat endpoint with conversation history (AIConversation model)
-- Prompt builder and dynamic context assembly system
+- ~~OpenAI API integration (backend-controlled, not exposed directly to frontend)~~ ✅ shipped
+- ~~AI chat endpoint with conversation history (AIConversation model)~~ ✅ shipped
+- ~~Prompt builder and dynamic context assembly system~~ ✅ shipped
+- Rate limiting / per-user message quotas (basic daily cap + input length validation)
 - AI-powered garden recommendations
 - AI-powered plant compatibility analysis
 - AI-powered troubleshooting and diagnostics
