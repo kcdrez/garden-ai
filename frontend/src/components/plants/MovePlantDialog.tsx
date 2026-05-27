@@ -20,7 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { TextField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, NumberField, NativeSelectField } from '@/components/ui/form-fields';
 import { LoadingSpinner } from '@/components/ui/query-state';
 import { FormRootError } from '@/components/ui/form-root-error';
 
@@ -162,8 +162,8 @@ function CreateBedStep({ defaultGardenId, onSuccess, onBack }: CreateBedStepProp
       <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
 
       <div className="grid grid-cols-3 gap-3">
-        <TextField control={form.control} name="length" label="Length" inputMode="numeric" />
-        <TextField control={form.control} name="width" label="Width" inputMode="numeric" />
+        <NumberField control={form.control} name="length" label="Length" />
+        <NumberField control={form.control} name="width" label="Width" />
         <NativeSelectField control={form.control} name="unit" label="Unit">
           {BED_UNITS.map((u) => (
             <option key={u.value} value={u.value}>{u.label}</option>

@@ -1,5 +1,7 @@
-from rest_framework import mixins, permissions, viewsets
+from django.db import transaction
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.response import Response
 
 from gardens.models import Garden, GardenBed
 
@@ -41,9 +43,23 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
             .order_by("plant__common_name", "-created_at")
         )
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        try:
+            quantity = max(1, min(int(request.data.get("quantity", 1)), 50))
+        except (TypeError, ValueError):
+            quantity = 1
+
         bed = self._get_bed()
-        serializer.save(bed=bed)
+        instances = []
+
+        with transaction.atomic():
+            for _ in range(quantity):
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save(bed=bed)
+                instances.append(serializer.data)
+
+        return Response(instances, status=status.HTTP_201_CREATED)
 
 
 class AllUserPlantsViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

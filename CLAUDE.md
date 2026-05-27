@@ -197,7 +197,7 @@ These are explicitly out of scope, at least initially:
 - Prioritize working end-to-end features
 - Ask before introducing new dependencies
 - Assume simplicity over scalability unless stated otherwise
-- Follow the single responsibility principle — components and functions should do one thing; flag components that are growing too large and suggest splitting them rather than continuing to add to them
+- Follow the single responsibility principle — components and functions should do one thing; whenever a component or function is found to violate SRP (whether it's growing, being refactored, or just noticed), do NOT silently proceed — flag it, explain why it violates SRP, then ask the user whether to split it now or document it as a planned improvement; never perform an SRP-motivated refactor without explicit user confirmation
 
 ---
 
@@ -224,6 +224,7 @@ These are explicitly out of scope, at least initially:
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 - Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
 - Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
+- Plant UX improvements — bulk create (quantity spinner, N records per submit), add-new-plant wizard step in placement dialog, observation date bug fixed (auto-logged observation uses `startDate` instead of today)
 
 ## 📋 Planned
 

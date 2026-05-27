@@ -169,6 +169,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
             createPlacementMutation.mutate({ userPlant: userPlantId, x: placingCell!.x, y: placingCell!.y })
           }
           isPlacing={createPlacementMutation.isPending}
+          gardenId={gardenId}
+          bedId={bedId}
         />
       </>
     </DndContext>

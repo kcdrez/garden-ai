@@ -48,6 +48,7 @@ export type UserPlantPayload = {
   variety?: string;
   startDate?: string;
   notes?: string;
+  quantity?: number;
 };
 
 export interface PlantPlacement {

@@ -29,8 +29,8 @@ describe('BedDialog', () => {
   it('pre-fills fields in edit mode', () => {
     render(<BedDialog gardenId="garden-1" bed={mockBed} open onOpenChange={onOpenChange} />);
     expect(screen.getByLabelText(/^name$/i)).toHaveValue('Raised Bed 1');
-    expect(screen.getByLabelText(/^length$/i)).toHaveValue('4');
-    expect(screen.getByLabelText(/^width$/i)).toHaveValue('4');
+    expect(screen.getByLabelText(/^length$/i)).toHaveValue(4);
+    expect(screen.getByLabelText(/^width$/i)).toHaveValue(4);
   });
 
   it('submit is disabled until required fields are filled', () => {

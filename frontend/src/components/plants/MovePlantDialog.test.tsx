@@ -94,8 +94,8 @@ describe('MovePlantDialog', () => {
     await user.click(screen.getByRole('button', { name: /create new bed/i }));
 
     await user.type(screen.getByRole('textbox', { name: /name/i }), 'New Bed');
-    await user.type(screen.getByRole('textbox', { name: /length/i }), '4');
-    await user.type(screen.getByRole('textbox', { name: /width/i }), '4');
+    await user.type(screen.getByRole('spinbutton', { name: /length/i }), '4');
+    await user.type(screen.getByRole('spinbutton', { name: /width/i }), '4');
 
     await user.click(screen.getByRole('button', { name: /create bed/i }));
 
