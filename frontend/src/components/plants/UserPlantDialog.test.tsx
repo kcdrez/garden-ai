@@ -53,6 +53,7 @@ const catalogPlant: Plant = {
   category: 'vegetable',
   scientificName: '',
   description: '',
+  defaultSpacingFt: null,
 };
 
 beforeEach(() => {

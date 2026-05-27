@@ -23,6 +23,7 @@ const mockPlants: Plant[] = [
     category: 'vegetable',
     scientificName: '',
     description: '',
+    defaultSpacingFt: null,
   },
   {
     id: 'p2',
@@ -30,6 +31,7 @@ const mockPlants: Plant[] = [
     category: 'herb',
     scientificName: '',
     description: '',
+    defaultSpacingFt: null,
   },
   {
     id: 'p3',
@@ -37,6 +39,7 @@ const mockPlants: Plant[] = [
     category: 'flower',
     scientificName: '',
     description: '',
+    defaultSpacingFt: null,
   },
 ];
 

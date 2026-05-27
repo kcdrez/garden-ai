@@ -16,7 +16,7 @@ type Props = {
   unplacedBeds: GardenBed[];
   onPlace: (bedId: string) => void;
   isPlacing: boolean;
-  placeError: string | null;
+  placeError?: string | null;
 };
 
 export default function PlaceBedDialog({
@@ -25,7 +25,7 @@ export default function PlaceBedDialog({
   unplacedBeds,
   onPlace,
   isPlacing,
-  placeError,
+  placeError = null,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
