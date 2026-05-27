@@ -60,6 +60,25 @@ class UserPlantAPITests(APITestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]["plant_name"], self.plant.common_name)
 
+    def test_create_user_plant_with_start_date_uses_start_date_for_observation(self):
+        res = self.client.post(
+            self._list_url(self.garden.id, self.bed.id),
+            {"plant": str(self.plant.id), "status": "planned", "start_date": "2025-03-01"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        obs = Observation.objects.get(user_plant_id=res.data[0]["id"])
+        self.assertEqual(str(obs.observed_date), "2025-03-01")
+
+    def test_create_user_plant_without_start_date_uses_today_for_observation(self):
+        res = self.client.post(
+            self._list_url(self.garden.id, self.bed.id),
+            {"plant": str(self.plant.id), "status": "planned"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        obs = Observation.objects.get(user_plant_id=res.data[0]["id"])
+        from datetime import date
+        self.assertEqual(obs.observed_date, date.today())
+
     def test_create_user_plant_with_quantity(self):
         res = self.client.post(
             self._list_url(self.garden.id, self.bed.id),

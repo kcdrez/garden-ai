@@ -57,7 +57,7 @@ const catalogPlant: Plant = {
 
 beforeEach(() => {
   vi.mocked(fetchPlants).mockResolvedValue([catalogPlant]);
-  vi.mocked(createUserPlant).mockResolvedValue(mockUserPlant);
+  vi.mocked(createUserPlant).mockResolvedValue([mockUserPlant]);
   vi.mocked(updateUserPlant).mockResolvedValue(mockUserPlant);
 });
 
@@ -71,7 +71,6 @@ describe('UserPlantDialog', () => {
         onOpenChange={onOpenChange}
       />,
     );
-    // await the query to settle so we don't get the async act() warning
     await screen.findByRole('button', { name: /tomato/i });
     expect(
       screen.getByRole('button', { name: /add plant/i }),
@@ -197,16 +196,18 @@ describe('UserPlantDialog', () => {
     expect(screen.getByRole('combobox', { name: /bed/i })).toBeInTheDocument();
   });
 
-  it('removes the opacity class from the bed picker once a garden is selected', async () => {
+  it('enables the bed picker once a garden is selected', async () => {
     const user = userEvent.setup();
     vi.mocked(fetchGardens).mockResolvedValueOnce([mockGarden]);
     render(<UserPlantDialog open onOpenChange={onOpenChange} />);
 
     await screen.findByRole('button', { name: /tomato/i });
 
-    const gardenSelect = screen.getByRole('combobox', { name: /garden/i });
-    await user.selectOptions(gardenSelect, 'garden-1');
+    const bedSelect = screen.getByRole('combobox', { name: /bed/i });
+    expect(bedSelect.parentElement?.parentElement).toHaveClass('opacity-50');
 
-    expect(screen.getByRole('combobox', { name: /bed/i })).not.toHaveClass('opacity-50');
+    await user.selectOptions(screen.getByRole('combobox', { name: /garden/i }), 'garden-1');
+
+    expect(bedSelect.parentElement?.parentElement).not.toHaveClass('opacity-50');
   });
 });
