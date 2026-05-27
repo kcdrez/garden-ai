@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-05-26 — ~2 hours
+
+**Completed:**
+- Bulk plant creation — quantity spinner in add-plant dialog; backend creates N separate UserPlant records in a transaction; max 50
+- Add new plant from placement dialog — wizard step in PlacePlantDialog; click a cell, create a plant, it's immediately placed; no round-tripping back to the bed
+- Observation date bug fix — auto-logged status-change observation on UserPlant create now uses `startDate` if provided, falls back to today
+- `NumberField` component — `type="number"` with blocked non-integer keystrokes (`e`, `E`, `+`, `-`, `.`); applied to all numeric inputs; documented in conventions
+- `UserPlantForm` — self-contained create-mode form component shared by `UserPlantDialog` and `PlacePlantDialog`; eliminated duplicated form logic
+- SRP documentation — updated CLAUDE.md to require flagging + user confirmation before any SRP-motivated refactor; documented `UserPlantDialog` split and `components/plants/` sub-folder restructure as planned improvements
+- Test updates — new `UserPlantForm.test.tsx` (9 tests); updated `PlacePlantDialog` and `UserPlantDialog` tests for refactor; fixed pre-existing accessibility bug (missing `htmlFor`/`id` on garden/bed selects)
+
+**Next up:** Research AI integration before building — review OpenAI API, decide on conversation model and backend approach
+
+---
+
 ## 2026-05-25 — ~1 hour
 
 **Completed:**
