@@ -6,6 +6,7 @@ import AllBeds from './pages/beds/AllBeds';
 import BedDetail from './pages/beds/BedDetail';
 import AllPlants from './pages/plants/AllPlants';
 import PlantDetail from './pages/plants/PlantDetail';
+import ProfilePage from './pages/profile/ProfilePage';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
       { path: 'beds', element: <AllBeds /> },
       { path: 'plants', element: <AllPlants /> },
       { path: 'plants/:plantId', element: <PlantDetail /> },
+      { path: 'profile', element: <ProfilePage /> },
     ],
   },
 ]);
