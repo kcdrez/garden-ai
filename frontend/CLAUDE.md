@@ -61,6 +61,7 @@ Conventions:
 - Mock `@/components/ui/sheet` in edit form tests so form fields render and are accessible in jsdom
 - Mock `useConfirm` as `vi.fn()` in tests that cover delete flows; assert on both the confirm-accepted and confirm-cancelled paths
 - Edit form stub pattern for header tests: `({ open }) => open ? <div role="dialog" aria-label="Edit X Form" /> : null`
+- `NumberField` (type="number") inputs have ARIA role `spinbutton`, not `textbox` — use `getByRole('spinbutton', { name: /label/i })` to query them; `toHaveValue()` returns a number, not a string
 
 E2e tests: Playwright — planned, not yet implemented (see root CLAUDE.md).
 
