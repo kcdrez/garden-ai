@@ -3,20 +3,16 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from rest_framework import serializers
 
-from core.utils import grid_dimensions
+from core.utils import to_feet
 from gardens.models import GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
 
 
-def bed_grid_dimensions(bed):
-    return grid_dimensions(bed.length, bed.width, bed.unit)
-
-
 class PlantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plant
-        fields = ["id", "common_name", "scientific_name", "category", "description"]
+        fields = ["id", "common_name", "scientific_name", "category", "description", "default_spacing_ft"]
         read_only_fields = ["id"]
 
 
@@ -123,17 +119,18 @@ class PlantPlacementSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user_plant = data.get("user_plant") or (self.instance.user_plant if self.instance else None)
         bed = self.instance.bed if self.instance else user_plant.bed
-        cols, rows = bed_grid_dimensions(bed)
+        bed_width_ft = to_feet(bed.width, bed.unit)
+        bed_height_ft = to_feet(bed.length, bed.unit)
 
         x = data.get("x", self.instance.x if self.instance else None)
         y = data.get("y", self.instance.y if self.instance else None)
-        width = data.get("width", self.instance.width if self.instance else 1)
-        height = data.get("height", self.instance.height if self.instance else 1)
+        width = data.get("width", self.instance.width if self.instance else 1.0)
+        height = data.get("height", self.instance.height if self.instance else 1.0)
 
-        if x is not None and (x < 0 or x + width > cols):
-            raise serializers.ValidationError({"x": f"Out of bounds (grid is {cols} columns wide)."})
-        if y is not None and (y < 0 or y + height > rows):
-            raise serializers.ValidationError({"y": f"Out of bounds (grid is {rows} rows tall)."})
+        if x is not None and (x < 0 or x + width > bed_width_ft):
+            raise serializers.ValidationError({"x": f"Out of bounds (bed is {bed_width_ft} ft wide)."})
+        if y is not None and (y < 0 or y + height > bed_height_ft):
+            raise serializers.ValidationError({"y": f"Out of bounds (bed is {bed_height_ft} ft tall)."})
 
         return data
 
