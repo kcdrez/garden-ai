@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DndContext, DragOverlay, type DragEndEvent } from '@dnd-kit/core';
-import { fetchPlacements, createPlacement, deletePlacement } from '@/api/plants';
-import { bedGridDimensions } from '@/lib/beds';
+import { fetchPlacements, createPlacement, movePlacement, deletePlacement } from '@/api/plants';
+import { toFeet } from '@/lib/beds';
 import type { GardenBed } from '@/types/gardens';
 import type { PlantPlacement, UserPlant } from '@/types/plants';
 import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
-import PlacementGrid, { DraggableChip } from '@/components/shared/PlacementGrid';
+import PlacementCanvas, { type CanvasItem } from '@/components/shared/PlacementCanvas';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface BedGridProps {
@@ -18,161 +17,140 @@ interface BedGridProps {
 
 export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridProps) {
   const queryClient = useQueryClient();
-  const [placingCell, setPlacingCell] = useState<{ x: number; y: number } | null>(null);
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
 
-  const { data: placements = [], isLoading: placementsLoading } = useQuery({
+  const { data: placements = [], isLoading } = useQuery({
     queryKey: ['placements', bedId],
     queryFn: () => fetchPlacements(gardenId, bedId),
   });
 
-  const createPlacementMutation = useMutation({
-    mutationFn: ({ userPlant, x, y }: { userPlant: string; x: number; y: number }) =>
-      createPlacement(gardenId, bedId, { userPlant, x, y }),
+  const createMutation = useMutation({
+    mutationFn: ({ userPlantId, x, y, width, height }: { userPlantId: string; x: number; y: number; width: number; height: number }) =>
+      createPlacement(gardenId, bedId, { userPlant: userPlantId, x, y, width, height }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['placements', bedId] });
-      setPlacingCell(null);
+      setPlacingAt(null);
     },
   });
 
-  const deletePlacementMutation = useMutation({
-    mutationFn: (placementId: string) => deletePlacement(gardenId, bedId, placementId),
+  const moveMutation = useMutation({
+    mutationFn: ({ placementId, x, y }: { placementId: string; x: number; y: number }) =>
+      movePlacement(gardenId, bedId, placementId, x, y),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
   });
 
-  if (placementsLoading) return <LoadingSpinner />;
+  const deleteMutation = useMutation({
+    mutationFn: (placementId: string) => deletePlacement(gardenId, bedId, placementId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
+  });
 
-  const { cols, rows } = bedGridDimensions(bed);
+  if (isLoading) return <LoadingSpinner />;
+
+  const widthFt = toFeet(bed.width, bed.unit);
+  const heightFt = toFeet(bed.length, bed.unit);
+
+  const userPlantById = new Map<string, UserPlant>(userPlants.map((p) => [p.id, p]));
   const placementById = new Map<string, PlantPlacement>(placements.map((p) => [p.id, p]));
-  const userPlantById = new Map(userPlants.map((p) => [p.id, p]));
   const unplacedPlants = userPlants.filter((p) => !placements.some((pl) => pl.userPlant === p.id));
 
-  function handleDragEnd(event: DragEndEvent) {
-    setActiveDragId(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = String(active.id);
-    const overId = String(over.id);
-
-    if (!overId.startsWith('cell:')) return;
-    const [x, y] = overId.slice(5).split(',').map(Number);
-
-    if (activeId.startsWith('unplaced:')) {
-      createPlacementMutation.mutate({ userPlant: activeId.slice(9), x, y });
-    } else if (activeId.startsWith('placed:')) {
-      const placementId = activeId.slice(7);
-      const existing = placements.find((p) => p.id === placementId);
-      if (!existing || (existing.x === x && existing.y === y)) return;
-      deletePlacementMutation.mutate(placementId, {
-        onSuccess: () =>
-          createPlacementMutation.mutate(
-            { userPlant: existing.userPlant, x, y },
-            { onError: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }) },
-          ),
-      });
-    }
-  }
-
-  function renderDragOverlay() {
-    if (!activeDragId) return null;
-
-    if (activeDragId.startsWith('unplaced:')) {
-      const plant = userPlantById.get(activeDragId.slice(9));
-      if (!plant) return null;
-      return (
-        <div className="flex flex-col px-3 py-1.5 bg-primary/10 border border-primary/20 rounded text-xs shadow-lg cursor-grabbing">
-          <span>{plant.plantName}</span>
-          {plant.variety && <span className="text-muted-foreground">{plant.variety}</span>}
-        </div>
-      );
-    }
-
-    if (activeDragId.startsWith('placed:')) {
-      const placement = placements.find((p) => p.id === activeDragId.slice(7));
-      if (!placement) return null;
-      const plant = userPlantById.get(placement.userPlant);
-      return (
-        <div className="w-24 h-24 bg-primary/15 border border-primary/30 rounded flex items-center justify-center p-1 shadow-lg cursor-grabbing">
-          <span className="text-xs leading-tight text-center break-words w-full">
-            {plant?.plantName}
-            {plant?.variety && (
-              <span className="block text-muted-foreground truncate">{plant.variety}</span>
-            )}
-          </span>
-        </div>
-      );
-    }
-
-    return null;
-  }
+  const items: CanvasItem[] = placements.map((p) => ({
+    id: p.id,
+    x: p.x,
+    y: p.y,
+    widthFt: p.width,
+    heightFt: p.height,
+  }));
 
   return (
-    <DndContext
-      onDragStart={({ active }) => setActiveDragId(String(active.id))}
-      onDragEnd={handleDragEnd}
-      onDragCancel={() => setActiveDragId(null)}
-    >
-      <>
-        <PlacementGrid
-          cols={cols}
-          rows={rows}
-          placements={placements}
-          onEmptyCellClick={(x, y) => setPlacingCell({ x, y })}
-          onRemove={(placementId) =>
-        deletePlacementMutation.mutate(placementId, {
-          onSuccess: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
-        })
-      }
-          isRemoving={deletePlacementMutation.isPending}
-          renderCell={(placement) => {
-            const full = placementById.get(placement.id);
-            const plant = full ? userPlantById.get(full.userPlant) : undefined;
-            return (
-              <span className="text-xs leading-tight text-center break-words w-full pointer-events-none select-none">
+    <>
+      <PlacementCanvas
+        widthFt={widthFt}
+        heightFt={heightFt}
+        items={items}
+        renderItem={(item) => {
+          const placement = placementById.get(item.id);
+          const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
+          const r = Math.min(item.widthFt, item.heightFt) / 2;
+          const cx = item.widthFt / 2;
+          const cy = item.heightFt / 2;
+          const fontSize = Math.max(0.1, r * 0.55);
+          return (
+            <>
+              <circle
+                cx={cx} cy={cy} r={r}
+                className="fill-primary/20 stroke-primary/50"
+                strokeWidth={0.04}
+              />
+              <text
+                x={cx} y={cy}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={fontSize}
+                className="fill-foreground"
+                style={{ userSelect: 'none', pointerEvents: 'none' }}
+              >
                 {plant?.plantName}
-                {plant?.variety && (
-                  <span className="block text-muted-foreground truncate">{plant.variety}</span>
-                )}
-              </span>
-            );
-          }}
-        />
+              </text>
+              {plant?.variety && (
+                <text
+                  x={cx} y={cy + fontSize * 1.2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={fontSize * 0.8}
+                  className="fill-muted-foreground"
+                  style={{ userSelect: 'none', pointerEvents: 'none' }}
+                >
+                  {plant.variety}
+                </text>
+              )}
+            </>
+          );
+        }}
+        onEmptyClick={(x, y) => setPlacingAt({ x, y })}
+        onMove={(placementId, x, y) => moveMutation.mutate({ placementId, x, y })}
+        onRemove={(placementId) => deleteMutation.mutate(placementId)}
+        isRemoving={deleteMutation.isPending}
+      />
 
-        {unplacedPlants.length > 0 && (
-          <div className="mt-4">
-            <p className="text-xs text-muted-foreground mb-2">
-              Unplaced plants — drag to grid or click a cell
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {unplacedPlants.map((plant) => (
-                <DraggableChip key={plant.id} dragId={`unplaced:${plant.id}`}>
-                  <span>{plant.plantName}</span>
-                  {plant.variety && (
-                    <span className="text-muted-foreground">{plant.variety}</span>
-                  )}
-                </DraggableChip>
-              ))}
-            </div>
+      {unplacedPlants.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs text-muted-foreground mb-2">
+            Unplaced plants — click the canvas to place
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {unplacedPlants.map((plant) => (
+              <div
+                key={plant.id}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded text-xs"
+              >
+                <span>{plant.plantName}</span>
+                {plant.variety && <span className="text-muted-foreground">{plant.variety}</span>}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        <DragOverlay dropAnimation={null}>{renderDragOverlay()}</DragOverlay>
-
-        <PlacePlantDialog
-          open={!!placingCell}
-          onOpenChange={(open) => {
-            if (!open) setPlacingCell(null);
-          }}
-          cell={placingCell}
-          unplacedPlants={unplacedPlants}
-          onPlace={(userPlantId) =>
-            createPlacementMutation.mutate({ userPlant: userPlantId, x: placingCell!.x, y: placingCell!.y })
-          }
-          isPlacing={createPlacementMutation.isPending}
-          gardenId={gardenId}
-          bedId={bedId}
-        />
-      </>
-    </DndContext>
+      <PlacePlantDialog
+        open={!!placingAt}
+        onOpenChange={(open) => { if (!open) setPlacingAt(null); }}
+        cell={placingAt}
+        unplacedPlants={unplacedPlants}
+        onPlace={(userPlantId) => {
+          const plant = userPlantById.get(userPlantId);
+          const spacing = plant?.plantDefaultSpacingFt ?? 1.0;
+          createMutation.mutate({
+            userPlantId,
+            x: placingAt!.x,
+            y: placingAt!.y,
+            width: spacing,
+            height: spacing,
+          });
+        }}
+        isPlacing={createMutation.isPending}
+        gardenId={gardenId}
+        bedId={bedId}
+      />
+    </>
   );
 }

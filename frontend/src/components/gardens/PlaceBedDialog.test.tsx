@@ -6,18 +6,13 @@ import PlaceBedDialog from './PlaceBedDialog';
 const onPlace = vi.fn();
 const onOpenChange = vi.fn();
 
-function renderDialog({
-  unplacedBeds = [mockBed],
-  placeableBedIds = new Set(['bed-1']),
-  isPlacing = false,
-} = {}) {
+function renderDialog({ unplacedBeds = [mockBed], isPlacing = false } = {}) {
   return render(
     <PlaceBedDialog
       open
       onOpenChange={onOpenChange}
       cell={{ x: 1, y: 0 }}
       unplacedBeds={unplacedBeds}
-      placeableBedIds={placeableBedIds}
       onPlace={onPlace}
       isPlacing={isPlacing}
     />,
@@ -25,11 +20,6 @@ function renderDialog({
 }
 
 describe('PlaceBedDialog', () => {
-  it('shows the cell position in the title', () => {
-    renderDialog();
-    expect(screen.getByText(/column 2, row 1/i)).toBeInTheDocument();
-  });
-
   it('shows "all beds placed" message when there are no unplaced beds', () => {
     renderDialog({ unplacedBeds: [] });
     expect(screen.getByText(/all beds in this garden are already placed/i)).toBeInTheDocument();
@@ -47,12 +37,7 @@ describe('PlaceBedDialog', () => {
     expect(onPlace).toHaveBeenCalledWith('bed-1');
   });
 
-  it('shows a "won\'t fit" bed as disabled', () => {
-    renderDialog({ placeableBedIds: new Set() }); // bed-1 is unplaced but not placeable
-    expect(screen.getByRole('button', { name: /raised bed 1/i })).toBeDisabled();
-  });
-
-  it('disables available bed buttons while placing', () => {
+  it('disables bed buttons while placing', () => {
     renderDialog({ isPlacing: true });
     expect(screen.getByRole('button', { name: /raised bed 1/i })).toBeDisabled();
   });

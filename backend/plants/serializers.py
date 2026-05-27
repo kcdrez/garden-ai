@@ -19,6 +19,7 @@ class PlantSerializer(serializers.ModelSerializer):
 class UserPlantSerializer(serializers.ModelSerializer):
     plant_name = serializers.CharField(source="plant.common_name", read_only=True)
     plant_category = serializers.CharField(source="plant.category", read_only=True)
+    plant_default_spacing_ft = serializers.FloatField(source="plant.default_spacing_ft", read_only=True, allow_null=True)
     bed_name = serializers.CharField(source="bed.name", read_only=True)
     garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
     garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
@@ -47,6 +48,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "plant",
             "plant_name",
             "plant_category",
+            "plant_default_spacing_ft",
             "placement_id",
             "variety",
             "start_date",
@@ -57,7 +59,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id", "bed_name", "garden_id", "garden_name", "plant_name",
-            "plant_category", "placement_id", "created_at", "updated_at",
+            "plant_category", "plant_default_spacing_ft", "placement_id", "created_at", "updated_at",
         ]
         extra_kwargs = {"bed": {"required": False}}
 
