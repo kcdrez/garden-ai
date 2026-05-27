@@ -54,9 +54,6 @@ class AIConversationSerializer(serializers.ModelSerializer):
 
         return data
 
-    def create(self, validated_data):
-        validated_data["user"] = self.context["request"].user
-        return super().create(validated_data)
 
 
 class AIConversationListSerializer(serializers.ModelSerializer):

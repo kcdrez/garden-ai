@@ -1,15 +1,20 @@
 from django.db.models import Count
+from openai import OpenAIError
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
+from .ai_service import send_message
+from .context_builder import build_context
 from .models import AIConversation, AIMessage
 from .serializers import (
     AIConversationListSerializer,
     AIConversationSerializer,
     SendMessageSerializer,
 )
+
+_HISTORY_LIMIT = 20
 
 
 class AIConversationViewSet(
@@ -22,9 +27,9 @@ class AIConversationViewSet(
     lookup_url_kwarg = "conversation_id"
 
     def get_serializer_class(self):
-        if self.action in ("retrieve", "message"):
-            return AIConversationSerializer
-        return AIConversationListSerializer
+        if self.action == "list":
+            return AIConversationListSerializer
+        return AIConversationSerializer
 
     def get_queryset(self):
         qs = AIConversation.objects.filter(user=self.request.user)
@@ -46,12 +51,13 @@ class AIConversationViewSet(
         context["request"] = self.request
         return context
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     @action(detail=True, methods=["post"], url_path="message")
     def message(self, request, conversation_id=None):
         try:
-            conversation = AIConversation.objects.prefetch_related("messages").get(
-                pk=conversation_id, user=request.user
-            )
+            conversation = AIConversation.objects.get(pk=conversation_id, user=request.user)
         except AIConversation.DoesNotExist as err:
             raise NotFound("Conversation not found.") from err
 
@@ -64,13 +70,31 @@ class AIConversationViewSet(
             content=serializer.validated_data["content"],
         )
 
-        # Stub — OpenAI integration wired in later
+        history = list(
+            AIMessage.objects.filter(conversation=conversation)
+            .order_by("created_at")
+            .values("role", "content")
+        )[-_HISTORY_LIMIT:]
+
+        system = build_context(conversation)
+
+        try:
+            content, input_tokens, output_tokens = send_message(system, history)
+        except OpenAIError:
+            return Response(
+                {"detail": "AI service unavailable. Please try again."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         AIMessage.objects.create(
             conversation=conversation,
             role=AIMessage.Role.ASSISTANT,
-            content="[AI integration not yet connected]",
+            content=content,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
         )
 
+        conversation = AIConversation.objects.prefetch_related("messages").get(pk=conversation_id)
         return Response(
             AIConversationSerializer(conversation, context={"request": request}).data,
             status=status.HTTP_200_OK,
