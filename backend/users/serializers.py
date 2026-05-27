@@ -9,10 +9,13 @@ from rest_framework import serializers
 from .models import UserProfile
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
+    timezone = serializers.CharField(source="userprofile.timezone", required=False)
+
     class Meta:
-        model = UserProfile
-        fields = ["timezone"]
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name", "timezone"]
+        read_only_fields = ["id", "username"]
 
     def validate_timezone(self, value):
         try:
@@ -20,6 +23,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         except (ZoneInfoNotFoundError, KeyError):
             raise serializers.ValidationError("Invalid timezone.") from None
         return value
+
+    def validate_email(self, value):
+        if User.objects.exclude(pk=self.instance.pk).filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("userprofile", {})
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if profile_data:
+            for attr, value in profile_data.items():
+                setattr(instance.userprofile, attr, value)
+            instance.userprofile.save()
+        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):

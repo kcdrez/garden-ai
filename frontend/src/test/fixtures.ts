@@ -1,5 +1,15 @@
 import type { Garden, GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
+import type { UserProfile } from '@/types/auth';
+
+export const mockProfile: UserProfile = {
+  id: 1,
+  username: 'alice',
+  email: 'alice@example.com',
+  firstName: 'Alice',
+  lastName: 'Smith',
+  timezone: 'America/Denver',
+};
 
 export const mockGarden: Garden = {
   id: 'garden-1',

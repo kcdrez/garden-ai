@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { UserIcon, SunIcon, MoonIcon, LogOutIcon } from "lucide-react";
+import { UserIcon, SunIcon, MoonIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -48,6 +48,10 @@ export default function NavBar() {
             <UserIcon />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => navigate(routes.profile())}>
+              <SettingsIcon />
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleTheme}>
               {isDark ? <SunIcon /> : <MoonIcon />}
               {isDark ? "Light mode" : "Dark mode"}

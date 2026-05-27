@@ -10,4 +10,5 @@ export const routes = {
   bedDetail: (gardenId: string, bedId: string) => `/gardens/${gardenId}/beds/${bedId}`,
   allPlants: () => '/plants',
   plantDetail: (plantId: string) => `/plants/${plantId}`,
+  profile: () => '/profile',
 };

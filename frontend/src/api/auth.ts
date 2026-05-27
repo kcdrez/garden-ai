@@ -1,5 +1,6 @@
 import { api } from "./client";
 import { auth } from "@/auth/auth";
+import type { UserProfile } from "@/types/auth";
 
 function browserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -38,5 +39,15 @@ export async function forgotPassword(email: string) {
 
 export async function resetPassword(uid: string, token: string, newPassword: string) {
   const res = await api.post("/auth/password/reset/confirm/", { uid, token, newPassword });
+  return res.data;
+}
+
+export async function getProfile(): Promise<UserProfile> {
+  const res = await api.get("/auth/profile/");
+  return res.data;
+}
+
+export async function updateProfile(data: Partial<Omit<UserProfile, "id" | "username">>): Promise<UserProfile> {
+  const res = await api.patch("/auth/profile/", data);
   return res.data;
 }
