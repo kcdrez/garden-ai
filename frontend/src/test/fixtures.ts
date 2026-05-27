@@ -41,6 +41,7 @@ export const mockUserPlant: UserPlant = {
   plant: 'catalog-1',
   plantName: 'Tomato',
   plantCategory: 'vegetable',
+  plantDefaultSpacingFt: 1.5,
   placementId: null,
   variety: '',
   startDate: null,

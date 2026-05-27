@@ -46,21 +46,18 @@ export async function deleteBed(gardenId: string, bedId: string): Promise<void> 
   await api.delete(`/gardens/${gardenId}/beds/${bedId}/`);
 }
 
-type BedPlacementPayload = {
-  bed: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
 export async function fetchBedPlacements(gardenId: string): Promise<BedPlacement[]> {
   const res = await api.get(`/gardens/${gardenId}/bed-placements/`);
   return res.data ?? [];
 }
 
-export async function createBedPlacement(gardenId: string, data: BedPlacementPayload): Promise<BedPlacement> {
+export async function createBedPlacement(gardenId: string, data: { bed: string; x: number; y: number }): Promise<BedPlacement> {
   const res = await api.post(`/gardens/${gardenId}/bed-placements/`, data);
+  return res.data;
+}
+
+export async function moveBedPlacement(gardenId: string, placementId: string, x: number, y: number): Promise<BedPlacement> {
+  const res = await api.patch(`/gardens/${gardenId}/bed-placements/${placementId}/`, { x, y });
   return res.data;
 }
 

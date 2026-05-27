@@ -38,6 +38,10 @@ const UNIT_TO_FEET: Record<string, number> = {
   m: 3.28084,
 };
 
+export function toFeet(dimension: number, unit: string): number {
+  return dimension * (UNIT_TO_FEET[unit] ?? 1);
+}
+
 export function bedGridDimensions(bed: GardenBed): { cols: number; rows: number } {
   const factor = UNIT_TO_FEET[bed.unit] ?? 1;
   return {
