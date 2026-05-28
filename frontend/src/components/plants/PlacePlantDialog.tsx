@@ -20,7 +20,7 @@ type Props = {
   unplacedPlants: UserPlant[];
   onPlace: (userPlantId: string) => void;
   isPlacing: boolean;
-  placeError: string | null;
+  placeError?: string | null;
   gardenId: string;
   bedId: string;
 };
@@ -31,7 +31,7 @@ export default function PlacePlantDialog({
   unplacedPlants,
   onPlace,
   isPlacing,
-  placeError,
+  placeError = null,
   gardenId,
   bedId,
 }: Props) {
