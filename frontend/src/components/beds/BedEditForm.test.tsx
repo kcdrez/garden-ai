@@ -81,6 +81,23 @@ describe('BedEditForm', () => {
     await waitFor(() => expect(screen.getByText('Server error')).toBeInTheDocument());
   });
 
+  it('submits depth and avgSunlightHours as integers when present', async () => {
+    const user = userEvent.setup();
+    const bedWithOptionals = { ...mockBed, depth: 12, avgSunlightHours: 6 };
+    render(<BedEditForm bed={bedWithOptionals} open={true} onOpenChange={onOpenChange} />);
+
+    await screen.findByDisplayValue('12');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() =>
+      expect(updateBed).toHaveBeenCalledWith(
+        'garden-1',
+        'bed-1',
+        expect.objectContaining({ depth: 12, avgSunlightHours: 6 }),
+      ),
+    );
+  });
+
   it('updates the facing field when a direction is selected', async () => {
     const user = userEvent.setup();
     render(<BedEditForm bed={mockBed} open={true} onOpenChange={onOpenChange} />);

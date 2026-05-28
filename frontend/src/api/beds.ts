@@ -51,7 +51,7 @@ export async function fetchBedPlacements(gardenId: string): Promise<BedPlacement
   return res.data ?? [];
 }
 
-export async function createBedPlacement(gardenId: string, data: { bed: string; x: number; y: number }): Promise<BedPlacement> {
+export async function createBedPlacement(gardenId: string, data: { bed: string; x: number; y: number; width?: number; height?: number }): Promise<BedPlacement> {
   const res = await api.post(`/gardens/${gardenId}/bed-placements/`, data);
   return res.data;
 }

@@ -19,7 +19,9 @@ class PlantSerializer(serializers.ModelSerializer):
 class UserPlantSerializer(serializers.ModelSerializer):
     plant_name = serializers.CharField(source="plant.common_name", read_only=True)
     plant_category = serializers.CharField(source="plant.category", read_only=True)
-    plant_default_spacing_ft = serializers.FloatField(source="plant.default_spacing_ft", read_only=True, allow_null=True)
+    plant_default_spacing_ft = serializers.FloatField(
+        source="plant.default_spacing_ft", read_only=True, allow_null=True
+    )
     bed_name = serializers.CharField(source="bed.name", read_only=True)
     garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
     garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
