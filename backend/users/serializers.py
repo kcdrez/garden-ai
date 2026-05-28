@@ -6,8 +6,6 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 
-from .models import UserProfile
-
 
 class UserProfileSerializer(serializers.ModelSerializer):
     timezone = serializers.CharField(source="userprofile.timezone", required=False)
