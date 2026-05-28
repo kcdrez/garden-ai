@@ -29,6 +29,16 @@
 
 ---
 
+## 2026-05-26 — ~1.5 hours
+
+**Completed:**
+- AI integration (backend) — `ai` Django app with `AIConversation` + `AIMessage` models; serializers, viewset, and URLs; `context_builder.py` assembles garden/bed/plant hierarchy into a system prompt per scope; `ai_service.py` wraps OpenAI chat completions; conversation history capped at 20 messages per call; `gpt-4o-mini` default model; rate-limit hooks and spend cap discussed but deferred
+- AI integration (frontend) — `AiChatWidget` global floating button (bottom-right); panel with per-entity conversation history list, markdown-rendered assistant replies (`react-markdown` + `remark-gfm`), and auto-scroll; `useAiContext` hook maps current route to scope/entityId via `useMatches`; context resets on navigation
+
+**Next up:** Iterate on AI chat widget UX — test feel, fix any layout/positioning issues, polish
+
+---
+
 ## 2026-05-26 — ~2 hours
 
 **Completed:**

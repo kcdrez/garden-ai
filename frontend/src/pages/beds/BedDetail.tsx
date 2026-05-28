@@ -67,6 +67,8 @@ export default function BedDetail() {
         isLoading={plantsLoading}
         error={plantsError}
       />
+
+
     </div>
   );
 }

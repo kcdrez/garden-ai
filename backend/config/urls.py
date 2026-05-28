@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("gardens.urls")),
     path("api/", include("plants.urls")),
+    path("api/", include("ai.urls")),
     path("api/auth/", include("users.urls")),
     path("api/auth/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
