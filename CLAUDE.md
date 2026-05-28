@@ -245,6 +245,7 @@ These are explicitly out of scope, at least initially:
 - Drag-and-drop garden design interface
 - Garden templates and presets
 - Export/import garden plans
+- Sort order for beds and gardens — user-controlled sort (alphabetical, date created, custom/manual drag order, etc.); persisted per user
 
 ### Plants
 
@@ -254,6 +255,13 @@ These are explicitly out of scope, at least initially:
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
+- Clone a plant — duplicate a `UserPlant` record (same bed, catalog entry, status, start date, notes) with a new id; does not copy placements or observations
+- Observation list on `/plants` page — each plant row expands to show a full observation timeline identical to the one on the bed detail page; includes the "Add observation" form; collapsed by default
+- Add observation from bed layout context menu — "Add observation" action in the `...` menu on a plant placement in `BedGrid`; opens the existing observation form
+
+### Bug Fixes (tracked)
+
+- Bed layout plant context menu hit area — the clickable region for the `...` button on a plant placement in `BedGrid` is larger than the visible button; needs hit-area tightening
 
 ### Testing
 
