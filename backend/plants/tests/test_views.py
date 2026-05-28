@@ -237,19 +237,29 @@ class PlantPlacementAPITests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-    def test_create_placement_out_of_bounds_is_rejected(self):
-        # bed is 8ft wide = 8 columns (0-7); x=8 is out of bounds
+    def test_create_placement_x_overflow_is_clamped(self):
+        # bed is 8ft wide, default footprint 1ft; x=8 → clamped to 7
         res = self.client.post(
             self._list_url(),
             {"userPlant": str(self.user_plant.id), "x": 8, "y": 0},
         )
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertAlmostEqual(res.data["x"], 7.0)
 
-    def test_create_placement_y_out_of_bounds_is_rejected(self):
-        # bed is 4ft long = 4 rows (0-3); y=4 is out of bounds
+    def test_create_placement_y_overflow_is_clamped(self):
+        # bed is 4ft long, default footprint 1ft; y=4 → clamped to 3
         res = self.client.post(
             self._list_url(),
             {"userPlant": str(self.user_plant.id), "x": 0, "y": 4},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertAlmostEqual(res.data["y"], 3.0)
+
+    def test_create_placement_rejected_when_footprint_too_large(self):
+        # footprint 9ft wide, bed only 8ft — item cannot fit
+        res = self.client.post(
+            self._list_url(),
+            {"userPlant": str(self.user_plant.id), "x": 0, "y": 0, "width": 9, "height": 1},
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 

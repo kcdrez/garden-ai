@@ -12,7 +12,7 @@ bed_detail = GardenBedViewSet.as_view(
 )
 all_beds = AllGardenBedsViewSet.as_view({"get": "list"})
 bed_placement_list = BedPlacementViewSet.as_view({"get": "list", "post": "create"})
-bed_placement_detail = BedPlacementViewSet.as_view({"delete": "destroy"})
+bed_placement_detail = BedPlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
 
 urlpatterns = [*router.urls,
     path("beds/", all_beds, name="all-beds"),

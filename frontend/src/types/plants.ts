@@ -22,6 +22,7 @@ export interface Plant {
   scientificName: string;
   category: PlantCategory;
   description: string;
+  defaultSpacingFt: number | null;
 }
 
 export interface UserPlant {
@@ -33,6 +34,7 @@ export interface UserPlant {
   plant: string;
   plantName: string;
   plantCategory: PlantCategory;
+  plantDefaultSpacingFt: number | null;
   placementId: string | null;
   variety: string;
   startDate: string | null;

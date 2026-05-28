@@ -39,8 +39,8 @@ export type BedPlacement = {
   garden: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  bedWidthFt: number;
+  bedHeightFt: number;
   createdAt: string;
   updatedAt: string;
 };

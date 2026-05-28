@@ -31,9 +31,9 @@ function renderDialog(unplacedPlants = [mockUserPlant]) {
 }
 
 describe('PlacePlantDialog', () => {
-  it('shows the cell position in the title', () => {
+  it('shows "Place Plant" as the title', () => {
     renderDialog();
-    expect(screen.getByText(/column 3, row 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/place plant/i)).toBeInTheDocument();
   });
 
   it('renders a button for each unplaced plant', () => {

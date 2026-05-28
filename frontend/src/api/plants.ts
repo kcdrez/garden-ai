@@ -67,9 +67,20 @@ export async function fetchPlacements(gardenId: string, bedId: string): Promise<
 export async function createPlacement(
   gardenId: string,
   bedId: string,
-  data: { userPlant: string; x: number; y: number },
+  data: { userPlant: string; x: number; y: number; width?: number; height?: number },
 ): Promise<PlantPlacement> {
   const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/placements/`, data);
+  return res.data;
+}
+
+export async function movePlacement(
+  gardenId: string,
+  bedId: string,
+  placementId: string,
+  x: number,
+  y: number,
+): Promise<PlantPlacement> {
+  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`, { x, y });
   return res.data;
 }
 

@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
 import { fetchGardens } from '@/api/gardens';
-import { mockUserPlant, mockGarden } from '@/test/fixtures';
+import { fetchBeds } from '@/api/beds';
+import { mockUserPlant, mockGarden, mockBed } from '@/test/fixtures';
 import type { Plant } from '@/types/plants';
 import type * as RHF from 'react-hook-form';
 import UserPlantDialog from './UserPlantDialog';
@@ -53,6 +54,7 @@ const catalogPlant: Plant = {
   category: 'vegetable',
   scientificName: '',
   description: '',
+  defaultSpacingFt: null,
 };
 
 beforeEach(() => {
@@ -209,5 +211,63 @@ describe('UserPlantDialog', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: /garden/i }), 'garden-1');
 
     expect(bedSelect.parentElement?.parentElement).not.toHaveClass('opacity-50');
+  });
+
+  it('shows the bed picker but not the garden picker when only gardenId is provided', async () => {
+    render(<UserPlantDialog gardenId="garden-1" open onOpenChange={onOpenChange} />);
+
+    await screen.findByRole('button', { name: /tomato/i });
+
+    expect(screen.queryByRole('combobox', { name: /garden/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /bed/i })).toBeInTheDocument();
+  });
+
+  it('shows the garden picker but not the bed picker when only bedId is provided', async () => {
+    render(<UserPlantDialog bedId="bed-1" open onOpenChange={onOpenChange} />);
+
+    await screen.findByRole('button', { name: /tomato/i });
+
+    expect(screen.getByRole('combobox', { name: /garden/i })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /bed/i })).not.toBeInTheDocument();
+  });
+
+  it('calls createUserPlant using selected garden and bed ids from pickers', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchGardens).mockResolvedValueOnce([mockGarden]);
+    vi.mocked(fetchBeds).mockResolvedValueOnce([mockBed]);
+    render(<UserPlantDialog open onOpenChange={onOpenChange} />);
+
+    await user.click(await screen.findByRole('button', { name: /tomato/i }));
+    await user.selectOptions(screen.getByRole('combobox', { name: /garden/i }), 'garden-1');
+    await screen.findByText('Raised Bed 1');
+    await user.selectOptions(screen.getByRole('combobox', { name: /bed/i }), 'bed-1');
+    await user.click(screen.getByRole('button', { name: /add plant/i }));
+
+    await waitFor(() =>
+      expect(createUserPlant).toHaveBeenCalledWith(
+        'garden-1',
+        'bed-1',
+        expect.objectContaining({ plant: 'catalog-1' }),
+      ),
+    );
+  });
+
+  it('shows "Saving…" while the update mutation is in flight', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateUserPlant).mockImplementation(() => new Promise(() => {}));
+    render(
+      <UserPlantDialog
+        gardenId="garden-1"
+        bedId="bed-1"
+        userPlant={mockUserPlant}
+        open
+        onOpenChange={onOpenChange}
+      />,
+    );
+
+    await screen.findByRole('button', { name: /tomato/i });
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(screen.getByText('Saving…')).toBeInTheDocument());
   });
 });

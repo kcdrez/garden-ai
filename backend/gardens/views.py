@@ -62,6 +62,7 @@ class BedPlacementViewSet(
     GardenScopedMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):

@@ -1,8 +1,24 @@
 import { render, screen, waitFor } from '@/test/test-utils';
+import { render as rtlRender } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { login } from '@/api/auth';
 import { mockNavigate } from '@/test/test-setup';
 import Login from './Login';
+
+function renderWithState(state: object) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return rtlRender(<Login />, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[{ pathname: '/login', state }]}>
+          {children}
+        </MemoryRouter>
+      </QueryClientProvider>
+    ),
+  });
+}
 
 vi.mock('@/api/auth', () => ({
   login: vi.fn(),
@@ -73,5 +89,15 @@ describe('Login', () => {
   it('has a link to the register page', () => {
     render(<Login />);
     expect(screen.getByRole('link', { name: /create one/i })).toBeInTheDocument();
+  });
+
+  it('shows the password reset success banner when passwordReset state is true', () => {
+    renderWithState({ passwordReset: true });
+    expect(screen.getByText(/password reset successfully/i)).toBeInTheDocument();
+  });
+
+  it('clears the passwordReset location state on mount', () => {
+    renderWithState({ passwordReset: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true, state: {} });
   });
 });
