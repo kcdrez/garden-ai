@@ -43,11 +43,7 @@ def _plant_label(up: UserPlant) -> str:
 
 
 def _build_garden_context(garden: Garden) -> str:
-    beds = (
-        GardenBed.objects.filter(garden=garden)
-        .prefetch_related("user_plants__plant")
-        .order_by("name")
-    )
+    beds = GardenBed.objects.filter(garden=garden).prefetch_related("user_plants__plant").order_by("name")
 
     lines = [_PERSONA, "", f"## Garden: {garden.name}"]
     if garden.description:
@@ -62,9 +58,7 @@ def _build_garden_context(garden: Garden) -> str:
         lines += ["", f"**{bed.name}**", _bed_meta(bed)]
         plants = list(bed.user_plants.all())
         if plants:
-            summary = ", ".join(
-                f"{_plant_label(p)} ({p.status})" for p in plants
-            )
+            summary = ", ".join(f"{_plant_label(p)} ({p.status})" for p in plants)
             lines.append(f"Plants: {summary}")
         else:
             lines.append("Plants: none")
@@ -88,15 +82,11 @@ def _build_bed_context(bed: GardenBed) -> str:
         .order_by("plant__common_name")
     )
 
-    other_beds = (
-        GardenBed.objects.filter(garden=bed.garden).exclude(pk=bed.pk).order_by("name")
-    )
+    other_beds = GardenBed.objects.filter(garden=bed.garden).exclude(pk=bed.pk).order_by("name")
 
     lines = [_PERSONA, "", f"## Garden: {bed.garden.name}"]
     if bed.garden.length and bed.garden.width:
-        lines.append(
-            f"Dimensions: {bed.garden.length} {bed.garden.unit} x {bed.garden.width} {bed.garden.unit}"
-        )
+        lines.append(f"Dimensions: {bed.garden.length} {bed.garden.unit} x {bed.garden.width} {bed.garden.unit}")
     other_names = [b.name for b in other_beds]
     if other_names:
         lines.append(f"Other beds: {', '.join(other_names)}")
@@ -112,9 +102,7 @@ def _build_bed_context(bed: GardenBed) -> str:
 
     for up in plant_list:
         lines += ["", f"**{_plant_label(up)}**"]
-        lines.append(
-            f"Species: {up.plant.scientific_name or up.plant.common_name} ({up.plant.category})"
-        )
+        lines.append(f"Species: {up.plant.scientific_name or up.plant.common_name} ({up.plant.category})")
         if up.plant.description:
             lines.append(f"Description: {up.plant.description}")
 
@@ -125,11 +113,7 @@ def _build_bed_context(bed: GardenBed) -> str:
 
         try:
             p = up.placement
-<<<<<<< HEAD
-            lines.append(f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, {p.width} × {p.height} ft")
-=======
             lines.append(f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, {p.width} x {p.height} ft")
->>>>>>> ai-integration
         except PlantPlacement.DoesNotExist:
             lines.append("Not yet placed — user is planning to add this plant to the bed")
 
@@ -157,9 +141,7 @@ def _build_plant_context(user_plant: UserPlant) -> str:
         .order_by("plant__common_name")
     )
 
-    all_obs = list(
-        Observation.objects.filter(user_plant=user_plant).order_by("observed_date", "created_at")
-    )
+    all_obs = list(Observation.objects.filter(user_plant=user_plant).order_by("observed_date", "created_at"))
     total_obs = len(all_obs)
     recent_obs = all_obs[-10:]
 
@@ -193,14 +175,10 @@ def _build_plant_context(user_plant: UserPlant) -> str:
     lines.append(status_line)
 
     if placement:
-<<<<<<< HEAD
-        lines.append(f"Position: ({placement.x:.1f}, {placement.y:.1f}) ft from top-left, {placement.width} × {placement.height} ft")
-=======
         lines.append(
             f"Position: ({placement.x:.1f}, {placement.y:.1f}) ft from top-left, "
             f"{placement.width} x {placement.height} ft"
         )
->>>>>>> ai-integration
     else:
         lines.append("Not yet placed on canvas")
 
