@@ -149,7 +149,10 @@ class TokenRefreshAPITests(APITestCase):
 
 class ProfileAPITests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.user = User.objects.create_user(
+            username="alice", email="alice@example.com", password="testpass123",
+            first_name="Alice", last_name="Smith",
+        )
         self.client.force_authenticate(user=self.user)
 
     def test_get_profile_requires_auth(self):
@@ -157,10 +160,38 @@ class ProfileAPITests(APITestCase):
         res = self.client.get(reverse("profile"))
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_get_profile_returns_timezone(self):
+    def test_get_profile_returns_all_fields(self):
         res = self.client.get(reverse("profile"))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["username"], "alice")
+        self.assertEqual(res.data["email"], "alice@example.com")
+        self.assertEqual(res.data["first_name"], "Alice")
+        self.assertEqual(res.data["last_name"], "Smith")
         self.assertIn("timezone", res.data)
+
+    def test_get_profile_username_is_readonly(self):
+        res = self.client.patch(reverse("profile"), {"username": "newname"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, "alice")
+
+    def test_patch_profile_first_and_last_name(self):
+        res = self.client.patch(reverse("profile"), {"firstName": "Bob", "lastName": "Jones"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Bob")
+        self.assertEqual(self.user.last_name, "Jones")
+
+    def test_patch_profile_email(self):
+        res = self.client.patch(reverse("profile"), {"email": "newemail@example.com"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "newemail@example.com")
+
+    def test_patch_profile_duplicate_email_rejected(self):
+        User.objects.create_user(username="bob", email="bob@example.com", password="testpass123")
+        res = self.client.patch(reverse("profile"), {"email": "bob@example.com"})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_patch_profile_valid_timezone(self):
         res = self.client.patch(reverse("profile"), {"timezone": "America/Denver"})

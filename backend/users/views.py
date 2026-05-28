@@ -18,8 +18,8 @@ from .models import UserProfile
 from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
-    ProfileSerializer,
     RegisterSerializer,
+    UserProfileSerializer,
 )
 
 
@@ -66,12 +66,11 @@ class RegisterView(APIView):
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = ProfileSerializer
+    serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
-        return profile
+        return User.objects.select_related("userprofile").get(pk=self.request.user.pk)
 
 
 class PasswordResetRequestView(APIView):
