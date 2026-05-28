@@ -93,7 +93,7 @@ class GardenAPITests(APITestCase):
     def test_resize_garden_blocked_when_bed_placement_out_of_bounds(self):
         garden = Garden.objects.create(name="Grid Garden", owner=self.user, length=20, width=20)
         bed = GardenBed.objects.create(name="Far Bed", garden=garden, length=4, width=8)
-        BedPlacement.objects.create(bed=bed, garden=garden, x=15, y=0, width=1, height=1)
+        BedPlacement.objects.create(bed=bed, garden=garden, x=15, y=0)
         res = self.client.patch(
             reverse("garden-detail", kwargs={"pk": garden.id}),
             {"width": 10},
@@ -111,7 +111,7 @@ class GardenAPITests(APITestCase):
     def test_clear_garden_dimensions_blocked_when_placements_exist(self):
         garden = Garden.objects.create(name="Grid Garden", owner=self.user, length=20, width=20)
         bed = GardenBed.objects.create(name="Bed", garden=garden, length=4, width=8)
-        BedPlacement.objects.create(bed=bed, garden=garden, x=0, y=0, width=1, height=1)
+        BedPlacement.objects.create(bed=bed, garden=garden, x=0, y=0)
         res = self.client.patch(
             reverse("garden-detail", kwargs={"pk": garden.id}),
             {"length": None},
@@ -266,13 +266,22 @@ class BedPlacementAPITests(APITestCase):
         res = self.client.post(self._list_url(), {"bed": str(self.bed.id), "x": 0, "y": 0})
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-    def test_create_bed_placement_x_out_of_bounds_rejected(self):
-        # garden is 20 ft = 20 cols; x=20 + default width=1 overflows
+    def test_create_bed_placement_x_overflow_is_clamped(self):
+        # garden 20ft wide, bed 8ft wide; x=20 → clamped to 12
         res = self.client.post(self._list_url(), {"bed": str(self.bed.id), "x": 20, "y": 0})
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertAlmostEqual(res.data["x"], 12.0)
 
-    def test_create_bed_placement_y_out_of_bounds_rejected(self):
+    def test_create_bed_placement_y_overflow_is_clamped(self):
+        # garden 20ft tall, bed 4ft long; y=20 → clamped to 16
         res = self.client.post(self._list_url(), {"bed": str(self.bed.id), "x": 0, "y": 20})
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertAlmostEqual(res.data["y"], 16.0)
+
+    def test_create_bed_placement_rejected_when_bed_too_large(self):
+        # bed 25ft wide, garden only 20ft — bed cannot fit
+        huge_bed = GardenBed.objects.create(name="Huge Bed", garden=self.garden, length=4, width=25)
+        res = self.client.post(self._list_url(), {"bed": str(huge_bed.id), "x": 0, "y": 0})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_bed_placement_invalid_bed_rejected(self):
@@ -288,7 +297,7 @@ class BedPlacementAPITests(APITestCase):
 
     def test_delete_bed_placement(self):
         placement = BedPlacement.objects.create(
-            bed=self.bed, garden=self.garden, x=0, y=0, width=1, height=1
+            bed=self.bed, garden=self.garden, x=0, y=0
         )
         res = self.client.delete(self._detail_url(placement.id))
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
@@ -311,6 +320,6 @@ class GardenModelTests(APITestCase):
 
     def test_bed_placement_str(self):
         placement = BedPlacement.objects.create(
-            bed=self.bed, garden=self.garden, x=2, y=3, width=1, height=1
+            bed=self.bed, garden=self.garden, x=2, y=3
         )
         self.assertEqual(str(placement), "Test Bed (Test Garden) @ (2, 3)")

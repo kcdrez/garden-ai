@@ -20,6 +20,7 @@ type Props = {
   unplacedPlants: UserPlant[];
   onPlace: (userPlantId: string) => void;
   isPlacing: boolean;
+  placeError?: string | null;
   gardenId: string;
   bedId: string;
 };
@@ -27,10 +28,10 @@ type Props = {
 export default function PlacePlantDialog({
   open,
   onOpenChange,
-  cell,
   unplacedPlants,
   onPlace,
   isPlacing,
+  placeError = null,
   gardenId,
   bedId,
 }: Props) {
@@ -61,14 +62,15 @@ export default function PlacePlantDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {step === 'pick'
-              ? `Place Plant — Column ${(cell?.x ?? 0) + 1}, Row ${(cell?.y ?? 0) + 1}`
-              : `New Plant — Column ${(cell?.x ?? 0) + 1}, Row ${(cell?.y ?? 0) + 1}`}
+            {step === 'pick' ? 'Place Plant' : 'New Plant'}
           </DialogTitle>
         </DialogHeader>
 
         {step === 'pick' ? (
           <div className="flex flex-col gap-3">
+            {placeError && (
+              <p className="text-sm text-destructive">{placeError}</p>
+            )}
             {unplacedPlants.length === 0 ? (
               <p className="text-sm text-muted-foreground py-1">
                 No unplaced plants in this bed.

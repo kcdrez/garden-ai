@@ -41,6 +41,7 @@ const catalogPlant: Plant = {
   category: 'vegetable',
   scientificName: '',
   description: '',
+  defaultSpacingFt: null,
 };
 
 const onSubmit = vi.fn().mockResolvedValue(undefined);

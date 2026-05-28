@@ -3,26 +3,25 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from rest_framework import serializers
 
-from core.utils import grid_dimensions
+from core.utils import to_feet
 from gardens.models import GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
 
 
-def bed_grid_dimensions(bed):
-    return grid_dimensions(bed.length, bed.width, bed.unit)
-
-
 class PlantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plant
-        fields = ["id", "common_name", "scientific_name", "category", "description"]
+        fields = ["id", "common_name", "scientific_name", "category", "description", "default_spacing_ft"]
         read_only_fields = ["id"]
 
 
 class UserPlantSerializer(serializers.ModelSerializer):
     plant_name = serializers.CharField(source="plant.common_name", read_only=True)
     plant_category = serializers.CharField(source="plant.category", read_only=True)
+    plant_default_spacing_ft = serializers.FloatField(
+        source="plant.default_spacing_ft", read_only=True, allow_null=True
+    )
     bed_name = serializers.CharField(source="bed.name", read_only=True)
     garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
     garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
@@ -51,6 +50,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
             "plant",
             "plant_name",
             "plant_category",
+            "plant_default_spacing_ft",
             "placement_id",
             "variety",
             "start_date",
@@ -61,7 +61,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id", "bed_name", "garden_id", "garden_name", "plant_name",
-            "plant_category", "placement_id", "created_at", "updated_at",
+            "plant_category", "plant_default_spacing_ft", "placement_id", "created_at", "updated_at",
         ]
         extra_kwargs = {"bed": {"required": False}}
 
@@ -123,17 +123,21 @@ class PlantPlacementSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user_plant = data.get("user_plant") or (self.instance.user_plant if self.instance else None)
         bed = self.instance.bed if self.instance else user_plant.bed
-        cols, rows = bed_grid_dimensions(bed)
+        bed_width_ft = to_feet(bed.width, bed.unit)
+        bed_height_ft = to_feet(bed.length, bed.unit)
 
         x = data.get("x", self.instance.x if self.instance else None)
         y = data.get("y", self.instance.y if self.instance else None)
-        width = data.get("width", self.instance.width if self.instance else 1)
-        height = data.get("height", self.instance.height if self.instance else 1)
+        width = data.get("width", self.instance.width if self.instance else 1.0)
+        height = data.get("height", self.instance.height if self.instance else 1.0)
 
-        if x is not None and (x < 0 or x + width > cols):
-            raise serializers.ValidationError({"x": f"Out of bounds (grid is {cols} columns wide)."})
-        if y is not None and (y < 0 or y + height > rows):
-            raise serializers.ValidationError({"y": f"Out of bounds (grid is {rows} rows tall)."})
+        if width > bed_width_ft or height > bed_height_ft:
+            raise serializers.ValidationError("Plant footprint does not fit in this bed.")
+
+        if x is not None:
+            data["x"] = max(0.0, min(x, bed_width_ft - width))
+        if y is not None:
+            data["y"] = max(0.0, min(y, bed_height_ft - height))
 
         return data
 

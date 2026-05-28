@@ -14,90 +14,51 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   cell: { x: number; y: number } | null;
   unplacedBeds: GardenBed[];
-  placeableBedIds: Set<string>;
   onPlace: (bedId: string) => void;
   isPlacing: boolean;
+  placeError?: string | null;
 };
 
 export default function PlaceBedDialog({
   open,
   onOpenChange,
-  cell,
   unplacedBeds,
-  placeableBedIds,
   onPlace,
   isPlacing,
+  placeError = null,
 }: Props) {
-  const available = unplacedBeds.filter((b) => placeableBedIds.has(b.id));
-  const tooLarge = unplacedBeds.filter((b) => !placeableBedIds.has(b.id));
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            Place Bed — Column {(cell?.x ?? 0) + 1}, Row {(cell?.y ?? 0) + 1}
-          </DialogTitle>
+          <DialogTitle>Place a Bed</DialogTitle>
         </DialogHeader>
+
+        {placeError && (
+          <p className="text-sm text-destructive">{placeError}</p>
+        )}
 
         {unplacedBeds.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">
-            All beds in this garden are already placed on the grid.
+            All beds in this garden are already placed on the canvas.
           </p>
         ) : (
-          <div className="flex flex-col gap-4">
-            {available.length > 0 && (
-              <section>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Select a bed
-                </p>
-                <ul className="flex flex-col gap-1 py-2">
-                  {available.map((bed) => (
-                    <li key={bed.id}>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 h-auto py-2"
-                        disabled={isPlacing}
-                        onClick={() => onPlace(bed.id)}
-                      >
-                        <LayoutDashboardIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                        <span className="text-sm">{bed.name}</span>
-                        <span className="ml-auto text-xs text-muted-foreground">{formatDimensions(bed)}</span>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {tooLarge.length > 0 && (
-              <section>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Won't fit here
-                </p>
-                <ul className="flex flex-col gap-1 py-2">
-                  {tooLarge.map((bed) => (
-                    <li key={bed.id}>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 h-auto py-2"
-                        disabled
-                      >
-                        <LayoutDashboardIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                        <span className="text-sm">{bed.name}</span>
-                        <span className="ml-auto text-xs text-muted-foreground">{formatDimensions(bed)}</span>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-                {available.length === 0 && (
-                  <p className="text-xs text-muted-foreground py-2">
-                    Try clicking a cell with more room.
-                  </p>
-                )}
-              </section>
-            )}
-          </div>
+          <ul className="flex flex-col gap-1 py-2">
+            {unplacedBeds.map((bed) => (
+              <li key={bed.id}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 h-auto py-2"
+                  disabled={isPlacing}
+                  onClick={() => onPlace(bed.id)}
+                >
+                  <LayoutDashboardIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="text-sm">{bed.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{formatDimensions(bed)}</span>
+                </Button>
+              </li>
+            ))}
+          </ul>
         )}
       </DialogContent>
     </Dialog>
