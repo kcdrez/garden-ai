@@ -125,7 +125,7 @@ def _build_bed_context(bed: GardenBed) -> str:
 
         try:
             p = up.placement
-            lines.append(f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, {p.width} × {p.height} ft")
+            lines.append(f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, {p.width} x {p.height} ft")
         except PlantPlacement.DoesNotExist:
             lines.append("Not yet placed — user is planning to add this plant to the bed")
 
@@ -189,7 +189,10 @@ def _build_plant_context(user_plant: UserPlant) -> str:
     lines.append(status_line)
 
     if placement:
-        lines.append(f"Position: ({placement.x:.1f}, {placement.y:.1f}) ft from top-left, {placement.width} × {placement.height} ft")
+        lines.append(
+            f"Position: ({placement.x:.1f}, {placement.y:.1f}) ft from top-left, "
+            f"{placement.width} x {placement.height} ft"
+        )
     else:
         lines.append("Not yet placed on canvas")
 
