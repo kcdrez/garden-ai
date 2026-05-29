@@ -18,17 +18,20 @@ vi.mock('@/components/ui/card-actions-menu', () => ({
     onEdit,
     onClone,
     onMove,
+    onObservations,
     onDelete,
   }: {
     onEdit: () => void;
     onClone?: () => void;
     onMove?: () => void;
+    onObservations?: () => void;
     onDelete: () => void;
   }) => (
     <>
       <button onClick={onEdit}>Edit</button>
       {onClone && <button onClick={onClone}>Clone</button>}
       {onMove && <button onClick={onMove}>Move to Bed</button>}
+      {onObservations && <button onClick={onObservations}>Observations</button>}
       <button onClick={onDelete}>Delete</button>
     </>
   ),
@@ -46,6 +49,11 @@ vi.mock('@/components/plants/UserPlantDialog', () => ({
 vi.mock('@/components/plants/MovePlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Move Plant" /> : null,
+}));
+
+vi.mock('@/components/plants/PlantObservationsSheet', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Plant Observations" /> : null,
 }));
 
 describe('PlantItem', () => {
@@ -149,5 +157,14 @@ describe('PlantItem', () => {
         expect.objectContaining({ description: expect.stringContaining('Cherry') }),
       ),
     );
+  });
+
+  it('opens the observations sheet when Observations is clicked', async () => {
+    const user = userEvent.setup();
+    render(<ul><PlantItem plant={mockUserPlant} /></ul>);
+
+    await user.click(screen.getByRole('button', { name: /observations/i }));
+
+    expect(screen.getByRole('dialog', { name: /plant observations/i })).toBeInTheDocument();
   });
 });

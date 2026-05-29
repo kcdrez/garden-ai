@@ -21,9 +21,6 @@ interface PlacementCanvasProps {
 const PAD = 0.4;
 const CLICK_THRESHOLD_FT = 0.15;
 const MIN_PLACEMENT_SIZE = 0.5;
-const HANDLE_SIZE = 0.135;
-const DOT_R = 0.010;
-const DOT_SPACING = HANDLE_SIZE * 0.2;
 
 function toSVGPoint(
   e: PointerEvent | MouseEvent,
@@ -157,10 +154,14 @@ function DraggableItem({
     }
   }
 
-  const buttonX = size.w - HANDLE_SIZE;
-  const menuCx = buttonX + HANDLE_SIZE / 2;
-  const menuCy = HANDLE_SIZE / 2;
-  const resizeY = size.h - HANDLE_SIZE;
+  // Scale handle to the canvas so it stays a consistent physical size across bed sizes
+  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42));
+  const dotR = hs * 0.074;
+  const dotSpacing = hs * 0.2;
+  const buttonX = size.w - hs;
+  const menuCx = buttonX + hs / 2;
+  const menuCy = hs / 2;
+  const resizeY = size.h - hs;
   const showControls = (isHovered || isMenuActive) && !isDragging && !isResizing;
 
   return (
@@ -188,12 +189,12 @@ function DraggableItem({
             <rect
               x={buttonX}
               y={0}
-              width={HANDLE_SIZE}
-              height={HANDLE_SIZE}
-              rx={0.03}
+              width={hs}
+              height={hs}
+              rx={hs * 0.22}
               fill="rgba(0,0,0,0.55)"
               stroke="rgba(255,255,255,0.45)"
-              strokeWidth={0.015}
+              strokeWidth={hs * 0.11}
               style={{ cursor: 'pointer' }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
@@ -201,9 +202,9 @@ function DraggableItem({
                 onMenuOpen(item.id, e.clientX, e.clientY);
               }}
             />
-            <circle cx={menuCx - DOT_SPACING} cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
-            <circle cx={menuCx}               cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
-            <circle cx={menuCx + DOT_SPACING} cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
+            <circle cx={menuCx - dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
+            <circle cx={menuCx}              cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
+            <circle cx={menuCx + dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
 
             {/* Resize handle — bottom-right corner, x-aligned with menu button */}
             {onResize && (
@@ -211,18 +212,18 @@ function DraggableItem({
                 <rect
                   x={buttonX}
                   y={resizeY}
-                  width={HANDLE_SIZE}
-                  height={HANDLE_SIZE}
-                  rx={0.03}
+                  width={hs}
+                  height={hs}
+                  rx={hs * 0.22}
                   fill="rgba(0,0,0,0.55)"
                   stroke="rgba(255,255,255,0.45)"
-                  strokeWidth={0.015}
+                  strokeWidth={hs * 0.11}
                 />
                 {/* Corner bracket pointing SE */}
                 <path
-                  d={`M ${buttonX + 0.07},${resizeY + 0.10} L ${buttonX + 0.10},${resizeY + 0.10} L ${buttonX + 0.10},${resizeY + 0.07}`}
+                  d={`M ${buttonX + hs * 0.52},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.52}`}
                   stroke="white"
-                  strokeWidth={0.02}
+                  strokeWidth={hs * 0.148}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
