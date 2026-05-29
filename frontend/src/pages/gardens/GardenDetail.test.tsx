@@ -47,6 +47,7 @@ beforeEach(() => {
   mockUseParams.mockReturnValue({ id: 'garden-1' });
   vi.mocked(fetchGarden).mockResolvedValue(mockGarden);
   vi.mocked(fetchBeds).mockResolvedValue([]);
+  localStorage.clear();
 });
 
 describe('GardenDetail', () => {
@@ -102,6 +103,32 @@ describe('GardenDetail', () => {
 
     await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument());
     expect(screen.queryByText(/header:/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the sort dropdown for the beds section', async () => {
+    vi.mocked(fetchBeds).mockResolvedValue([mockBed]);
+    render(<GardenDetail />);
+
+    await screen.findByTestId('bed-item');
+    expect(screen.getByRole('combobox', { name: /sort order/i })).toHaveValue('name-asc');
+  });
+
+  it('sorts beds alphabetically descending when name-desc is selected', async () => {
+    const user = userEvent.setup();
+    const bed2 = { ...mockBed, id: 'bed-2', name: 'Zzz Bed' };
+    vi.mocked(fetchBeds).mockResolvedValue([bed2, mockBed]);
+    render(<GardenDetail />);
+
+    await waitFor(() => expect(screen.getAllByTestId('bed-item')).toHaveLength(2));
+    const [first, second] = screen.getAllByTestId('bed-item');
+    expect(first).toHaveTextContent('Raised Bed 1');
+    expect(second).toHaveTextContent('Zzz Bed');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: /sort order/i }), 'name-desc');
+
+    const [newFirst, newSecond] = screen.getAllByTestId('bed-item');
+    expect(newFirst).toHaveTextContent('Zzz Bed');
+    expect(newSecond).toHaveTextContent('Raised Bed 1');
   });
 
   it('uses cached garden and beds when the all-gardens and all-beds caches are populated', async () => {
