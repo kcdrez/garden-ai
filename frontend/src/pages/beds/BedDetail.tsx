@@ -4,7 +4,6 @@ import { fetchBeds } from '@/api/beds';
 import { fetchUserPlants } from '@/api/plants';
 import BedGrid from '@/components/beds/BedGrid';
 import BedDetailHeader from '@/components/beds/BedDetailHeader';
-import PlantListSection from '@/components/plants/PlantListSection';
 import { getErrorMessage } from '@/lib/errors';
 import type { GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
@@ -31,11 +30,7 @@ export default function BedDetail() {
       queryClient.getQueryState(['beds', 'all'])?.dataUpdatedAt || Date.now(),
   });
 
-  const {
-    data: userPlants = [],
-    isLoading: plantsLoading,
-    error: plantsError,
-  } = useQuery({
+  const { data: userPlants = [] } = useQuery({
     queryKey: ['plants', 'user', bedId],
     queryFn: () => fetchUserPlants(id!, bedId!),
     enabled: !!id && !!bedId,
@@ -59,16 +54,6 @@ export default function BedDetail() {
         <h2 className="mb-3">Layout</h2>
         <BedGrid gardenId={id!} bedId={bedId!} bed={bed} userPlants={userPlants} />
       </div>
-
-      <PlantListSection
-        gardenId={id!}
-        bedId={bedId!}
-        userPlants={userPlants}
-        isLoading={plantsLoading}
-        error={plantsError}
-      />
-
-
     </div>
   );
 }

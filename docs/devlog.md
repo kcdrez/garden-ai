@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-28 — ~2.75 hours (1pm–2pm, 8pm–9:45pm)
+
+**Completed:**
+- Canvas context menu hitbox bug fix — SVG `<g>` wrapper was creating a bounding-box hit area larger than the visible button; fixed by removing the wrapper and conditionally rendering flat sibling circles
+- Clone a plant — full-stack feature; backend `clone` action on `UserPlantViewSet`; frontend `cloneUserPlant` API call; `usePlantActions` hook centralises clone/delete/edit/move for single-plant components; available from canvas, bed plant list, all-plants list, and plant detail page
+- Bed detail refactor — `PlantListSection` removed; page is now canvas-only; observations accessible via a new `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opened from the canvas context menu; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places adjacent to source); unplaced plants section promoted with heading, zero state, "Create Plant" button, and per-chip actions menu
+
+**Next up:** Wire `PlantObservationsSheet` into the all-plants list so observations are reachable from `/plants` without navigating to the plant detail page
+
+---
+
 ## 2026-05-27 — ~45 min
 
 **Completed:**

@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CopyIcon, EditIcon, ArrowRightLeftIcon, Trash2Icon } from 'lucide-react';
-import { fetchPlacements, createPlacement, movePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { fetchPlacements, createPlacement, movePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { routes } from '@/lib/routes';
 import { toFeet, plantColor } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
 import type { GardenBed } from '@/types/gardens';
@@ -9,7 +11,10 @@ import type { PlantPlacement, UserPlant } from '@/types/plants';
 import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
+import PlantObservationsSheet from '@/components/plants/PlantObservationsSheet';
+import CardActionsMenu from '@/components/ui/card-actions-menu';
 import PlacementCanvas, { type CanvasItem, type CanvasMenuItem } from '@/components/shared/PlacementCanvas';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/query-state';
 import { useConfirm } from '@/hooks/useConfirm';
 
@@ -21,12 +26,15 @@ interface BedGridProps {
 }
 
 export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [editingPlant, setEditingPlant] = useState<UserPlant | null>(null);
   const [movingPlant, setMovingPlant] = useState<UserPlant | null>(null);
+  const [observingPlant, setObservingPlant] = useState<UserPlant | null>(null);
+  const [addPlantOpen, setAddPlantOpen] = useState(false);
 
   const { data: placements = [], isLoading } = useQuery({
     queryKey: ['placements', bedId],
@@ -63,12 +71,22 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   });
 
   const cloneUserPlantMutation = useMutation({
-    mutationFn: ({ plantId }: { plantId: string }) =>
-      cloneUserPlant(gardenId, bedId, plantId),
+    mutationFn: ({ plantId, placement }: {
+      plantId: string;
+      placement?: { x: number; y: number; width: number; height: number };
+    }) => cloneUserPlant(gardenId, bedId, plantId, placement),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user', bedId] });
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['placements', bedId] });
     },
+    onError: (err) => setMutationError(getErrorMessage(err)),
+  });
+
+  const removePlacementMutation = useMutation({
+    mutationFn: ({ placementId }: { placementId: string }) =>
+      deletePlacement(gardenId, bedId, placementId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
     onError: (err) => setMutationError(getErrorMessage(err)),
   });
 
@@ -106,6 +124,21 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
     return [
       {
+        label: 'Remove from Bed',
+        icon: <MinusCircleIcon className="size-4" />,
+        onClick: () => removePlacementMutation.mutate({ placementId }),
+      },
+      {
+        label: 'View Details',
+        icon: <ArrowUpRightIcon className="size-4" />,
+        onClick: () => { if (plant) navigate(routes.plantDetail(plant.id)); },
+      },
+      {
+        label: 'Observations',
+        icon: <ClipboardListIcon className="size-4" />,
+        onClick: () => { if (plant) setObservingPlant(plant); },
+      },
+      {
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
         onClick: () => { if (plant) setEditingPlant(plant); },
@@ -113,10 +146,18 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       {
         label: 'Clone',
         icon: <CopyIcon className="size-4" />,
-        onClick: () => { if (plant) cloneUserPlantMutation.mutate({ plantId: plant.id }); },
+        onClick: () => {
+          if (!plant) return;
+          const p = placementById.get(placementId);
+          if (p) {
+            cloneUserPlantMutation.mutate({ plantId: plant.id, placement: { x: p.x + p.width, y: p.y, width: p.width, height: p.height } });
+          } else {
+            cloneUserPlantMutation.mutate({ plantId: plant.id });
+          }
+        },
       },
       {
-        label: 'Move',
+        label: 'Move to Another Bed',
         icon: <ArrowRightLeftIcon className="size-4" />,
         onClick: () => { if (plant) setMovingPlant(plant); },
       },
@@ -134,6 +175,14 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         },
       },
     ];
+  }
+
+  async function handleUnplacedDelete(plant: UserPlant) {
+    const ok = await confirm({
+      title: 'Delete plant?',
+      description: `"${plant.plantName}${plant.variety ? ` — ${plant.variety}` : ''}" will be permanently deleted from this bed.`,
+    });
+    if (ok) deleteUserPlantMutation.mutate({ plantId: plant.id });
   }
 
   return (
@@ -192,24 +241,44 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         <p className="mt-2 text-sm text-destructive">{mutationError}</p>
       )}
 
-      {unplacedPlants.length > 0 && (
-        <div className="mt-3">
-          <p className="text-xs text-muted-foreground mb-2">
-            Unplaced plants — click the canvas to place
-          </p>
+      <div className="mt-6">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h2>Unplaced Plants</h2>
+            {unplacedPlants.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-0.5">Click the bed layout to place</p>
+            )}
+          </div>
+          <Button size="sm" onClick={() => setAddPlantOpen(true)}>
+            <PlusIcon className="size-4" />
+            Create Plant
+          </Button>
+        </div>
+        {unplacedPlants.length === 0 ? (
+          <p className="text-sm text-muted-foreground">All plants are placed in the bed.</p>
+        ) : (
           <div className="flex flex-wrap gap-2">
             {unplacedPlants.map((plant) => (
               <div
                 key={plant.id}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded text-xs"
+                className="flex items-center gap-1 pl-3 pr-1 py-1 bg-primary/10 border border-primary/20 rounded text-xs"
               >
-                <span>{plant.plantName}</span>
+                <span className="font-medium">{plant.plantName}</span>
                 {plant.variety && <span className="text-muted-foreground">{plant.variety}</span>}
+                <CardActionsMenu
+                  label={`${plant.plantName} actions`}
+                  onEdit={() => setEditingPlant(plant)}
+                  onClone={() => cloneUserPlantMutation.mutate({ plantId: plant.id })}
+                  onMove={() => setMovingPlant(plant)}
+                  onDelete={() => handleUnplacedDelete(plant)}
+                  isDeleting={deleteUserPlantMutation.isPending}
+                />
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
 
       <PlacePlantDialog
         open={!!placingAt}
@@ -238,20 +307,34 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         bedId={bedId}
       />
 
-      {editingPlant && (
-        <UserPlantDialog
-          gardenId={gardenId}
-          bedId={bedId}
-          userPlant={editingPlant}
-          open
-          onOpenChange={(open) => { if (!open) setEditingPlant(null); }}
-        />
-      )}
+      <UserPlantDialog
+        gardenId={gardenId}
+        bedId={bedId}
+        open={addPlantOpen || !!editingPlant}
+        userPlant={editingPlant ?? undefined}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAddPlantOpen(false);
+            setEditingPlant(null);
+          }
+        }}
+      />
+
       {movingPlant && (
         <MovePlantDialog
           userPlant={movingPlant}
           open
           onOpenChange={(open) => { if (!open) setMovingPlant(null); }}
+        />
+      )}
+
+      {observingPlant && (
+        <PlantObservationsSheet
+          plant={observingPlant}
+          gardenId={gardenId}
+          bedId={bedId}
+          open
+          onOpenChange={(open) => { if (!open) setObservingPlant(null); }}
         />
       )}
     </>

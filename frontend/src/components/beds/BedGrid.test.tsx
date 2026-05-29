@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { fetchPlacements, createPlacement, movePlacement, deleteUserPlant } from '@/api/plants';
+import { fetchPlacements, createPlacement, movePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
 import { mockBed, mockUserPlant } from '@/test/fixtures';
 import BedGrid from './BedGrid';
 
@@ -8,6 +8,8 @@ vi.mock('@/api/plants', () => ({
   fetchPlacements: vi.fn(),
   createPlacement: vi.fn(),
   movePlacement: vi.fn(),
+  deletePlacement: vi.fn(),
+  cloneUserPlant: vi.fn(),
   deleteUserPlant: vi.fn(),
 }));
 
@@ -55,9 +57,32 @@ vi.mock('@/components/plants/MovePlantDialog', () => ({
     open ? <div role="dialog" aria-label="Move Plant Dialog" /> : null,
 }));
 
+vi.mock('@/components/plants/PlantObservationsSheet', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Observations Sheet" /> : null,
+}));
+
+vi.mock('@/components/ui/card-actions-menu', () => ({
+  default: ({ onEdit, onClone, onMove, onDelete }: {
+    onEdit: () => void;
+    onClone?: () => void;
+    onMove?: () => void;
+    onDelete: () => void;
+  }) => (
+    <div>
+      <button onClick={onEdit}>Edit chip</button>
+      {onClone && <button onClick={onClone}>Clone chip</button>}
+      {onMove && <button onClick={onMove}>Move chip</button>}
+      <button onClick={onDelete}>Delete chip</button>
+    </div>
+  ),
+}));
+
 const mockFetchPlacements = vi.mocked(fetchPlacements);
 const mockCreatePlacement = vi.mocked(createPlacement);
 const mockMovePlacement = vi.mocked(movePlacement);
+const mockDeletePlacement = vi.mocked(deletePlacement);
+const mockCloneUserPlant = vi.mocked(cloneUserPlant);
 const mockDeleteUserPlant = vi.mocked(deleteUserPlant);
 
 const bed = { ...mockBed, length: 8, width: 4, unit: 'ft' as const };
@@ -74,6 +99,8 @@ describe('BedGrid', () => {
     mockFetchPlacements.mockResolvedValue([]);
     mockCreatePlacement.mockResolvedValue(placement);
     mockMovePlacement.mockResolvedValue(placement);
+    mockDeletePlacement.mockResolvedValue(undefined);
+    mockCloneUserPlant.mockResolvedValue(mockUserPlant);
     mockDeleteUserPlant.mockResolvedValue(undefined);
   });
 
@@ -94,11 +121,11 @@ describe('BedGrid', () => {
     expect(screen.getByText('Tomato')).toBeInTheDocument();
   });
 
-  it('hides unplaced plants panel when all plants are placed', async () => {
+  it('shows zero state when all plants are placed', async () => {
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('placement-canvas');
-    expect(screen.queryByText(/unplaced plants/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/all plants are placed in the bed/i)).toBeInTheDocument();
   });
 
   it('opens PlacePlantDialog when the canvas is clicked', async () => {
@@ -174,7 +201,94 @@ describe('BedGrid', () => {
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('canvas-item-pl-1');
-    await user.click(screen.getByRole('button', { name: /move pl-1/i }));
+    await user.click(screen.getByRole('button', { name: /move to another bed pl-1/i }));
     expect(screen.getByRole('dialog', { name: /move plant dialog/i })).toBeInTheDocument();
+  });
+
+  it('navigates to plant detail when View Details menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /view details pl-1/i }));
+    // navigation is "Not implemented" in jsdom — confirmed by the warning in test output
+  });
+
+  it('calls cloneUserPlant with placement coords when canvas Clone is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /clone pl-1/i }));
+    await waitFor(() => {
+      expect(mockCloneUserPlant).toHaveBeenCalledWith(
+        'garden-1', 'bed-1', 'plant-1',
+        expect.objectContaining({ x: placement.x + placement.width, y: placement.y }),
+      );
+    });
+  });
+
+  it('opens PlantObservationsSheet when Observations menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /observations pl-1/i }));
+    expect(screen.getByRole('dialog', { name: /observations sheet/i })).toBeInTheDocument();
+  });
+
+  it('calls deletePlacement when Remove from Bed menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /remove from bed pl-1/i }));
+    await waitFor(() => {
+      expect(mockDeletePlacement).toHaveBeenCalledWith('garden-1', 'bed-1', 'pl-1');
+    });
+  });
+
+  it('opens UserPlantDialog when Create Plant button is clicked', async () => {
+    const user = userEvent.setup();
+    renderBedGrid();
+    await screen.findByTestId('placement-canvas');
+    await user.click(screen.getByRole('button', { name: /create plant/i }));
+    expect(screen.getByRole('dialog', { name: /edit plant form/i })).toBeInTheDocument();
+  });
+
+  it('opens UserPlantDialog when unplaced chip Edit is clicked', async () => {
+    const user = userEvent.setup();
+    renderBedGrid();
+    await screen.findByText('Tomato');
+    await user.click(screen.getByRole('button', { name: /edit chip/i }));
+    expect(screen.getByRole('dialog', { name: /edit plant form/i })).toBeInTheDocument();
+  });
+
+  it('calls cloneUserPlant when unplaced chip Clone is clicked', async () => {
+    const user = userEvent.setup();
+    renderBedGrid();
+    await screen.findByText('Tomato');
+    await user.click(screen.getByRole('button', { name: /clone chip/i }));
+    await waitFor(() => {
+      expect(mockCloneUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1', undefined);
+    });
+  });
+
+  it('opens MovePlantDialog when unplaced chip Move is clicked', async () => {
+    const user = userEvent.setup();
+    renderBedGrid();
+    await screen.findByText('Tomato');
+    await user.click(screen.getByRole('button', { name: /move chip/i }));
+    expect(screen.getByRole('dialog', { name: /move plant dialog/i })).toBeInTheDocument();
+  });
+
+  it('calls deleteUserPlant when unplaced chip Delete is clicked', async () => {
+    const user = userEvent.setup();
+    renderBedGrid();
+    await screen.findByText('Tomato');
+    await user.click(screen.getByRole('button', { name: /delete chip/i }));
+    await waitFor(() => {
+      expect(mockDeleteUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1');
+    });
   });
 });

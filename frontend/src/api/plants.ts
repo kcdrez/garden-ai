@@ -55,8 +55,9 @@ export async function cloneUserPlant(
   gardenId: string,
   bedId: string,
   plantId: string,
+  placement?: { x: number; y: number; width: number; height: number },
 ): Promise<UserPlant> {
-  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/clone/`);
+  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/clone/`, placement ?? {});
   return res.data;
 }
 

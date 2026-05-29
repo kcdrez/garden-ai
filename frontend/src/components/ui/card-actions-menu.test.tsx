@@ -54,22 +54,35 @@ describe('CardActionsMenu', () => {
     expect(onDelete).toHaveBeenCalledOnce();
   });
 
-  it('renders Move to Bed when onMove is provided', () => {
+  it('renders Clone when onClone is provided', () => {
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /clone/i })).toBeInTheDocument();
+  });
+
+  it('calls onClone when Clone is clicked', async () => {
+    const user = userEvent.setup();
+    const onClone = vi.fn();
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={onClone} />);
+    await user.click(screen.getByRole('button', { name: /clone/i }));
+    expect(onClone).toHaveBeenCalledOnce();
+  });
+
+  it('renders Move to Another Bed when onMove is provided', () => {
     render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onMove={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /move to bed/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /move to another bed/i })).toBeInTheDocument();
   });
 
-  it('does not render Move to Bed when onMove is not provided', () => {
+  it('does not render Move to Another Bed when onMove is not provided', () => {
     render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.queryByRole('button', { name: /move to bed/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /move to another bed/i })).not.toBeInTheDocument();
   });
 
-  it('calls onMove when Move to Bed is clicked', async () => {
+  it('calls onMove when Move to Another Bed is clicked', async () => {
     const user = userEvent.setup();
     const onMove = vi.fn();
     render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onMove={onMove} />);
 
-    await user.click(screen.getByRole('button', { name: /move to bed/i }));
+    await user.click(screen.getByRole('button', { name: /move to another bed/i }));
 
     expect(onMove).toHaveBeenCalledOnce();
   });

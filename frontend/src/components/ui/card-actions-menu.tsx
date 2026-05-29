@@ -39,7 +39,7 @@ export default function CardActionsMenu({ onEdit, onDelete, onMove, onClone, isD
         {onMove && (
           <DropdownMenuItem onClick={onMove}>
             <ArrowRightIcon />
-            Move to Bed
+            Move to Another Bed
           </DropdownMenuItem>
         )}
         <DropdownMenuItem

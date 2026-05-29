@@ -117,7 +117,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Garden** `timezone` field _(planned)_ — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
-**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
+**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed. **Pending addition:** Blackberry — needs to be added to the catalog via a new data migration.
 
 **PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
 
@@ -230,6 +230,7 @@ These are explicitly out of scope, at least initially:
 - AI integration — OpenAI-powered chat at garden/bed/plant scope; `AIConversation` + `AIMessage` models; context builder serializes garden hierarchy into system prompt; conversation history (last 20 msgs); global floating chat widget with per-entity history and markdown rendering
 - Clone a plant — duplicate a `UserPlant` (same bed, catalog entry, status, start date, notes); backend `clone` action on `UserPlantViewSet`; available from canvas context menu, bed plant list, all-plants list, and plant detail page; `usePlantActions` hook centralises clone/delete/edit/move logic shared by `PlantItem` and `PlantDetailHeader`
 - Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
+- Bed detail refactor — `PlantListSection` removed; bed detail page is canvas-only; `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opens from canvas context menu "Observations" item preserving spatial context; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places clone adjacent to source at `x + width`, clamped by backend); unplaced plants section promoted with `h2` heading, zero state message, "Create Plant" button, and per-chip actions menu (Edit / Clone / Move to Another Bed / Delete)
 
 ## 📋 Planned
 
@@ -258,8 +259,8 @@ These are explicitly out of scope, at least initially:
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
-- Observation list on `/plants` page — each plant row expands to show a full observation timeline identical to the one on the bed detail page; includes the "Add observation" form; collapsed by default
-- Add observation from bed layout context menu — "Add observation" action in the `...` menu on a plant placement in `BedGrid`; opens the existing observation form
+- Resize plant on canvas — allow users to set a `PlantPlacement` to a size other than the default 1×1 ft (e.g., 2×2 for a squash, 1×3 for a row crop); `width` and `height` fields already exist on `PlantPlacement` but the UI always writes 1; needs a resize handle or an edit-placement form field; must respect bed bounds (resize protection already enforced by the backend)
+- Observation list on `/plants` page — wire `PlantObservationsSheet` into the all-plants list so observations are reachable per-plant without navigating to the plant detail page
 
 ### Bug Fixes (tracked)
 
