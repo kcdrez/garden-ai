@@ -232,6 +232,8 @@ These are explicitly out of scope, at least initially:
 - Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
 - Bed detail refactor — `PlantListSection` removed; bed detail page is canvas-only; `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opens from canvas context menu "Observations" item preserving spatial context; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places clone adjacent to source at `x + width`, clamped by backend); unplaced plants section promoted with `h2` heading, zero state message, "Create Plant" button, and per-chip actions menu (Edit / Clone / Move to Another Bed / Delete)
 - Resize plant on canvas — drag handle in bottom-right corner of each placed item; dragging resizes the placement live and commits on release; plant visual is an ellipse that fills the bounding box; `lostpointercapture` handles out-of-window release; backend PATCH already supported width/height
+- Observation list on `/plants` — "Observations" action in `CardActionsMenu` opens `PlantObservationsSheet` per plant without navigating away from the list
+- Plant canvas icons — `plantEmoji()` maps 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets (drop in `src/assets/garden_icons/`, add to `PLANT_IMAGES` in `src/lib/plants.ts`); Ideogram prompt and priority list of shared-emoji plants documented in the file; tomato and squash done
 
 ## 📋 Planned
 
@@ -255,12 +257,10 @@ These are explicitly out of scope, at least initially:
 ### Plants
 
 - Add plants to garden layouts
-- Plant canvas icons — replace solid-color circles on `PlacementCanvas` items with veggie/plant images; likely SVG icons or emoji per plant type keyed off the catalog entry
 - Plant spacing guidance
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
-- Observation list on `/plants` page — wire `PlantObservationsSheet` into the all-plants list so observations are reachable per-plant without navigating to the plant detail page
 
 ### Bug Fixes (tracked)
 
@@ -317,6 +317,7 @@ These are explicitly out of scope, at least initially:
 - Push notifications for gardening reminders and tasks
 - Camera integration for plant/garden photo capture
 - Offline-first support with sync when reconnected
+- **Migrate plant emoji to backend** — currently a frontend-only `plantName → emoji` map in `src/lib/plants.ts`; move to an `emoji` field on the `Plant` model (data migration) so mobile clients get it from the API without a separate mapping
 
 ### AI Integration
 
