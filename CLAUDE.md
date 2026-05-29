@@ -231,6 +231,7 @@ These are explicitly out of scope, at least initially:
 - Clone a plant — duplicate a `UserPlant` (same bed, catalog entry, status, start date, notes); backend `clone` action on `UserPlantViewSet`; available from canvas context menu, bed plant list, all-plants list, and plant detail page; `usePlantActions` hook centralises clone/delete/edit/move logic shared by `PlantItem` and `PlantDetailHeader`
 - Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
 - Bed detail refactor — `PlantListSection` removed; bed detail page is canvas-only; `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opens from canvas context menu "Observations" item preserving spatial context; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places clone adjacent to source at `x + width`, clamped by backend); unplaced plants section promoted with `h2` heading, zero state message, "Create Plant" button, and per-chip actions menu (Edit / Clone / Move to Another Bed / Delete)
+- Resize plant on canvas — drag handle in bottom-right corner of each placed item; dragging resizes the placement live and commits on release; plant visual is an ellipse that fills the bounding box; `lostpointercapture` handles out-of-window release; backend PATCH already supported width/height
 
 ## 📋 Planned
 
@@ -259,7 +260,6 @@ These are explicitly out of scope, at least initially:
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
-- Resize plant on canvas — allow users to set a `PlantPlacement` to a size other than the default 1×1 ft (e.g., 2×2 for a squash, 1×3 for a row crop); `width` and `height` fields already exist on `PlantPlacement` but the UI always writes 1; needs a resize handle or an edit-placement form field; must respect bed bounds (resize protection already enforced by the backend)
 - Observation list on `/plants` page — wire `PlantObservationsSheet` into the all-plants list so observations are reachable per-plant without navigating to the plant detail page
 
 ### Bug Fixes (tracked)

@@ -8,7 +8,8 @@ import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
 import type { BedPlacement, Garden, GardenBed } from '@/types/gardens';
 import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
-import PlacementCanvas, { type CanvasItem, type CanvasMenuItem } from '@/components/shared/PlacementCanvas';
+import PlacementCanvas from '@/components/shared/PlacementCanvas';
+import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface GardenGridProps {

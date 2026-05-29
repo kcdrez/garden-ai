@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { fetchPlacements, createPlacement, movePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
 import { routes } from '@/lib/routes';
 import { toFeet, plantColor } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
@@ -13,7 +13,8 @@ import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
 import PlantObservationsSheet from '@/components/plants/PlantObservationsSheet';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
-import PlacementCanvas, { type CanvasItem, type CanvasMenuItem } from '@/components/shared/PlacementCanvas';
+import PlacementCanvas from '@/components/shared/PlacementCanvas';
+import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/query-state';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -81,6 +82,26 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       queryClient.invalidateQueries({ queryKey: ['placements', bedId] });
     },
     onError: (err) => setMutationError(getErrorMessage(err)),
+  });
+
+  const resizeMutation = useMutation({
+    mutationFn: ({ placementId, widthFt, heightFt }: { placementId: string; widthFt: number; heightFt: number }) =>
+      resizePlacement(gardenId, bedId, placementId, widthFt, heightFt),
+    onMutate: async ({ placementId, widthFt, heightFt }) => {
+      await queryClient.cancelQueries({ queryKey: ['placements', bedId] });
+      const previous = queryClient.getQueryData<PlantPlacement[]>(['placements', bedId]);
+      queryClient.setQueryData<PlantPlacement[]>(['placements', bedId], (old = []) =>
+        old.map((p) => (p.id === placementId ? { ...p, width: widthFt, height: heightFt } : p)),
+      );
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['placements', bedId], context.previous);
+      }
+      setMutationError(getErrorMessage(err));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
   });
 
   const removePlacementMutation = useMutation({
@@ -194,15 +215,16 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         renderItem={(item) => {
           const placement = placementById.get(item.id);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
-          const r = Math.min(item.widthFt, item.heightFt) / 2;
-          const cx = item.widthFt / 2;
-          const cy = item.heightFt / 2;
-          const fontSize = Math.max(0.08, Math.min(r * 0.3, 0.2));
+          const rx = item.widthFt / 2;
+          const ry = item.heightFt / 2;
+          const cx = rx;
+          const cy = ry;
+          const fontSize = Math.max(0.08, Math.min(Math.min(rx, ry) * 0.3, 0.2));
           const color = plantColor(plant?.plant ?? '', plant?.variety ?? '');
           return (
             <>
-              <circle
-                cx={cx} cy={cy} r={r}
+              <ellipse
+                cx={cx} cy={cy} rx={rx} ry={ry}
                 fill={color.fill}
                 stroke={color.stroke}
                 strokeWidth={0.04}
@@ -234,6 +256,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
         onMove={(placementId, x, y) => moveMutation.mutate({ placementId, x, y })}
+        onResize={(placementId, widthFt, heightFt) => resizeMutation.mutate({ placementId, widthFt, heightFt })}
         getMenuItems={getMenuItems}
       />
 

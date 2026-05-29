@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { fetchPlacements, createPlacement, movePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
 import { mockBed, mockUserPlant } from '@/test/fixtures';
 import BedGrid from './BedGrid';
 
@@ -8,6 +8,7 @@ vi.mock('@/api/plants', () => ({
   fetchPlacements: vi.fn(),
   createPlacement: vi.fn(),
   movePlacement: vi.fn(),
+  resizePlacement: vi.fn(),
   deletePlacement: vi.fn(),
   cloneUserPlant: vi.fn(),
   deleteUserPlant: vi.fn(),
@@ -18,10 +19,11 @@ vi.mock('@/hooks/useConfirm', () => ({
 }));
 
 vi.mock('@/components/shared/PlacementCanvas', () => ({
-  default: ({ items, onEmptyClick, onMove, getMenuItems }: {
+  default: ({ items, onEmptyClick, onMove, onResize, getMenuItems }: {
     items: { id: string }[];
     onEmptyClick: (x: number, y: number) => void;
     onMove: (id: string, x: number, y: number) => void;
+    onResize?: (id: string, w: number, h: number) => void;
     getMenuItems: (id: string) => { label: string; onClick: () => void }[];
   }) => (
     <div data-testid="placement-canvas">
@@ -29,6 +31,7 @@ vi.mock('@/components/shared/PlacementCanvas', () => ({
       {items.map((item) => (
         <div key={item.id} data-testid={`canvas-item-${item.id}`}>
           <button onClick={() => onMove(item.id, 3.0, 4.0)}>Drag {item.id}</button>
+          {onResize && <button onClick={() => onResize(item.id, 2.0, 2.0)}>Resize {item.id}</button>}
           {getMenuItems(item.id).map((mi) => (
             <button key={mi.label} onClick={mi.onClick}>{mi.label} {item.id}</button>
           ))}
@@ -81,6 +84,7 @@ vi.mock('@/components/ui/card-actions-menu', () => ({
 const mockFetchPlacements = vi.mocked(fetchPlacements);
 const mockCreatePlacement = vi.mocked(createPlacement);
 const mockMovePlacement = vi.mocked(movePlacement);
+const mockResizePlacement = vi.mocked(resizePlacement);
 const mockDeletePlacement = vi.mocked(deletePlacement);
 const mockCloneUserPlant = vi.mocked(cloneUserPlant);
 const mockDeleteUserPlant = vi.mocked(deleteUserPlant);
@@ -99,6 +103,7 @@ describe('BedGrid', () => {
     mockFetchPlacements.mockResolvedValue([]);
     mockCreatePlacement.mockResolvedValue(placement);
     mockMovePlacement.mockResolvedValue(placement);
+    mockResizePlacement.mockResolvedValue(placement);
     mockDeletePlacement.mockResolvedValue(undefined);
     mockCloneUserPlant.mockResolvedValue(mockUserPlant);
     mockDeleteUserPlant.mockResolvedValue(undefined);
@@ -162,6 +167,17 @@ describe('BedGrid', () => {
         'garden-1', 'bed-1',
         expect.objectContaining({ width: 1.0, height: 1.0 }),
       );
+    });
+  });
+
+  it('calls resizePlacement when canvas onResize fires', async () => {
+    const user = userEvent.setup();
+    mockFetchPlacements.mockResolvedValue([placement]);
+    renderBedGrid();
+    await screen.findByTestId('canvas-item-pl-1');
+    await user.click(screen.getByRole('button', { name: /resize pl-1/i }));
+    await waitFor(() => {
+      expect(mockResizePlacement).toHaveBeenCalledWith('garden-1', 'bed-1', 'pl-1', 2.0, 2.0);
     });
   });
 

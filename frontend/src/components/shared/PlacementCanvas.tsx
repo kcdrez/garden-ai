@@ -5,20 +5,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 
-export interface CanvasItem {
-  id: string;
-  x: number;
-  y: number;
-  widthFt: number;
-  heightFt: number;
-}
-
-export interface CanvasMenuItem {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: () => void;
-  variant?: 'destructive';
-}
+import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 
 interface PlacementCanvasProps {
   widthFt: number;
@@ -27,11 +14,16 @@ interface PlacementCanvasProps {
   renderItem: (item: CanvasItem) => React.ReactNode;
   onEmptyClick: (xFt: number, yFt: number) => void;
   onMove: (id: string, xFt: number, yFt: number) => void;
+  onResize?: (id: string, widthFt: number, heightFt: number) => void;
   getMenuItems: (id: string) => CanvasMenuItem[];
 }
 
 const PAD = 0.4;
 const CLICK_THRESHOLD_FT = 0.15;
+const MIN_PLACEMENT_SIZE = 0.5;
+const HANDLE_SIZE = 0.135;
+const DOT_R = 0.010;
+const DOT_SPACING = HANDLE_SIZE * 0.2;
 
 function toSVGPoint(
   e: PointerEvent | MouseEvent,
@@ -50,6 +42,7 @@ function DraggableItem({
   containerHeightFt,
   renderItem,
   onMove,
+  onResize,
   onMenuOpen,
   isMenuActive,
 }: {
@@ -58,11 +51,14 @@ function DraggableItem({
   containerHeightFt: number;
   renderItem: (item: CanvasItem) => React.ReactNode;
   onMove: (id: string, x: number, y: number) => void;
+  onResize?: (id: string, widthFt: number, heightFt: number) => void;
   onMenuOpen: (id: string, x: number, y: number) => void;
   isMenuActive: boolean;
 }) {
   const [pos, setPos] = useState({ x: item.x, y: item.y });
+  const [size, setSize] = useState({ w: item.widthFt, h: item.heightFt });
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const dragStart = useRef<{
     svgX: number;
@@ -70,11 +66,15 @@ function DraggableItem({
     itemX: number;
     itemY: number;
   } | null>(null);
+  const resizeStart = useRef<{ svgX: number; svgY: number; w: number; h: number } | null>(null);
   const gRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
-    if (!isDragging) setPos({ x: item.x, y: item.y });
-  }, [item.x, item.y, isDragging]);
+    if (!isDragging && !isResizing) {
+      setPos({ x: item.x, y: item.y });
+      setSize({ w: item.widthFt, h: item.heightFt });
+    }
+  }, [item.x, item.y, item.widthFt, item.heightFt, isDragging, isResizing]);
 
   function handlePointerDown(e: React.PointerEvent<SVGGElement>) {
     e.stopPropagation();
@@ -90,72 +90,110 @@ function DraggableItem({
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   }
 
-  function handlePointerMove(e: React.PointerEvent<SVGGElement>) {
-    if (!isDragging || !dragStart.current) return;
+  function handleResizePointerDown(e: React.PointerEvent<SVGRectElement>) {
+    e.stopPropagation();
     const svg = gRef.current!.ownerSVGElement!;
     const coords = toSVGPoint(e.nativeEvent, svg);
-    const newX = Math.max(
-      0,
-      Math.min(
-        dragStart.current.itemX + (coords.x - dragStart.current.svgX),
-        containerWidthFt - item.widthFt,
-      ),
-    );
-    const newY = Math.max(
-      0,
-      Math.min(
-        dragStart.current.itemY + (coords.y - dragStart.current.svgY),
-        containerHeightFt - item.heightFt,
-      ),
-    );
-    setPos({ x: newX, y: newY });
+    resizeStart.current = { svgX: coords.x, svgY: coords.y, w: size.w, h: size.h };
+    setIsResizing(true);
+    gRef.current!.setPointerCapture(e.pointerId);
   }
 
-  function handlePointerUp() {
-    if (!isDragging) return;
-    setIsDragging(false);
-    dragStart.current = null;
-    if (pos.x !== item.x || pos.y !== item.y) {
-      onMove(item.id, pos.x, pos.y);
+  function handlePointerMove(e: React.PointerEvent<SVGGElement>) {
+    if (isDragging && dragStart.current) {
+      const svg = gRef.current!.ownerSVGElement!;
+      const coords = toSVGPoint(e.nativeEvent, svg);
+      const newX = Math.max(
+        0,
+        Math.min(
+          dragStart.current.itemX + (coords.x - dragStart.current.svgX),
+          containerWidthFt - size.w,
+        ),
+      );
+      const newY = Math.max(
+        0,
+        Math.min(
+          dragStart.current.itemY + (coords.y - dragStart.current.svgY),
+          containerHeightFt - size.h,
+        ),
+      );
+      setPos({ x: newX, y: newY });
+    } else if (isResizing && resizeStart.current) {
+      const svg = gRef.current!.ownerSVGElement!;
+      const coords = toSVGPoint(e.nativeEvent, svg);
+      const newW = Math.max(
+        MIN_PLACEMENT_SIZE,
+        Math.min(
+          resizeStart.current.w + (coords.x - resizeStart.current.svgX),
+          containerWidthFt - pos.x,
+        ),
+      );
+      const newH = Math.max(
+        MIN_PLACEMENT_SIZE,
+        Math.min(
+          resizeStart.current.h + (coords.y - resizeStart.current.svgY),
+          containerHeightFt - pos.y,
+        ),
+      );
+      setSize({ w: newW, h: newH });
     }
   }
 
-  const r = Math.min(item.widthFt, item.heightFt) / 2;
-  const cx = item.widthFt / 2;
-  const cy = item.heightFt / 2;
-  const btnOffset = r * 0.707;
-  const btnR = 0.15;
-  const dotR = 0.015;
-  const dotSpacing = btnR * 0.32;
-  const showMenuBtn = (isHovered || isMenuActive) && !isDragging;
+  // Handles both normal release and out-of-window release. Since setPointerCapture is always called
+  // for move and resize, lostpointercapture fires after every pointerup — so this covers both cases.
+  function handleLostPointerCapture() {
+    if (isDragging) {
+      setIsDragging(false);
+      dragStart.current = null;
+      if (pos.x !== item.x || pos.y !== item.y) {
+        onMove(item.id, pos.x, pos.y);
+      }
+    } else if (isResizing) {
+      setIsResizing(false);
+      resizeStart.current = null;
+      if (size.w !== item.widthFt || size.h !== item.heightFt) {
+        onResize?.(item.id, size.w, size.h);
+      }
+    }
+  }
+
+  const buttonX = size.w - HANDLE_SIZE;
+  const menuCx = buttonX + HANDLE_SIZE / 2;
+  const menuCy = HANDLE_SIZE / 2;
+  const resizeY = size.h - HANDLE_SIZE;
+  const showControls = (isHovered || isMenuActive) && !isDragging && !isResizing;
 
   return (
     <g
       ref={gRef}
-      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{ cursor: isDragging ? 'grabbing' : isResizing ? 'se-resize' : 'grab' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      onLostPointerCapture={handleLostPointerCapture}
     >
       <g
         transform={`translate(${pos.x}, ${pos.y})`}
-        opacity={isDragging ? 0.65 : 1}
+        opacity={isDragging || isResizing ? 0.65 : 1}
         onPointerEnter={() => setIsHovered(true)}
         onPointerLeave={() => setIsHovered(false)}
       >
         {/* Transparent hit rect — gives the <g> a defined area so pointerEnter/Leave fire reliably */}
-        <rect x={0} y={0} width={item.widthFt} height={item.heightFt} fill="transparent" />
+        <rect x={0} y={0} width={size.w} height={size.h} fill="transparent" />
 
-        {renderItem({ ...item, x: pos.x, y: pos.y })}
+        {renderItem({ ...item, x: pos.x, y: pos.y, widthFt: size.w, heightFt: size.h })}
 
-        {/* SVG context menu button */}
-        {showMenuBtn && (
+        {/* SVG context menu button — top-right corner */}
+        {showControls && (
           <>
-            <circle
-              cx={cx + btnOffset}
-              cy={cy - btnOffset}
-              r={btnR}
+            <rect
+              x={buttonX}
+              y={0}
+              width={HANDLE_SIZE}
+              height={HANDLE_SIZE}
+              rx={0.03}
               fill="rgba(0,0,0,0.55)"
+              stroke="rgba(255,255,255,0.45)"
+              strokeWidth={0.015}
               style={{ cursor: 'pointer' }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
@@ -163,9 +201,36 @@ function DraggableItem({
                 onMenuOpen(item.id, e.clientX, e.clientY);
               }}
             />
-            <circle cx={cx + btnOffset - dotSpacing} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
-            <circle cx={cx + btnOffset} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
-            <circle cx={cx + btnOffset + dotSpacing} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
+            <circle cx={menuCx - DOT_SPACING} cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
+            <circle cx={menuCx}               cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
+            <circle cx={menuCx + DOT_SPACING} cy={menuCy} r={DOT_R} fill="white" pointerEvents="none" />
+
+            {/* Resize handle — bottom-right corner, x-aligned with menu button */}
+            {onResize && (
+              <g style={{ cursor: 'se-resize' }} onPointerDown={handleResizePointerDown}>
+                <rect
+                  x={buttonX}
+                  y={resizeY}
+                  width={HANDLE_SIZE}
+                  height={HANDLE_SIZE}
+                  rx={0.03}
+                  fill="rgba(0,0,0,0.55)"
+                  stroke="rgba(255,255,255,0.45)"
+                  strokeWidth={0.015}
+                />
+                {/* Corner bracket pointing SE */}
+                <path
+                  d={`M ${buttonX + 0.07},${resizeY + 0.10} L ${buttonX + 0.10},${resizeY + 0.10} L ${buttonX + 0.10},${resizeY + 0.07}`}
+                  stroke="white"
+                  strokeWidth={0.02}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  opacity={0.85}
+                  pointerEvents="none"
+                />
+              </g>
+            )}
           </>
         )}
       </g>
@@ -180,6 +245,7 @@ export default function PlacementCanvas({
   renderItem,
   onEmptyClick,
   onMove,
+  onResize,
   getMenuItems,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -302,6 +368,7 @@ export default function PlacementCanvas({
             containerHeightFt={heightFt}
             renderItem={renderItem}
             onMove={onMove}
+            onResize={onResize}
             onMenuOpen={(id, x, y) => setSvgMenu({ id, x, y })}
             isMenuActive={svgMenu?.id === item.id}
           />
