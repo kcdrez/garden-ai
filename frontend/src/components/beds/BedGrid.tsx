@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
 import { routes } from '@/lib/routes';
-import { toFeet, plantColor } from '@/lib/beds';
+import { toFeet } from '@/lib/beds';
+import { plantEmoji, plantImage } from '@/lib/plants';
 import { getErrorMessage } from '@/lib/errors';
 import type { GardenBed } from '@/types/gardens';
 import type { PlantPlacement, UserPlant } from '@/types/plants';
@@ -219,36 +220,37 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           const ry = item.heightFt / 2;
           const cx = rx;
           const cy = ry;
-          const fontSize = Math.max(0.08, Math.min(Math.min(rx, ry) * 0.3, 0.2));
-          const color = plantColor(plant?.plant ?? '', plant?.variety ?? '');
+          const imgSrc = plant ? plantImage(plant.plantName) : null;
+          const emoji = plant ? plantEmoji(plant.plantName, plant.plantCategory) : '🌱';
+          const emojiFontSize = Math.min(rx, ry) * 1.6;
+          const imgSize = Math.min(item.widthFt, item.heightFt) * 0.85;
           return (
             <>
               <ellipse
                 cx={cx} cy={cy} rx={rx} ry={ry}
-                fill={color.fill}
-                stroke={color.stroke}
+                fill="rgba(128,128,128,0.12)"
+                stroke="rgba(128,128,128,0.3)"
                 strokeWidth={0.04}
               />
-              <text
-                x={cx} y={cy}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={fontSize}
-                fill="#1e293b"
-                style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
-              >
-                {plant?.plantName}
-              </text>
-              {plant?.variety && (
+              {imgSrc ? (
+                <image
+                  href={imgSrc}
+                  x={cx - imgSize / 2}
+                  y={cy - imgSize / 2}
+                  width={imgSize}
+                  height={imgSize}
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ) : (
                 <text
-                  x={cx} y={cy + fontSize * 1.2}
+                  x={cx} y={cy}
                   textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={fontSize * 0.8}
-                  fill="#475569"
+                  dominantBaseline="central"
+                  fontSize={emojiFontSize}
                   style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
                 >
-                  {plant.variety.split(' ')[0]}
+                  {emoji}
                 </text>
               )}
             </>

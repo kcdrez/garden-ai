@@ -2,7 +2,19 @@
 
 ---
 
-## 2026-05-29 — ~1 hour (11pm–12am)
+## 2026-05-30 — ~1.5 hours
+
+**Completed:**
+- Observation list on `/plants` — "Observations" action added to `CardActionsMenu`; opens `PlantObservationsSheet` slide-in directly from the all-plants list without navigating to the plant detail page
+- Canvas button scaling — menu and resize handle buttons now scale proportionally with canvas size (`containerWidthFt * 0.034`) so they stay a consistent physical size on large beds
+- Plant canvas icons — `plantEmoji()` maps all 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets with emoji fallback; `BedGrid.renderItem` uses `<image>` when a PNG exists; tomato and squash icons generated via Ideogram; prompt and priority list of shared-emoji plants documented in `plants.ts`
+- Root `.gitignore` created to suppress `.DS_Store`
+
+**Next up:** Sort order for beds and gardens — user-controlled sort (alphabetical, date created, custom/manual drag order) persisted per user
+
+---
+
+## 2026-05-29 — ~1 hour
 
 **Completed:**
 - Resize plant on canvas — drag handle in bottom-right corner of placed items; `resizePlacement` API (PATCH width/height to existing endpoint); `resizeMutation` with optimistic updates in BedGrid; plant visual changed from `<circle>` to `<ellipse>` to fill the bounding box on non-square sizes; `lostpointercapture` replaces `pointerup` to handle out-of-window pointer release
@@ -13,7 +25,7 @@
 
 ---
 
-## 2026-05-28 — ~2.75 hours (1pm–2pm, 8pm–9:45pm)
+## 2026-05-28 — ~2.75 hours
 
 **Completed:**
 - Canvas context menu hitbox bug fix — SVG `<g>` wrapper was creating a bounding-box hit area larger than the visible button; fixed by removing the wrapper and conditionally rendering flat sibling circles
