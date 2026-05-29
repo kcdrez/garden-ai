@@ -51,6 +51,15 @@ export async function moveUserPlant(
   return res.data;
 }
 
+export async function cloneUserPlant(
+  gardenId: string,
+  bedId: string,
+  plantId: string,
+): Promise<UserPlant> {
+  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/clone/`);
+  return res.data;
+}
+
 export async function deleteUserPlant(
   gardenId: string,
   bedId: string,

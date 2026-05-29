@@ -1,38 +1,19 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SproutIcon } from 'lucide-react';
 import type { UserPlant } from '@/types/plants';
-import { deleteUserPlant } from '@/api/plants';
 import { routes } from '@/lib/routes';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
 import StatusBadge from '@/components/plants/StatusBadge';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
-import { useConfirm } from '@/hooks/useConfirm';
+import { usePlantActions } from '@/hooks/usePlantActions';
 
 type Props = {
   plant: UserPlant;
 };
 
 export default function PlantItem({ plant }: Props) {
-  const queryClient = useQueryClient();
-  const confirm = useConfirm();
-  const [editOpen, setEditOpen] = useState(false);
-  const [moveOpen, setMoveOpen] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteUserPlant(plant.gardenId, plant.bed, plant.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
-  });
-
-  async function handleDelete() {
-    const ok = await confirm({
-      title: 'Delete plant?',
-      description: `"${plant.plantName}${plant.variety ? ` — ${plant.variety}` : ''}" will be permanently deleted from this bed.`,
-    });
-    if (ok) deleteMutation.mutate();
-  }
+  const { editOpen, setEditOpen, moveOpen, setMoveOpen, cloneMutation, deleteMutation, handleDelete } = usePlantActions(plant);
 
   return (
     <>
@@ -63,6 +44,7 @@ export default function PlantItem({ plant }: Props) {
         <CardActionsMenu
           label="Plant actions"
           onEdit={() => setEditOpen(true)}
+          onClone={() => cloneMutation.mutate()}
           onMove={() => setMoveOpen(true)}
           onDelete={handleDelete}
           isDeleting={deleteMutation.isPending}

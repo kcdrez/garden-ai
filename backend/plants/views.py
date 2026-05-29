@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 
@@ -42,6 +43,20 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
             .select_related("plant", "bed__garden")
             .order_by("plant__common_name", "-created_at")
         )
+
+    @action(detail=True, methods=["post"])
+    def clone(self, request, *args, **kwargs):
+        original = self.get_object()
+        cloned = UserPlant.objects.create(
+            bed=original.bed,
+            plant=original.plant,
+            variety=original.variety,
+            status=original.status,
+            start_date=original.start_date,
+            notes=original.notes,
+        )
+        serializer = self.get_serializer(cloned)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def create(self, request, *args, **kwargs):
         try:
