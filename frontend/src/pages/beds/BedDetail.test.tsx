@@ -34,9 +34,6 @@ vi.mock('@/components/beds/BedDetailHeader', () => ({
 vi.mock('@/components/beds/BedGrid', () => ({
   default: () => <div>Bed Grid</div>,
 }));
-vi.mock('@/components/plants/PlantListSection', () => ({
-  default: () => <div>Plant List</div>,
-}));
 
 beforeEach(() => {
   mockUseParams.mockReturnValue({ id: 'garden-1', bedId: 'bed-1' });
@@ -58,12 +55,11 @@ describe('BedDetail', () => {
     expect(await screen.findByText('Header: Raised Bed 1')).toBeInTheDocument();
   });
 
-  it('renders the layout grid and plant list', async () => {
+  it('renders the layout grid', async () => {
     render(<BedDetail />);
 
     await screen.findByText('Header: Raised Bed 1');
     expect(screen.getByText('Bed Grid')).toBeInTheDocument();
-    expect(screen.getByText('Plant List')).toBeInTheDocument();
   });
 
   it('shows an error message when the bed fails to load', async () => {

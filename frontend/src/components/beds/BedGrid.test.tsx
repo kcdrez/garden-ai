@@ -8,6 +8,8 @@ vi.mock('@/api/plants', () => ({
   fetchPlacements: vi.fn(),
   createPlacement: vi.fn(),
   movePlacement: vi.fn(),
+  deletePlacement: vi.fn(),
+  cloneUserPlant: vi.fn(),
   deleteUserPlant: vi.fn(),
 }));
 
@@ -55,6 +57,11 @@ vi.mock('@/components/plants/MovePlantDialog', () => ({
     open ? <div role="dialog" aria-label="Move Plant Dialog" /> : null,
 }));
 
+vi.mock('@/components/plants/PlantObservationsSheet', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Observations Sheet" /> : null,
+}));
+
 const mockFetchPlacements = vi.mocked(fetchPlacements);
 const mockCreatePlacement = vi.mocked(createPlacement);
 const mockMovePlacement = vi.mocked(movePlacement);
@@ -94,11 +101,11 @@ describe('BedGrid', () => {
     expect(screen.getByText('Tomato')).toBeInTheDocument();
   });
 
-  it('hides unplaced plants panel when all plants are placed', async () => {
+  it('shows zero state when all plants are placed', async () => {
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('placement-canvas');
-    expect(screen.queryByText(/unplaced plants/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/all plants are placed in the bed/i)).toBeInTheDocument();
   });
 
   it('opens PlacePlantDialog when the canvas is clicked', async () => {
@@ -174,7 +181,7 @@ describe('BedGrid', () => {
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('canvas-item-pl-1');
-    await user.click(screen.getByRole('button', { name: /move pl-1/i }));
+    await user.click(screen.getByRole('button', { name: /move to another bed pl-1/i }));
     expect(screen.getByRole('dialog', { name: /move plant dialog/i })).toBeInTheDocument();
   });
 });

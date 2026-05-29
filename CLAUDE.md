@@ -117,7 +117,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Garden** `timezone` field _(planned)_ — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
-**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
+**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed. **Pending addition:** Blackberry — needs to be added to the catalog via a new data migration.
 
 **PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
 
@@ -258,6 +258,7 @@ These are explicitly out of scope, at least initially:
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
+- Resize plant on canvas — allow users to set a `PlantPlacement` to a size other than the default 1×1 ft (e.g., 2×2 for a squash, 1×3 for a row crop); `width` and `height` fields already exist on `PlantPlacement` but the UI always writes 1; needs a resize handle or an edit-placement form field; must respect bed bounds (resize protection already enforced by the backend)
 - Observation list on `/plants` page — each plant row expands to show a full observation timeline identical to the one on the bed detail page; includes the "Add observation" form; collapsed by default
 - Add observation from bed layout context menu — "Add observation" action in the `...` menu on a plant placement in `BedGrid`; opens the existing observation form
 

@@ -49,7 +49,7 @@ export default function PlantDetailHeader({ plant }: Props) {
         </div>
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
-            Move
+            Move to Another Bed
           </Button>
           <Button
             variant="outline"
