@@ -1,4 +1,4 @@
-import { ArrowRightIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { ArrowRightIcon, CopyIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,11 +11,12 @@ type Props = {
   onEdit: () => void;
   onDelete: () => void;
   onMove?: () => void;
+  onClone?: () => void;
   isDeleting?: boolean;
   label?: string;
 };
 
-export default function CardActionsMenu({ onEdit, onDelete, onMove, isDeleting = false, label }: Props) {
+export default function CardActionsMenu({ onEdit, onDelete, onMove, onClone, isDeleting = false, label }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -29,6 +30,12 @@ export default function CardActionsMenu({ onEdit, onDelete, onMove, isDeleting =
           <PencilIcon />
           Edit
         </DropdownMenuItem>
+        {onClone && (
+          <DropdownMenuItem onClick={onClone}>
+            <CopyIcon />
+            Clone
+          </DropdownMenuItem>
+        )}
         {onMove && (
           <DropdownMenuItem onClick={onMove}>
             <ArrowRightIcon />

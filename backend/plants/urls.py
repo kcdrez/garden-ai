@@ -10,6 +10,7 @@ user_plant_list = UserPlantViewSet.as_view({"get": "list", "post": "create"})
 user_plant_detail = UserPlantViewSet.as_view(
     {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
 )
+user_plant_clone = UserPlantViewSet.as_view({"post": "clone"})
 all_user_plants = AllUserPlantsViewSet.as_view({"get": "list"})
 all_user_plant_detail = AllUserPlantsViewSet.as_view({"get": "retrieve"})
 observation_list = ObservationViewSet.as_view({"get": "list", "post": "create"})
@@ -29,6 +30,11 @@ urlpatterns = [*router.urls,
         "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/",
         user_plant_detail,
         name="user-plants-detail",
+    ),
+    path(
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/clone/",
+        user_plant_clone,
+        name="user-plant-clone",
     ),
     path(
         "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/observations/",

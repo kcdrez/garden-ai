@@ -148,25 +148,26 @@ function DraggableItem({
 
         {renderItem({ ...item, x: pos.x, y: pos.y })}
 
-        {/* SVG button — visual only, click calls back to PlacementCanvas to open the HTML menu */}
-        <g
-          transform={`translate(${cx + btnOffset}, ${cy - btnOffset})`}
-          style={{
-            cursor: showMenuBtn ? 'pointer' : 'default',
-            opacity: showMenuBtn ? 1 : 0,
-            pointerEvents: showMenuBtn ? 'all' : 'none',
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onMenuOpen(item.id, e.clientX, e.clientY);
-          }}
-        >
-          <circle r={btnR} fill="rgba(0,0,0,0.55)" />
-          <circle cx={-dotSpacing} cy={0} r={dotR} fill="white" />
-          <circle cx={0} cy={0} r={dotR} fill="white" />
-          <circle cx={dotSpacing} cy={0} r={dotR} fill="white" />
-        </g>
+        {/* SVG context menu button */}
+        {showMenuBtn && (
+          <>
+            <circle
+              cx={cx + btnOffset}
+              cy={cy - btnOffset}
+              r={btnR}
+              fill="rgba(0,0,0,0.55)"
+              style={{ cursor: 'pointer' }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMenuOpen(item.id, e.clientX, e.clientY);
+              }}
+            />
+            <circle cx={cx + btnOffset - dotSpacing} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
+            <circle cx={cx + btnOffset} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
+            <circle cx={cx + btnOffset + dotSpacing} cy={cy - btnOffset} r={dotR} fill="white" pointerEvents="none" />
+          </>
+        )}
       </g>
     </g>
   );

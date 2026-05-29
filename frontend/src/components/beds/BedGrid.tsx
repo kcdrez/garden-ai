@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { EditIcon, ArrowRightLeftIcon, Trash2Icon } from 'lucide-react';
-import { fetchPlacements, createPlacement, movePlacement, deleteUserPlant } from '@/api/plants';
+import { CopyIcon, EditIcon, ArrowRightLeftIcon, Trash2Icon } from 'lucide-react';
+import { fetchPlacements, createPlacement, movePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
 import { toFeet, plantColor } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
 import type { GardenBed } from '@/types/gardens';
@@ -62,6 +62,16 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['placements', bedId] }),
   });
 
+  const cloneUserPlantMutation = useMutation({
+    mutationFn: ({ plantId }: { plantId: string }) =>
+      cloneUserPlant(gardenId, bedId, plantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plants', 'user', bedId] });
+      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+    },
+    onError: (err) => setMutationError(getErrorMessage(err)),
+  });
+
   const deleteUserPlantMutation = useMutation({
     mutationFn: ({ plantId }: { plantId: string }) =>
       deleteUserPlant(gardenId, bedId, plantId),
@@ -99,6 +109,11 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
         onClick: () => { if (plant) setEditingPlant(plant); },
+      },
+      {
+        label: 'Clone',
+        icon: <CopyIcon className="size-4" />,
+        onClick: () => { if (plant) cloneUserPlantMutation.mutate({ plantId: plant.id }); },
       },
       {
         label: 'Move',

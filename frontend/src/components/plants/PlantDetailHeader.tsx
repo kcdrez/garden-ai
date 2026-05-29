@@ -1,8 +1,5 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { PencilIcon, Trash2Icon, CalendarIcon, StickyNoteIcon } from 'lucide-react';
-import { deleteUserPlant } from '@/api/plants';
+import { CopyIcon, PencilIcon, Trash2Icon, CalendarIcon, StickyNoteIcon } from 'lucide-react';
 import { routes } from '@/lib/routes';
 import type { UserPlant } from '@/types/plants';
 import { PLANT_CATEGORIES } from '@/types/plants';
@@ -11,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/plants/StatusBadge';
 import PlantEditForm from '@/components/plants/PlantEditForm';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
-import { useConfirm } from '@/hooks/useConfirm';
+import { usePlantActions } from '@/hooks/usePlantActions';
 
 type Props = {
   plant: UserPlant;
@@ -19,26 +16,9 @@ type Props = {
 
 export default function PlantDetailHeader({ plant }: Props) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const confirm = useConfirm();
-  const [editOpen, setEditOpen] = useState(false);
-  const [moveOpen, setMoveOpen] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteUserPlant(plant.gardenId, plant.bed, plant.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      navigate(routes.bedDetail(plant.gardenId, plant.bed));
-    },
+  const { editOpen, setEditOpen, moveOpen, setMoveOpen, cloneMutation, deleteMutation, handleDelete } = usePlantActions(plant, {
+    onDeleteSuccess: () => navigate(routes.bedDetail(plant.gardenId, plant.bed)),
   });
-
-  async function handleDelete() {
-    const ok = await confirm({
-      title: 'Delete plant?',
-      description: `"${plant.plantName}${plant.variety ? ` — ${plant.variety}` : ''}" will be permanently deleted.`,
-    });
-    if (ok) deleteMutation.mutate();
-  }
 
   const categoryLabel = PLANT_CATEGORIES.find((c) => c.value === plant.plantCategory)?.label;
 
@@ -70,6 +50,15 @@ export default function PlantDetailHeader({ plant }: Props) {
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
             Move
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={cloneMutation.isPending}
+            onClick={() => cloneMutation.mutate()}
+          >
+            <CopyIcon className="size-4" />
+            Clone
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <PencilIcon className="size-4" />
