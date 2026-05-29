@@ -54,6 +54,19 @@ describe('CardActionsMenu', () => {
     expect(onDelete).toHaveBeenCalledOnce();
   });
 
+  it('renders Clone when onClone is provided', () => {
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /clone/i })).toBeInTheDocument();
+  });
+
+  it('calls onClone when Clone is clicked', async () => {
+    const user = userEvent.setup();
+    const onClone = vi.fn();
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={onClone} />);
+    await user.click(screen.getByRole('button', { name: /clone/i }));
+    expect(onClone).toHaveBeenCalledOnce();
+  });
+
   it('renders Move to Another Bed when onMove is provided', () => {
     render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onMove={vi.fn()} />);
     expect(screen.getByRole('button', { name: /move to another bed/i })).toBeInTheDocument();
