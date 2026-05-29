@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 
+from core.utils import to_feet
 from gardens.models import Garden, GardenBed
 
 from .models import Observation, Plant, PlantPlacement, UserPlant
@@ -47,14 +48,33 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def clone(self, request, *args, **kwargs):
         original = self.get_object()
-        cloned = UserPlant.objects.create(
-            bed=original.bed,
-            plant=original.plant,
-            variety=original.variety,
-            status=original.status,
-            start_date=original.start_date,
-            notes=original.notes,
-        )
+        try:
+            placement_fields = {k: float(request.data[k]) for k in ("x", "y", "width", "height")}
+        except (KeyError, TypeError, ValueError):
+            placement_fields = None
+
+        with transaction.atomic():
+            cloned = UserPlant.objects.create(
+                bed=original.bed,
+                plant=original.plant,
+                variety=original.variety,
+                status=original.status,
+                start_date=original.start_date,
+                notes=original.notes,
+            )
+            if placement_fields:
+                bed = original.bed
+                bed_w = to_feet(bed.width, bed.unit)
+                bed_h = to_feet(bed.length, bed.unit)
+                w, h = placement_fields["width"], placement_fields["height"]
+                PlantPlacement.objects.create(
+                    user_plant=cloned,
+                    x=max(0.0, min(placement_fields["x"], bed_w - w)),
+                    y=max(0.0, min(placement_fields["y"], bed_h - h)),
+                    width=w,
+                    height=h,
+                )
+
         serializer = self.get_serializer(cloned)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

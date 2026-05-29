@@ -71,16 +71,10 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   });
 
   const cloneUserPlantMutation = useMutation({
-    mutationFn: async ({ plantId, x, y, width, height }: {
+    mutationFn: ({ plantId, placement }: {
       plantId: string;
-      x?: number; y?: number; width?: number; height?: number;
-    }) => {
-      const cloned = await cloneUserPlant(gardenId, bedId, plantId);
-      if (x !== undefined && y !== undefined && width !== undefined && height !== undefined) {
-        await createPlacement(gardenId, bedId, { userPlant: cloned.id, x, y, width, height });
-      }
-      return cloned;
-    },
+      placement?: { x: number; y: number; width: number; height: number };
+    }) => cloneUserPlant(gardenId, bedId, plantId, placement),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user', bedId] });
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
@@ -156,7 +150,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           if (!plant) return;
           const p = placementById.get(placementId);
           if (p) {
-            cloneUserPlantMutation.mutate({ plantId: plant.id, x: p.x + p.width, y: p.y, width: p.width, height: p.height });
+            cloneUserPlantMutation.mutate({ plantId: plant.id, placement: { x: p.x + p.width, y: p.y, width: p.width, height: p.height } });
           } else {
             cloneUserPlantMutation.mutate({ plantId: plant.id });
           }
