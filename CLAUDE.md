@@ -228,6 +228,8 @@ These are explicitly out of scope, at least initially:
 - Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
 - User profile page — `/profile` with inline edit form (first name, last name, email, timezone); backend `UserProfileSerializer` combines `User` + `UserProfile` fields in one endpoint; NavBar account dropdown links to it
 - AI integration — OpenAI-powered chat at garden/bed/plant scope; `AIConversation` + `AIMessage` models; context builder serializes garden hierarchy into system prompt; conversation history (last 20 msgs); global floating chat widget with per-entity history and markdown rendering
+- Clone a plant — duplicate a `UserPlant` (same bed, catalog entry, status, start date, notes); backend `clone` action on `UserPlantViewSet`; available from canvas context menu, bed plant list, all-plants list, and plant detail page; `usePlantActions` hook centralises clone/delete/edit/move logic shared by `PlantItem` and `PlantDetailHeader`
+- Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
 
 ## 📋 Planned
 
@@ -256,13 +258,10 @@ These are explicitly out of scope, at least initially:
 - Plant growth and lifecycle tracking
 - Seed starting and transplant planning
 - Seasonal planting schedules
-- Clone a plant — duplicate a `UserPlant` record (same bed, catalog entry, status, start date, notes) with a new id; does not copy placements or observations
 - Observation list on `/plants` page — each plant row expands to show a full observation timeline identical to the one on the bed detail page; includes the "Add observation" form; collapsed by default
 - Add observation from bed layout context menu — "Add observation" action in the `...` menu on a plant placement in `BedGrid`; opens the existing observation form
 
 ### Bug Fixes (tracked)
-
-- Bed layout plant context menu hit area — the clickable region for the `...` button on a plant placement in `BedGrid` is larger than the visible button; needs hit-area tightening
 
 ### Testing
 
