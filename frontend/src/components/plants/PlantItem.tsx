@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SproutIcon } from 'lucide-react';
 import type { UserPlant } from '@/types/plants';
@@ -6,6 +7,7 @@ import CardActionsMenu from '@/components/ui/card-actions-menu';
 import StatusBadge from '@/components/plants/StatusBadge';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
+import PlantObservationsSheet from '@/components/plants/PlantObservationsSheet';
 import { usePlantActions } from '@/hooks/usePlantActions';
 
 type Props = {
@@ -14,6 +16,7 @@ type Props = {
 
 export default function PlantItem({ plant }: Props) {
   const { editOpen, setEditOpen, moveOpen, setMoveOpen, cloneMutation, deleteMutation, handleDelete } = usePlantActions(plant);
+  const [observationsOpen, setObservationsOpen] = useState(false);
 
   return (
     <>
@@ -46,6 +49,7 @@ export default function PlantItem({ plant }: Props) {
           onEdit={() => setEditOpen(true)}
           onClone={() => cloneMutation.mutate()}
           onMove={() => setMoveOpen(true)}
+          onObservations={() => setObservationsOpen(true)}
           onDelete={handleDelete}
           isDeleting={deleteMutation.isPending}
         />
@@ -62,6 +66,13 @@ export default function PlantItem({ plant }: Props) {
         userPlant={plant}
         open={moveOpen}
         onOpenChange={setMoveOpen}
+      />
+      <PlantObservationsSheet
+        plant={plant}
+        gardenId={plant.gardenId}
+        bedId={plant.bed}
+        open={observationsOpen}
+        onOpenChange={setObservationsOpen}
       />
     </>
   );
