@@ -219,7 +219,7 @@ These are explicitly out of scope, at least initially:
 - Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
 - Deployed to production — frontend on Vercel, backend + DB on Railway
 - Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
-- Frontend unit tests — Vitest + React Testing Library; CI enforces 90% statements/functions/lines and 85% branches; 90.23% branch coverage achieved; tests colocated with components
+- Frontend unit tests — Vitest + React Testing Library; CI enforces 85% statements/functions/lines and 80% branches; tests colocated with components
 - CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
 - Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
 - Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
