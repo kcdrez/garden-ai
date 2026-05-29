@@ -125,7 +125,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Resize protection:** resizing a garden is blocked if any `BedPlacement` would go out of bounds; resizing a bed is blocked if any `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors`.
 
-**UserPlant ↔ organism cardinality _(deferred)_:** 1 UserPlant = 1 PlantPlacement (deliberate simplification). A gardener planting 4 tomato seedlings should create 4 UserPlant records. Revisit if per-plant health tracking or harvest tracking makes this painful — options are a `quantity` field (pragmatic) or a child `PlantInstance` model (most expressive).
+**UserPlant ↔ organism cardinality:** 1 UserPlant = 1 plant = 1 PlantPlacement. A gardener planting 4 onions creates 4 UserPlant records — intentional so each plant has its own observation timeline (disease, harvest, etc.). A `quantity` field was considered and rejected for mature plants because it prevents per-plant health tracking; quantity is only appropriate for bulk seed starting where individual tracking isn't needed yet. Sub-foot canvas resolution (e.g., a 4-inch onion smaller than 1×1 ft on the grid) is deferred — the schema supports it but the renderer currently treats 1 unit = 1 ft minimum.
 
 **Planned models** (design context only — fields in code when built):
 
