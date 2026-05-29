@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-29 — ~1 hour (11pm–12am)
+
+**Completed:**
+- Resize plant on canvas — drag handle in bottom-right corner of placed items; `resizePlacement` API (PATCH width/height to existing endpoint); `resizeMutation` with optimistic updates in BedGrid; plant visual changed from `<circle>` to `<ellipse>` to fill the bounding box on non-square sizes; `lostpointercapture` replaces `pointerup` to handle out-of-window pointer release
+- Canvas button polish — menu button and resize handle both rounded rects, same size, pinned to right-edge column; corner bracket `⌟` icon on resize handle; white stroke on both buttons for dark mode visibility
+- PlacementCanvas cleanup — button/placement constants hoisted to module level; `resizeX` alias removed; `CanvasItem`/`CanvasMenuItem` moved from component file to `src/types/canvas.ts`; SRP split noted in CLAUDE.md planned improvements
+
+**Next up:** Wire `PlantObservationsSheet` into the all-plants list so observations are reachable from `/plants` without navigating to the plant detail page
+
+---
+
 ## 2026-05-28 — ~2.75 hours (1pm–2pm, 8pm–9:45pm)
 
 **Completed:**

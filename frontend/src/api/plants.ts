@@ -94,6 +94,20 @@ export async function movePlacement(
   return res.data;
 }
 
+export async function resizePlacement(
+  gardenId: string,
+  bedId: string,
+  placementId: string,
+  widthFt: number,
+  heightFt: number,
+): Promise<PlantPlacement> {
+  const res = await api.patch(
+    `/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`,
+    { width: widthFt, height: heightFt },
+  );
+  return res.data;
+}
+
 export async function deletePlacement(
   gardenId: string,
   bedId: string,

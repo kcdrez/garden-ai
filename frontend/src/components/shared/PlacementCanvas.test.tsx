@@ -1,7 +1,8 @@
 import { render, screen } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
-import PlacementCanvas, { type CanvasItem } from './PlacementCanvas';
+import PlacementCanvas from './PlacementCanvas';
+import type { CanvasItem } from '@/types/canvas';
 
 const item: CanvasItem = { id: 'item-1', x: 1, y: 1, widthFt: 1.5, heightFt: 1.5 };
 
@@ -101,7 +102,7 @@ describe('PlacementCanvas', () => {
     const outerG = container.querySelector('g')!;
     fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
     fireEvent.pointerMove(outerG, { clientX: 2.5, clientY: 2.5 });
-    fireEvent.pointerUp(outerG);
+    fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
   });
 
@@ -109,14 +110,14 @@ describe('PlacementCanvas', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
     const outerG = container.querySelector('g')!;
     fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
-    fireEvent.pointerUp(outerG);
+    fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).not.toHaveBeenCalled();
   });
 
-  it('does not call onMove when pointerUp fires on an item before any drag', () => {
+  it('does not call onMove when lostPointerCapture fires before any drag', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
     const outerG = container.querySelector('g');
-    fireEvent.pointerUp(outerG!);
+    fireEvent.lostPointerCapture(outerG!);
     expect(defaultProps.onMove).not.toHaveBeenCalled();
   });
 
@@ -128,7 +129,7 @@ describe('PlacementCanvas', () => {
     fireEvent.pointerEnter(innerG);
 
     // click the menu circle (onClick uses clientX/Y only — no SVG transform)
-    const menuCircle = container.querySelector('circle[fill="rgba(0,0,0,0.55)"]');
+    const menuCircle = container.querySelector('rect[fill="rgba(0,0,0,0.55)"]');
     fireEvent.click(menuCircle!);
 
     expect(screen.getByRole('menuitem', { name: /edit/i })).toBeInTheDocument();
@@ -144,7 +145,7 @@ describe('PlacementCanvas', () => {
 
     const innerG = container.querySelectorAll('g')[1];
     fireEvent.pointerEnter(innerG);
-    fireEvent.click(container.querySelector('circle[fill="rgba(0,0,0,0.55)"]')!);
+    fireEvent.click(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')!);
 
     await user.click(screen.getByRole('menuitem', { name: /edit/i }));
 
@@ -157,7 +158,7 @@ describe('PlacementCanvas', () => {
 
     const innerG = container.querySelectorAll('g')[1];
     fireEvent.pointerEnter(innerG);
-    fireEvent.click(container.querySelector('circle[fill="rgba(0,0,0,0.55)"]')!);
+    fireEvent.click(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')!);
 
     expect(defaultProps.getMenuItems).toHaveBeenCalledWith('item-1');
   });
@@ -166,9 +167,9 @@ describe('PlacementCanvas', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
     const innerG = container.querySelectorAll('g')[1];
     fireEvent.pointerEnter(innerG);
-    expect(container.querySelector('circle[fill="rgba(0,0,0,0.55)"]')).toBeInTheDocument();
+    expect(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')).toBeInTheDocument();
     fireEvent.pointerLeave(innerG);
-    expect(container.querySelector('circle[fill="rgba(0,0,0,0.55)"]')).not.toBeInTheDocument();
+    expect(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')).not.toBeInTheDocument();
   });
 
   it('ignores pointerMove before drag starts', () => {
@@ -183,7 +184,7 @@ describe('PlacementCanvas', () => {
     const outerG = container.querySelector('g')!;
     fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
     fireEvent.pointerMove(outerG, { clientX: 1.75, clientY: 2.5 });
-    fireEvent.pointerUp(outerG);
+    fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
   });
 });
