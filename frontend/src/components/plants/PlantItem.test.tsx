@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { deleteUserPlant } from '@/api/plants';
+import { deleteUserPlant, cloneUserPlant } from '@/api/plants';
 import { mockUserPlant } from '@/test/fixtures';
 import type { UserPlant } from '@/types/plants';
 import PlantItem from './PlantItem';
 
-vi.mock('@/api/plants', () => ({ deleteUserPlant: vi.fn() }));
+vi.mock('@/api/plants', () => ({ deleteUserPlant: vi.fn(), cloneUserPlant: vi.fn() }));
 
 const mockConfirm = vi.fn();
 vi.mock('@/hooks/useConfirm', () => ({
@@ -16,15 +16,18 @@ vi.mock('@/hooks/useConfirm', () => ({
 vi.mock('@/components/ui/card-actions-menu', () => ({
   default: ({
     onEdit,
+    onClone,
     onMove,
     onDelete,
   }: {
     onEdit: () => void;
+    onClone?: () => void;
     onMove?: () => void;
     onDelete: () => void;
   }) => (
     <>
       <button onClick={onEdit}>Edit</button>
+      {onClone && <button onClick={onClone}>Clone</button>}
       {onMove && <button onClick={onMove}>Move to Bed</button>}
       <button onClick={onDelete}>Delete</button>
     </>
@@ -119,6 +122,18 @@ describe('PlantItem', () => {
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
     await waitFor(() => expect(deleteUserPlant).not.toHaveBeenCalled());
+  });
+
+  it('calls cloneUserPlant when Clone is clicked', async () => {
+    const user = userEvent.setup();
+    vi.mocked(cloneUserPlant).mockResolvedValueOnce(mockUserPlant);
+    render(<ul><PlantItem plant={mockUserPlant} /></ul>);
+
+    await user.click(screen.getByRole('button', { name: /clone/i }));
+
+    await waitFor(() =>
+      expect(cloneUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1'),
+    );
   });
 
   it('includes the variety in the delete confirmation when present', async () => {

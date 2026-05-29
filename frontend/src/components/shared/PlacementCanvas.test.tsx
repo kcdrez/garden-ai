@@ -187,4 +187,33 @@ describe('PlacementCanvas', () => {
     fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
   });
+
+  it('calls onResize when the resize handle is dragged to a new size', () => {
+    const onResize = vi.fn();
+    const { container } = render(
+      <PlacementCanvas {...defaultProps} items={[item]} onResize={onResize} />,
+    );
+    const innerG = container.querySelectorAll('g')[1];
+    fireEvent.pointerEnter(innerG);
+    const resizeHandleG = container.querySelectorAll('g')[2];
+    fireEvent.pointerDown(resizeHandleG, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerMove(outerG, { clientX: 3.0, clientY: 3.0 });
+    fireEvent.lostPointerCapture(outerG);
+    expect(onResize).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
+  });
+
+  it('does not call onResize when the resize handle is released without moving', () => {
+    const onResize = vi.fn();
+    const { container } = render(
+      <PlacementCanvas {...defaultProps} items={[item]} onResize={onResize} />,
+    );
+    const innerG = container.querySelectorAll('g')[1];
+    fireEvent.pointerEnter(innerG);
+    const resizeHandleG = container.querySelectorAll('g')[2];
+    fireEvent.pointerDown(resizeHandleG, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
+    const outerG = container.querySelector('g')!;
+    fireEvent.lostPointerCapture(outerG);
+    expect(onResize).not.toHaveBeenCalled();
+  });
 });
