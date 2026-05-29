@@ -18,6 +18,7 @@ vi.mock('@/components/gardens/GardenDialog', () => ({
 
 beforeEach(() => {
   vi.mocked(fetchGardens).mockClear();
+  localStorage.clear();
 });
 
 describe('AllGardens', () => {
@@ -38,6 +39,34 @@ describe('AllGardens', () => {
     await waitFor(() => expect(screen.getAllByTestId('garden-item')).toHaveLength(2));
     expect(screen.getByText('Front Yard')).toBeInTheDocument();
     expect(screen.getByText('Back Yard')).toBeInTheDocument();
+  });
+
+  it('renders the sort dropdown with the default name-asc selection', async () => {
+    vi.mocked(fetchGardens).mockResolvedValueOnce([mockGarden]);
+    render(<AllGardens />);
+
+    await screen.findByTestId('garden-item');
+    expect(screen.getByRole('combobox', { name: /sort order/i })).toHaveValue('name-asc');
+  });
+
+  it('sorts gardens alphabetically descending when name-desc is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchGardens).mockResolvedValueOnce([
+      mockGarden,
+      { ...mockGarden, id: 'garden-2', name: 'Back Yard' },
+    ]);
+    render(<AllGardens />);
+
+    await waitFor(() => expect(screen.getAllByTestId('garden-item')).toHaveLength(2));
+    const [first, second] = screen.getAllByTestId('garden-item');
+    expect(first).toHaveTextContent('Back Yard');
+    expect(second).toHaveTextContent('Front Yard');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: /sort order/i }), 'name-desc');
+
+    const [newFirst, newSecond] = screen.getAllByTestId('garden-item');
+    expect(newFirst).toHaveTextContent('Front Yard');
+    expect(newSecond).toHaveTextContent('Back Yard');
   });
 
   it('opens the add garden dialog when Add Garden is clicked', async () => {
