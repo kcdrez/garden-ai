@@ -234,6 +234,7 @@ These are explicitly out of scope, at least initially:
 - Resize plant on canvas — drag handle in bottom-right corner of each placed item; dragging resizes the placement live and commits on release; plant visual is an ellipse that fills the bounding box; `lostpointercapture` handles out-of-window release; backend PATCH already supported width/height
 - Observation list on `/plants` — "Observations" action in `CardActionsMenu` opens `PlantObservationsSheet` per plant without navigating away from the list
 - Plant canvas icons — `plantEmoji()` maps 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets (drop in `src/assets/garden_icons/`, add to `PLANT_IMAGES` in `src/lib/plants.ts`); Ideogram prompt and priority list of shared-emoji plants documented in the file; tomato and squash done
+- Sort order for gardens and beds — dropdown on AllGardens, GardenDetail, and AllBeds with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; `useSortedList` hook with localStorage persistence; `SortableGrid<T>` generic component owns all DnD boilerplate (DndContext + SortableContext + SortableCard); `@dnd-kit/sortable` added
 
 ## 📋 Planned
 
@@ -252,7 +253,6 @@ These are explicitly out of scope, at least initially:
 - Drag-and-drop garden design interface
 - Garden templates and presets
 - Export/import garden plans
-- Sort order for beds and gardens — user-controlled sort (alphabetical, date created, custom/manual drag order, etc.); persisted per user
 
 ### Plants
 

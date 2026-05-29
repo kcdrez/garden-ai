@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-29 — ~45 min
+
+**Completed:**
+- Sort order for gardens and beds — dropdown on all three list views (AllGardens, GardenDetail, AllBeds) with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; sort preference persisted to localStorage; custom order seeded from current sort on first use so list doesn't jump; added `@dnd-kit/sortable`
+- `SortableGrid<T>` generic component — owns DndContext + SortableContext + SortableCard wrapping; replaces duplicated DnD boilerplate across all three pages; pages now pass `items`, `sortMode`, `onReorder`, and `renderItem`
+- Tests — `useSortedList` (15 tests: all sort modes, localStorage persistence, custom seeding, reorder, edge cases), `usePlantActions` (10 tests: dialog state, clone/delete mutations, confirm flow, onDeleteSuccess callback), `SortDropdown`/`SortableCard`/`SortableGrid` component tests; page tests updated with sort assertions and `localStorage.clear()` in beforeEach; coverage up to 89.7% statements / 83.3% branches (all thresholds ≥3% clear)
+
+**Next up:** AllBeds SRP refactor — extract BedGroupSection component (garden header + SortableGrid per group) to clean up the remaining inline complexity in AllBeds
+
+---
+
 ## 2026-05-30 — ~1.5 hours
 
 **Completed:**
