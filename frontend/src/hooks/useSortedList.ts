@@ -5,7 +5,7 @@ export type SortMode = 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc' | 'cu
 
 type SortableItem = { id: string; name: string; createdAt: string };
 
-function readStorage<T>(key: string, fallback: T): T {
+export function readStorage<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     return raw !== null ? (JSON.parse(raw) as T) : fallback;
@@ -14,8 +14,21 @@ function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
-function writeStorage(key: string, value: unknown): void {
+export function writeStorage(key: string, value: unknown): void {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+export function applyCustomOrder<T extends { id: string }>(items: T[], order: string[]): T[] {
+  if (order.length === 0) return items;
+  const orderMap = new Map(order.map((id, i) => [id, i]));
+  const known: T[] = [];
+  const unknown: T[] = [];
+  for (const item of items) {
+    if (orderMap.has(item.id)) known.push(item);
+    else unknown.push(item);
+  }
+  known.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+  return [...known, ...unknown];
 }
 
 export function sortItems<T extends SortableItem>(items: T[], mode: Exclude<SortMode, 'custom'>): T[] {
@@ -80,23 +93,8 @@ export function useSortedList<T extends SortableItem>(
   );
 
   const sorted = useMemo(() => {
-    if (sortMode !== 'custom') {
-      return sortItems(items, sortMode);
-    }
-    // Build a lookup from id → index in customOrder
-    const orderMap = new Map(customOrder.map((id, i) => [id, i]));
-    // Items missing from customOrder get appended at the end
-    const known: T[] = [];
-    const unknown: T[] = [];
-    for (const item of items) {
-      if (orderMap.has(item.id)) {
-        known.push(item);
-      } else {
-        unknown.push(item);
-      }
-    }
-    known.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
-    return [...known, ...unknown];
+    if (sortMode !== 'custom') return sortItems(items, sortMode);
+    return applyCustomOrder(items, customOrder);
   }, [items, sortMode, customOrder]);
 
   return { sorted, sortMode, setSortMode, handleReorder };
