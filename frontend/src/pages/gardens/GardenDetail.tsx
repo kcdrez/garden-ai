@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
-import { fetchGarden } from '@/api/gardens';
-import { fetchBeds } from '@/api/beds';
-import type { Garden, GardenBed } from '@/types/gardens';
-import { getErrorMessage } from '@/lib/errors';
+import { useGardenDetail } from '@/hooks/useGardenDetail';
 import { useSortedList } from '@/hooks/useSortedList';
+import { getErrorMessage } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import BedItem from '@/components/beds/BedItem';
 import BedDialog from '@/components/beds/BedDialog';
@@ -18,43 +15,10 @@ import { QueryState, LoadingSpinner } from '@/components/ui/query-state';
 
 export default function GardenDetail() {
   const { id } = useParams<{ id: string }>();
-  const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const {
-    data: garden,
-    isLoading: gardenLoading,
-    error: gardenError,
-  } = useQuery({
-    queryKey: ['gardens', id],
-    queryFn: () => fetchGarden(id!),
-    enabled: !!id,
-    initialData: () =>
-      queryClient.getQueryData<Garden[]>(['gardens'])?.find((g) => g.id === id),
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState(['gardens'])?.dataUpdatedAt || Date.now(),
-  });
-
-  const {
-    data: beds = [],
-    isLoading: bedsLoading,
-    error: bedsError,
-  } = useQuery({
-    queryKey: ['beds', 'garden', id],
-    queryFn: () => fetchBeds(id!),
-    enabled: !!id,
-    initialData: () => {
-      const allBeds = queryClient.getQueryData<GardenBed[]>(['beds', 'all']);
-      return allBeds?.filter((b) => b.garden === id);
-    },
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState(['beds', 'all'])?.dataUpdatedAt || Date.now(),
-  });
-
-  const { sorted: sortedBeds, sortMode, setSortMode, handleReorder } = useSortedList(
-    beds,
-    `garden-${id}-beds`,
-  );
+  const { garden, beds, gardenLoading, gardenError, bedsLoading, bedsError } = useGardenDetail(id);
+  const { sorted: sortedBeds, sortMode, setSortMode, handleReorder } = useSortedList(beds, `garden-${id}-beds`);
 
   if (gardenLoading) return <div className="p-5"><LoadingSpinner /></div>;
   if (gardenError) return <div className="p-5 text-sm text-destructive">{getErrorMessage(gardenError)}</div>;
