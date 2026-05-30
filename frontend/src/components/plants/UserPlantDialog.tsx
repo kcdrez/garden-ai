@@ -1,29 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDownIcon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { userPlantSchema, type UserPlantFormValues, type UserPlantCreateFormValues } from '@/schemas/plants';
-import { useDialogFormReset } from '@/hooks/useDialogFormReset';
-import { USER_PLANT_STATUSES } from '@/types/plants';
 import type { UserPlant } from '@/types/plants';
-import { fetchPlants, createUserPlant, updateUserPlant } from '@/api/plants';
+import { createUserPlant } from '@/api/plants';
 import { fetchGardens } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
-import { applyServerErrors } from '@/lib/errors';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
-import { FormRootError } from '@/components/ui/form-root-error';
-import { TextField, TextAreaField, NativeSelectField, selectClass } from '@/components/ui/form-fields';
-import PlantPicker from '@/components/plants/PlantPicker';
+import { selectClass } from '@/components/ui/form-fields';
+import UserPlantEditForm from '@/components/plants/UserPlantEditForm';
 import UserPlantForm from '@/components/plants/UserPlantForm';
 
 type Props = {
@@ -37,53 +27,6 @@ type Props = {
 export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const isEditing = !!userPlant;
-
-  // --- Edit mode ---
-
-  const editDefaultValues = (): UserPlantFormValues => ({
-    gardenId: userPlant?.gardenId ?? gardenId ?? '',
-    bedId: userPlant?.bed ?? bedId ?? '',
-    plant: userPlant?.plant ?? '',
-    variety: userPlant?.variety ?? '',
-    startDate: userPlant?.startDate ?? '',
-    status: userPlant?.status ?? 'planned',
-    notes: userPlant?.notes ?? '',
-  });
-
-  const editForm = useForm<UserPlantFormValues>({
-    resolver: zodResolver(userPlantSchema),
-    defaultValues: editDefaultValues(),
-    mode: 'onChange',
-  });
-
-  useDialogFormReset(editForm, open && isEditing, editDefaultValues);
-
-  const { data: editPlants = [] } = useQuery({
-    queryKey: ['plants', 'catalog'],
-    queryFn: fetchPlants,
-    enabled: open && isEditing,
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (values: UserPlantFormValues) =>
-      updateUserPlant(values.gardenId, values.bedId, userPlant!.id, {
-        plant: values.plant,
-        variety: values.variety || undefined,
-        startDate: values.startDate || undefined,
-        status: values.status,
-        notes: values.notes || undefined,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['observations', userPlant!.id] });
-      onOpenChange(false);
-    },
-    onError: (err) => {
-      applyServerErrors(err, editForm, ['plant', 'variety', 'startDate', 'status', 'notes']);
-    },
-  });
-
-  // --- Create mode ---
 
   const needsGardenPicker = !isEditing && !gardenId;
   const needsBedPicker = !isEditing && !bedId;
@@ -114,15 +57,8 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   const effectiveBedId = bedId ?? selectedBedId;
 
   const createMutation = useMutation({
-    mutationFn: (values: UserPlantCreateFormValues) =>
-      createUserPlant(effectiveGardenId, effectiveBedId, {
-        plant: values.plant,
-        variety: values.variety || undefined,
-        startDate: values.startDate || undefined,
-        status: values.status,
-        notes: values.notes || undefined,
-        quantity: parseInt(values.quantity, 10),
-      }),
+    mutationFn: (values: Parameters<typeof createUserPlant>[2]) =>
+      createUserPlant(effectiveGardenId, effectiveBedId, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
       onOpenChange(false);
@@ -137,25 +73,11 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
         </DialogHeader>
 
         {isEditing ? (
-          <Form form={editForm} onSubmit={(v) => updateMutation.mutate(v)}>
-            <PlantPicker control={editForm.control} name="plant" plants={editPlants} />
-            <TextField control={editForm.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
-            <div className="grid grid-cols-2 gap-3">
-              <TextField control={editForm.control} name="startDate" label="Start Date" type="date" />
-              <NativeSelectField control={editForm.control} name="status" label="Status">
-                {USER_PLANT_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </NativeSelectField>
-            </div>
-            <TextAreaField control={editForm.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
-            <FormRootError message={editForm.formState.errors.root?.message} />
-            <DialogFooter>
-              <Button type="submit" disabled={!editForm.formState.isValid || updateMutation.isPending}>
-                {updateMutation.isPending ? 'Saving…' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </Form>
+          <UserPlantEditForm
+            open={open}
+            userPlant={userPlant}
+            onSuccess={() => onOpenChange(false)}
+          />
         ) : (
           <UserPlantForm
             open={open}
@@ -163,7 +85,16 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
             isPending={createMutation.isPending}
             showQuantity
             disabled={(needsGardenPicker && !selectedGardenId) || (needsBedPicker && !selectedBedId)}
-            onSubmit={async (values) => { await createMutation.mutateAsync(values); }}
+            onSubmit={async (values) => {
+              await createMutation.mutateAsync({
+                plant: values.plant,
+                variety: values.variety || undefined,
+                startDate: values.startDate || undefined,
+                status: values.status,
+                notes: values.notes || undefined,
+                quantity: parseInt(values.quantity, 10),
+              });
+            }}
           >
             {(needsGardenPicker || needsBedPicker) && (
               <div className="grid grid-cols-2 gap-3">
