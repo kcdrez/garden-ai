@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ExternalLinkIcon, Trash2Icon } from 'lucide-react';
-import { fetchBedPlacements, createBedPlacement, moveBedPlacement, deleteBedPlacement } from '@/api/beds';
+import { useBedPlacementActions } from '@/hooks/useBedPlacementActions';
 import { toFeet, formatDimensions } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
-import type { BedPlacement, Garden, GardenBed } from '@/types/gardens';
+import type { Garden, GardenBed } from '@/types/gardens';
 import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
 import PlacementCanvas from '@/components/shared/PlacementCanvas';
-import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
+import type { CanvasMenuItem } from '@/types/canvas';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface GardenGridProps {
@@ -18,48 +17,27 @@ interface GardenGridProps {
   beds: GardenBed[];
 }
 
-export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) {
-  const queryClient = useQueryClient();
+export default function GardenGrid({
+  gardenId,
+  garden,
+  beds,
+}: GardenGridProps) {
   const navigate = useNavigate();
-  const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
+  const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
-  const { data: placements = [], isLoading } = useQuery({
-    queryKey: ['bed-placements', gardenId],
-    queryFn: () => fetchBedPlacements(gardenId),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: ({ bedId, x, y }: { bedId: string; x: number; y: number }) =>
-      createBedPlacement(gardenId, { bed: bedId, x, y }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bed-placements', gardenId] });
-      setPlacingAt(null);
-    },
-  });
-
-  const moveMutation = useMutation({
-    mutationFn: ({ placementId, x, y }: { placementId: string; x: number; y: number }) =>
-      moveBedPlacement(gardenId, placementId, x, y),
-    onMutate: async ({ placementId, x, y }) => {
-      await queryClient.cancelQueries({ queryKey: ['bed-placements', gardenId] });
-      const previous = queryClient.getQueryData<BedPlacement[]>(['bed-placements', gardenId]);
-      queryClient.setQueryData<BedPlacement[]>(['bed-placements', gardenId], (old = []) =>
-        old.map((p) => (p.id === placementId ? { ...p, x, y } : p)),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['bed-placements', gardenId], context.previous);
-      }
-    },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['bed-placements', gardenId] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (placementId: string) => deleteBedPlacement(gardenId, placementId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bed-placements', gardenId] }),
-  });
+  const {
+    placements,
+    isLoading,
+    createPlacement,
+    movePlacement,
+    removePlacement,
+    isCreating,
+    createFailed,
+    createError,
+    resetCreate,
+  } = useBedPlacementActions(gardenId);
 
   if (garden.width == null || garden.length == null) return null;
   if (isLoading) return <LoadingSpinner />;
@@ -67,11 +45,13 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
   const gardenWidthFt = toFeet(garden.width, garden.unit);
   const gardenHeightFt = toFeet(garden.length, garden.unit);
 
-  const placementById = new Map<string, BedPlacement>(placements.map((p) => [p.id, p]));
-  const bedById = new Map<string, GardenBed>(beds.map((b) => [b.id, b]));
-  const unplacedBeds = beds.filter((b) => !placements.some((p) => p.bed === b.id));
+  const placementById = new Map(placements.map((p) => [p.id, p]));
+  const bedById = new Map(beds.map((b) => [b.id, b]));
+  const unplacedBeds = beds.filter(
+    (b) => !placements.some((p) => p.bed === b.id),
+  );
 
-  const items: CanvasItem[] = placements.map((p) => ({
+  const items = placements.map((p) => ({
     id: p.id,
     x: p.x,
     y: p.y,
@@ -82,7 +62,6 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
   function getMenuItems(placementId: string): CanvasMenuItem[] {
     const placement = placementById.get(placementId);
     const bed = placement ? bedById.get(placement.bed) : undefined;
-
     return [
       {
         label: 'Go to bed',
@@ -95,7 +74,7 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
         label: 'Remove from layout',
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
-        onClick: () => deleteMutation.mutate(placementId),
+        onClick: () => removePlacement(placementId),
       },
     ];
   }
@@ -109,12 +88,17 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
         renderItem={(item) => {
           const placement = placementById.get(item.id);
           const bed = placement ? bedById.get(placement.bed) : undefined;
-          const fontSize = Math.max(0.2, Math.min(item.widthFt, item.heightFt) * 0.18);
+          const fontSize = Math.max(
+            0.2,
+            Math.min(item.widthFt, item.heightFt) * 0.18,
+          );
           return (
             <>
               <rect
-                x={0} y={0}
-                width={item.widthFt} height={item.heightFt}
+                x={0}
+                y={0}
+                width={item.widthFt}
+                height={item.heightFt}
                 className="fill-primary/20 stroke-primary/50"
                 strokeWidth={0.06}
                 rx={0.12}
@@ -126,7 +110,11 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
                 dominantBaseline="middle"
                 fontSize={fontSize}
                 className="fill-foreground"
-                style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+                style={{
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                  letterSpacing: 0,
+                }}
               >
                 {bed?.name}
               </text>
@@ -138,7 +126,11 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
                   dominantBaseline="middle"
                   fontSize={fontSize * 0.8}
                   className="fill-muted-foreground"
-                  style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+                  style={{
+                    userSelect: 'none',
+                    pointerEvents: 'none',
+                    letterSpacing: 0,
+                  }}
                 >
                   {formatDimensions(bed)}
                 </text>
@@ -147,7 +139,7 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
           );
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
-        onMove={(placementId, x, y) => moveMutation.mutate({ placementId, x, y })}
+        onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
         getMenuItems={getMenuItems}
       />
 
@@ -163,7 +155,9 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
                 className="flex flex-col px-3 py-1.5 bg-primary/10 border border-primary/20 rounded text-xs"
               >
                 <span>{bed.name}</span>
-                <span className="text-muted-foreground">{formatDimensions(bed)}</span>
+                <span className="text-muted-foreground">
+                  {formatDimensions(bed)}
+                </span>
               </div>
             ))}
           </div>
@@ -175,14 +169,16 @@ export default function GardenGrid({ gardenId, garden, beds }: GardenGridProps) 
         onOpenChange={(open) => {
           if (!open) {
             setPlacingAt(null);
-            createMutation.reset();
+            resetCreate();
           }
         }}
         cell={placingAt}
         unplacedBeds={unplacedBeds}
-        onPlace={(bedId) => createMutation.mutate({ bedId, x: placingAt!.x, y: placingAt!.y })}
-        isPlacing={createMutation.isPending}
-        placeError={createMutation.isError ? getErrorMessage(createMutation.error) : null}
+        onPlace={(bedId) =>
+          createPlacement({ bedId, x: placingAt!.x, y: placingAt!.y })
+        }
+        isPlacing={isCreating}
+        placeError={createFailed ? getErrorMessage(createError) : null}
       />
     </>
   );
