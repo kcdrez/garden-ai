@@ -1,5 +1,5 @@
 import { renderHook, act } from '@/test/test-utils';
-import { sortItems, useSortedList } from './useSortedList';
+import { sortItems, applyCustomOrder, useSortedList } from './useSortedList';
 
 const items = [
   { id: '1', name: 'Banana', createdAt: '2024-01-03T00:00:00Z' },
@@ -32,6 +32,21 @@ describe('sortItems', () => {
     const original = [...items];
     sortItems(items, 'name-desc');
     expect(items).toEqual(original);
+  });
+});
+
+describe('applyCustomOrder', () => {
+  it('returns items in the order specified by the order array', () => {
+    expect(applyCustomOrder(items, ['3', '1', '2']).map((i) => i.name)).toEqual(['Cherry', 'Banana', 'Apple']);
+  });
+
+  it('appends items not in the order array to the end', () => {
+    const extra = { id: '4', name: 'Dragonfruit', createdAt: '2024-01-04T00:00:00Z' };
+    expect(applyCustomOrder([...items, extra], ['3', '1', '2']).map((i) => i.id)).toEqual(['3', '1', '2', '4']);
+  });
+
+  it('returns the original items unchanged when order is empty', () => {
+    expect(applyCustomOrder(items, [])).toEqual(items);
   });
 });
 
