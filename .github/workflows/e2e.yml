@@ -18,8 +18,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Start e2e stack
-        run: docker compose -f docker-compose.e2e.yml up -d --wait
-        timeout-minutes: 10
+        run: docker compose -f docker-compose.e2e.yml up -d
+
+      - name: Wait for backend
+        run: timeout 90 bash -c 'until curl -sf http://localhost:8001/api/health/; do sleep 2; done'
 
       - uses: actions/setup-node@v4
         with:

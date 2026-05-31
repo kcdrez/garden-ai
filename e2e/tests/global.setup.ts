@@ -23,8 +23,6 @@ async function waitForHealth(url: string, maxWaitMs = 60_000): Promise<void> {
   throw new Error(`Backend at ${url} did not become healthy within ${maxWaitMs}ms`);
 }
 
-setup.setTimeout(120_000);
-
 setup("seed database and authenticate", async () => {
   await waitForHealth(BACKEND_URL);
 
