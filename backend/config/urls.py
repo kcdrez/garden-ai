@@ -15,6 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from pathlib import Path
+
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
@@ -22,13 +24,20 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from users.views import CustomTokenObtainPairView
 
+_VERSION_FILE = Path(__file__).resolve().parent.parent / "VERSION"
+
 
 def health(request):
     return JsonResponse({"status": "ok"})
 
 
+def version(request):
+    return JsonResponse({"version": _VERSION_FILE.read_text().strip()})
+
+
 urlpatterns = [
     path("api/health/", health, name="health"),
+    path("api/version/", version, name="version"),
     path("admin/", admin.site.urls),
     path("api/", include("gardens.urls")),
     path("api/", include("plants.urls")),
