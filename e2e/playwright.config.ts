@@ -9,7 +9,6 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://localhost:5174",
-    storageState: path.join(__dirname, ".auth/user.json"),
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -20,7 +19,10 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(__dirname, ".auth/user.json"),
+      },
       dependencies: ["setup"],
     },
   ],
