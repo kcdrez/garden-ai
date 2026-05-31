@@ -33,6 +33,78 @@ function toSVGPoint(
   return { x: svgPt.x, y: svgPt.y };
 }
 
+function PlacementItemControls({
+  widthFt,
+  heightFt,
+  containerWidthFt,
+  onMenuOpen,
+  onResizePointerDown,
+}: {
+  widthFt: number;
+  heightFt: number;
+  containerWidthFt: number;
+  onMenuOpen: (x: number, y: number) => void;
+  onResizePointerDown?: (e: React.PointerEvent<SVGRectElement>) => void;
+}) {
+  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42));
+  const dotR = hs * 0.074;
+  const dotSpacing = hs * 0.2;
+  const buttonX = widthFt - hs;
+  const menuCx = buttonX + hs / 2;
+  const menuCy = hs / 2;
+  const resizeY = heightFt - hs;
+
+  return (
+    <>
+      <rect
+        x={buttonX}
+        y={0}
+        width={hs}
+        height={hs}
+        rx={hs * 0.22}
+        fill="rgba(0,0,0,0.55)"
+        stroke="rgba(255,255,255,0.45)"
+        strokeWidth={hs * 0.11}
+        style={{ cursor: 'pointer' }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onMenuOpen(e.clientX, e.clientY);
+        }}
+      />
+      <circle cx={menuCx - dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
+      <circle cx={menuCx}              cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
+      <circle cx={menuCx + dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
+
+      {onResizePointerDown && (
+        <g style={{ cursor: 'se-resize' }} onPointerDown={onResizePointerDown}>
+          <rect
+            x={buttonX}
+            y={resizeY}
+            width={hs}
+            height={hs}
+            rx={hs * 0.22}
+            fill="rgba(0,0,0,0.55)"
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth={hs * 0.11}
+          />
+          {/* Corner bracket pointing SE */}
+          <path
+            d={`M ${buttonX + hs * 0.52},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.52}`}
+            stroke="white"
+            strokeWidth={hs * 0.148}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            opacity={0.85}
+            pointerEvents="none"
+          />
+        </g>
+      )}
+    </>
+  );
+}
+
 function DraggableItem({
   item,
   containerWidthFt,
@@ -154,14 +226,6 @@ function DraggableItem({
     }
   }
 
-  // Scale handle to the canvas so it stays a consistent physical size across bed sizes
-  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42));
-  const dotR = hs * 0.074;
-  const dotSpacing = hs * 0.2;
-  const buttonX = size.w - hs;
-  const menuCx = buttonX + hs / 2;
-  const menuCy = hs / 2;
-  const resizeY = size.h - hs;
   const showControls = (isHovered || isMenuActive) && !isDragging && !isResizing;
 
   return (
@@ -183,56 +247,14 @@ function DraggableItem({
 
         {renderItem({ ...item, x: pos.x, y: pos.y, widthFt: size.w, heightFt: size.h })}
 
-        {/* SVG context menu button — top-right corner */}
         {showControls && (
-          <>
-            <rect
-              x={buttonX}
-              y={0}
-              width={hs}
-              height={hs}
-              rx={hs * 0.22}
-              fill="rgba(0,0,0,0.55)"
-              stroke="rgba(255,255,255,0.45)"
-              strokeWidth={hs * 0.11}
-              style={{ cursor: 'pointer' }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMenuOpen(item.id, e.clientX, e.clientY);
-              }}
-            />
-            <circle cx={menuCx - dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-            <circle cx={menuCx}              cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-            <circle cx={menuCx + dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-
-            {/* Resize handle — bottom-right corner, x-aligned with menu button */}
-            {onResize && (
-              <g style={{ cursor: 'se-resize' }} onPointerDown={handleResizePointerDown}>
-                <rect
-                  x={buttonX}
-                  y={resizeY}
-                  width={hs}
-                  height={hs}
-                  rx={hs * 0.22}
-                  fill="rgba(0,0,0,0.55)"
-                  stroke="rgba(255,255,255,0.45)"
-                  strokeWidth={hs * 0.11}
-                />
-                {/* Corner bracket pointing SE */}
-                <path
-                  d={`M ${buttonX + hs * 0.52},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.52}`}
-                  stroke="white"
-                  strokeWidth={hs * 0.148}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  opacity={0.85}
-                  pointerEvents="none"
-                />
-              </g>
-            )}
-          </>
+          <PlacementItemControls
+            widthFt={size.w}
+            heightFt={size.h}
+            containerWidthFt={containerWidthFt}
+            onMenuOpen={(x, y) => onMenuOpen(item.id, x, y)}
+            onResizePointerDown={onResize ? handleResizePointerDown : undefined}
+          />
         )}
       </g>
     </g>
