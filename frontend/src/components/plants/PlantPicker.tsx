@@ -42,6 +42,7 @@ function PlantPicker<
         <div className="relative">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
           <Input
+            aria-label="Search plants"
             placeholder="Search plants…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

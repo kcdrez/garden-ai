@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { BedSingleIcon } from 'lucide-react';
@@ -56,7 +56,13 @@ export default function BedItem({ gardenId, bed }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BedSingleIcon className="size-4 text-primary" />
-            {bed.name}
+            <Link
+              to={routes.bedDetail(gardenId, bed.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:underline"
+            >
+              {bed.name}
+            </Link>
           </CardTitle>
           <CardDescription>{formatDimensions(bed)}</CardDescription>
           <CardDescription>
@@ -64,7 +70,7 @@ export default function BedItem({ gardenId, bed }: Props) {
           </CardDescription>
           <CardAction>
             <CardActionsMenu
-              label="Bed actions"
+              label={`${bed.name} actions`}
               onEdit={() => setEditOpen(true)}
               onDelete={handleDelete}
               isDeleting={deleteMutation.isPending}

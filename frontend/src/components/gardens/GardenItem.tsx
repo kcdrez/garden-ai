@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LeafIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
@@ -52,7 +52,13 @@ export default function GardenItem({ garden }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LeafIcon className="size-4 text-primary" />
-            {garden.name}
+            <Link
+              to={routes.gardenDetail(garden.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:underline"
+            >
+              {garden.name}
+            </Link>
           </CardTitle>
           {garden.description && (
             <CardDescription className="line-clamp-2">
@@ -69,7 +75,7 @@ export default function GardenItem({ garden }: Props) {
           </CardDescription>
           <CardAction>
             <CardActionsMenu
-              label="Garden actions"
+              label={`${garden.name} actions`}
               onEdit={() => setEditOpen(true)}
               onDelete={handleDelete}
               isDeleting={deleteMutation.isPending}

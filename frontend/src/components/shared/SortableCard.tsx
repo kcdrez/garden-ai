@@ -22,7 +22,7 @@ export default function SortableCard({ id, disabled = false, children }: Props) 
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...(disabled ? {} : { ...attributes, ...listeners })}>
       {children}
     </div>
   );
