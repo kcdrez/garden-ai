@@ -17,12 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start e2e stack
-        run: docker compose -f docker-compose.e2e.yml up -d
-
-      - name: Wait for backend
-        run: timeout 90 bash -c 'until curl -sf http://localhost:8001/api/health/; do sleep 2; done'
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -36,6 +30,12 @@ jobs:
       - name: Install Playwright browsers
         working-directory: e2e
         run: npm run install:browsers -- --with-deps
+
+      - name: Start e2e stack
+        run: docker compose -f docker-compose.e2e.yml up -d
+
+      - name: Wait for backend
+        run: timeout 90 bash -c 'until curl -sf http://localhost:8001/api/health/; do sleep 2; done'
 
       - name: Run e2e tests
         working-directory: e2e

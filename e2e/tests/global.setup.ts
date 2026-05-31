@@ -26,7 +26,11 @@ async function waitForHealth(url: string, maxWaitMs = 60_000): Promise<void> {
 setup.setTimeout(120_000);
 
 setup("seed database and authenticate", async () => {
-  await waitForHealth(BACKEND_URL);
+  // In CI the workflow wait step already guarantees the backend is healthy.
+  // Locally (VS Code) there's no pre-flight, so we poll until ready.
+  if (!process.env.CI) {
+    await waitForHealth(BACKEND_URL);
+  }
 
   execSync(
     "docker compose -f docker-compose.e2e.yml exec -T backend python manage.py seed_test_data",
