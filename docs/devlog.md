@@ -2,6 +2,15 @@
 
 ---
 
+## 2026-05-31 — ~2 hours
+
+**Completed:**
+- Playwright e2e test suite — all 18 tests passing across auth, gardens, beds, and plants; fixed selector issues (card navigation links, dnd-kit aria-disabled propagation, PlantPicker label, canvas SVG targeting, dialog close animation timing, shared DB state); replaced `globalSetup` with a setup project so VS Code extension triggers seed + auth before individual tests
+
+**Next up:** AllBeds SRP refactor — extract BedGroupSection component (garden header + SortableGrid per group) to clean up the remaining inline complexity in AllBeds
+
+---
+
 ## 2026-05-29 — ~45 min
 
 **Completed:**
