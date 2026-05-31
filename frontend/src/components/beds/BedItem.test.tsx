@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { mockNavigate } from '@/test/test-setup';
 import { deleteBed } from '@/api/beds';
 import { mockBed } from '@/test/fixtures';
 import type { GardenBed } from '@/types/gardens';
@@ -64,13 +63,12 @@ describe('BedItem', () => {
     expect(screen.queryByTestId('bed-details')).not.toBeInTheDocument();
   });
 
-  it('navigates to the bed detail page when the card is clicked', async () => {
-    const user = userEvent.setup();
+  it('has a link to the bed detail page', () => {
     render(<BedItem gardenId="garden-1" bed={mockBed} />);
-
-    await user.click(screen.getByText('Raised Bed 1'));
-
-    expect(mockNavigate).toHaveBeenCalledWith('/gardens/garden-1/beds/bed-1');
+    expect(screen.getByRole('link', { name: 'Raised Bed 1' })).toHaveAttribute(
+      'href',
+      '/gardens/garden-1/beds/bed-1',
+    );
   });
 
   it('opens the edit dialog when Edit is clicked', async () => {

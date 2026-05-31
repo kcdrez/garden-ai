@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { mockNavigate } from '@/test/test-setup';
 import { deleteGarden } from '@/api/gardens';
 import { mockGarden } from '@/test/fixtures';
 import GardenItem from './GardenItem';
@@ -63,13 +62,12 @@ describe('GardenItem', () => {
     expect(screen.getByText('3 beds')).toBeInTheDocument();
   });
 
-  it('navigates to the garden detail page when the card is clicked', async () => {
-    const user = userEvent.setup();
+  it('has a link to the garden detail page', () => {
     render(<GardenItem garden={mockGarden} />);
-
-    await user.click(screen.getByText('Front Yard'));
-
-    expect(mockNavigate).toHaveBeenCalledWith('/gardens/garden-1');
+    expect(screen.getByRole('link', { name: 'Front Yard' })).toHaveAttribute(
+      'href',
+      '/gardens/garden-1',
+    );
   });
 
   it('opens the edit dialog when Edit is clicked', async () => {

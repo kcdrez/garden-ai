@@ -2,9 +2,20 @@
 
 ---
 
+## 2026-05-31 — ~2 hours
+
+**Completed:**
+
+- Playwright e2e test suite — all 18 tests passing across auth, gardens, beds, and plants; fixed selector issues (card navigation links, dnd-kit aria-disabled propagation, PlantPicker label, canvas SVG targeting, dialog close animation timing, shared DB state); replaced `globalSetup` with a setup project so VS Code extension triggers seed + auth before individual tests
+
+**Next up:** Semantic versioning — FE and BE version numbers in the app footer, auto-incremented on merge to `main` via GitHub Actions
+
+---
+
 ## 2026-05-29 — ~45 min
 
 **Completed:**
+
 - Sort order for gardens and beds — dropdown on all three list views (AllGardens, GardenDetail, AllBeds) with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; sort preference persisted to localStorage; custom order seeded from current sort on first use so list doesn't jump; added `@dnd-kit/sortable`
 - `SortableGrid<T>` generic component — owns DndContext + SortableContext + SortableCard wrapping; replaces duplicated DnD boilerplate across all three pages; pages now pass `items`, `sortMode`, `onReorder`, and `renderItem`
 - Tests — `useSortedList` (15 tests: all sort modes, localStorage persistence, custom seeding, reorder, edge cases), `usePlantActions` (10 tests: dialog state, clone/delete mutations, confirm flow, onDeleteSuccess callback), `SortDropdown`/`SortableCard`/`SortableGrid` component tests; page tests updated with sort assertions and `localStorage.clear()` in beforeEach; coverage up to 89.7% statements / 83.3% branches (all thresholds ≥3% clear)
@@ -16,6 +27,7 @@
 ## 2026-05-30 — ~1.5 hours
 
 **Completed:**
+
 - Observation list on `/plants` — "Observations" action added to `CardActionsMenu`; opens `PlantObservationsSheet` slide-in directly from the all-plants list without navigating to the plant detail page
 - Canvas button scaling — menu and resize handle buttons now scale proportionally with canvas size (`containerWidthFt * 0.034`) so they stay a consistent physical size on large beds
 - Plant canvas icons — `plantEmoji()` maps all 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets with emoji fallback; `BedGrid.renderItem` uses `<image>` when a PNG exists; tomato and squash icons generated via Ideogram; prompt and priority list of shared-emoji plants documented in `plants.ts`
@@ -28,6 +40,7 @@
 ## 2026-05-29 — ~1 hour
 
 **Completed:**
+
 - Resize plant on canvas — drag handle in bottom-right corner of placed items; `resizePlacement` API (PATCH width/height to existing endpoint); `resizeMutation` with optimistic updates in BedGrid; plant visual changed from `<circle>` to `<ellipse>` to fill the bounding box on non-square sizes; `lostpointercapture` replaces `pointerup` to handle out-of-window pointer release
 - Canvas button polish — menu button and resize handle both rounded rects, same size, pinned to right-edge column; corner bracket `⌟` icon on resize handle; white stroke on both buttons for dark mode visibility
 - PlacementCanvas cleanup — button/placement constants hoisted to module level; `resizeX` alias removed; `CanvasItem`/`CanvasMenuItem` moved from component file to `src/types/canvas.ts`; SRP split noted in CLAUDE.md planned improvements
@@ -39,6 +52,7 @@
 ## 2026-05-28 — ~2.75 hours
 
 **Completed:**
+
 - Canvas context menu hitbox bug fix — SVG `<g>` wrapper was creating a bounding-box hit area larger than the visible button; fixed by removing the wrapper and conditionally rendering flat sibling circles
 - Clone a plant — full-stack feature; backend `clone` action on `UserPlantViewSet`; frontend `cloneUserPlant` API call; `usePlantActions` hook centralises clone/delete/edit/move for single-plant components; available from canvas, bed plant list, all-plants list, and plant detail page
 - Bed detail refactor — `PlantListSection` removed; page is now canvas-only; observations accessible via a new `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opened from the canvas context menu; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places adjacent to source); unplaced plants section promoted with heading, zero state, "Create Plant" button, and per-chip actions menu
@@ -50,6 +64,7 @@
 ## 2026-05-27 — ~45 min
 
 **Completed:**
+
 - User profile page — `/profile` route with inline edit form (no slide-out drawer); fields: first name, last name, email, timezone (all IANA timezones in select)
 - Backend `UserProfileSerializer` — exposes User fields (`first_name`, `last_name`, `email`, `username` read-only) + `UserProfile.timezone` in one endpoint; email uniqueness validated on PATCH; `ProfileView` now targets `User` directly with `select_related('userprofile')`
 - NavBar account dropdown gets a "Profile" link
@@ -62,6 +77,7 @@
 ## 2026-05-27 — ~3 hours
 
 **Completed:**
+
 - Migrated from grid-based `PlacementGrid` (`@dnd-kit/core`) to freeform SVG `PlacementCanvas` — items positioned in feet coordinates, drag-and-drop via pointer capture, no grid snapping; replaces the old cell-based DnD system
 - Context menu (`...` hover button) on canvas placement items — replaces the old X remove button
 - BedGrid: Edit (opens UserPlantDialog), Move (opens MovePlantDialog), Delete (deleteUserPlant with confirm)
@@ -77,6 +93,7 @@
 ## 2026-05-26 — ~1.5 hours
 
 **Completed:**
+
 - AI integration (backend) — `ai` Django app with `AIConversation` + `AIMessage` models; serializers, viewset, and URLs; `context_builder.py` assembles garden/bed/plant hierarchy into a system prompt per scope; `ai_service.py` wraps OpenAI chat completions; conversation history capped at 20 messages per call; `gpt-4o-mini` default model; rate-limit hooks and spend cap discussed but deferred
 - AI integration (frontend) — `AiChatWidget` global floating button (bottom-right); panel with per-entity conversation history list, markdown-rendered assistant replies (`react-markdown` + `remark-gfm`), and auto-scroll; `useAiContext` hook maps current route to scope/entityId via `useMatches`; context resets on navigation
 
@@ -87,6 +104,7 @@
 ## 2026-05-26 — ~2 hours
 
 **Completed:**
+
 - Bulk plant creation — quantity spinner in add-plant dialog; backend creates N separate UserPlant records in a transaction; max 50
 - Add new plant from placement dialog — wizard step in PlacePlantDialog; click a cell, create a plant, it's immediately placed; no round-tripping back to the bed
 - Observation date bug fix — auto-logged status-change observation on UserPlant create now uses `startDate` if provided, falls back to today
@@ -102,6 +120,7 @@
 ## 2026-05-25 — ~1 hour
 
 **Completed:**
+
 - Drag-and-drop placement for garden grid — unplaced beds drag from a panel onto the grid; placed beds can be repositioned by dragging; click-to-place dialog retained as fallback
 - DnD UX improvements — bed footprint highlights green/red on hover cells; self-occupancy bug fixed (dragged bed's cells become valid drop targets); reposition blink fixed (single invalidation after delete+create)
 - Decided to leave grid DnD as-is and not invest further — eventual plan is to replace the grid system with a freeform canvas layout
@@ -113,6 +132,7 @@
 ## 2026-05-25 — ~1.5 hours
 
 **Completed:**
+
 - Forgot password flow — email-based reset via Django's token generator; two new endpoints (`POST /api/auth/password/reset/` and `/api/auth/password/reset/confirm/`); `ForgotPassword` and `ResetPassword` pages; "Forgot password?" link on login
 - Email sending via Resend — domain verified on kcdrez.com, SMTP configured in Railway; console backend for local dev with clean URL logging
 - Email required on registration — backend serializer + frontend schema updated
@@ -129,6 +149,7 @@
 ## 2026-05-25 — ~1.25 hours
 
 **Completed:**
+
 - Frontend branch coverage raised from 85.1% → 90.23% — added tests across BedGrid, GardenGrid, GardenDialog, BedDialog, UserPlantDialog, MovePlantDialog, BedEditForm, GardenDetail, BedDetail, PlantDetail, and API layers
 - CI coverage gates expanded — branches (85%), functions (90%), and lines (90%) now enforced alongside existing statements (90%) threshold
 
@@ -139,6 +160,7 @@
 ## 2026-05-25 — ~0.5 hours
 
 **Completed:**
+
 - Observation editing — backend PATCH endpoint (`observed_date` + `note` only, type locked); inline edit form in `ObservationList` with date + note fields side by side, save/cancel buttons right-aligned to match display mode; note shown for all observation types including `status_change`; 3 new backend tests
 
 **Next up:** Raise frontend coverage floor — branches (78%) and functions (88%) are below the planned 90% gate
@@ -148,6 +170,7 @@
 ## 2026-05-24 — ~1.5 hours
 
 **Completed:**
+
 - Transplant tracking — new `Observation.Type.TRANSPLANT` choice, `_record_transplant` helper in `UserPlantSerializer.update()` auto-logs "Moved from X to Y" when a plant's bed changes; migration applied; `ObservationList` renders transplant entries with an arrow icon
 - Fixed gunicorn hot-reload gap — identified that the dev backend runs gunicorn (not `runserver`), so Python file changes require a container restart to take effect
 - Fixed observations cache race condition — included `gardenId`/`bedId` in the PlantTimeline observations query key so a bed change naturally triggers a fresh fetch with the correct URL instead of racing with stale data
@@ -160,6 +183,7 @@
 ## 2026-05-23–24 — ~2.5 hours
 
 **Completed:**
+
 - Frontend unit tests — 23 test files, 331 tests covering all components: `GardenItem`, `BedItem`, `PlantItem`, `PlacementGrid`, `BedGrid`, `GardenGrid`, `PlantTimeline`, `PlantPicker`, `PlantListSection`, `ObservationList`, `ObservationForm`, `StatusChips`, `StatusBadge`, `BedDetails`, `CardActionsMenu`, `QueryState`, all dialog components (`GardenDialog`, `BedDialog`, `UserPlantDialog`, `MovePlantDialog`, `PlacePlantDialog`, `PlaceBedDialog`), and `NavBar`
 - Coverage reporting — `text-summary` reporter added to vitest config; CI enforces 90% statement floor via `npm run coverage`
 
@@ -170,6 +194,7 @@
 ## 2026-05-22 — ~2.5 hours
 
 **Completed:**
+
 - Plant detail page (`/plants/:plantId`) — full timeline, status chips, metadata card, edit/delete/move actions; completes the Garden → Bed → Plant hierarchy
 - Backend unit tests — 35 tests across gardens, beds, plants, placements, and observations; `make test` and `make coverage` targets added
 - GitHub Actions CI — backend tests run on every PR touching `backend/**`; branch ruleset blocks merges on failure
@@ -182,6 +207,7 @@
 ## 2026-05-22 — ~0.5 hours
 
 **Completed:**
+
 - `useConfirm` hook — `ConfirmProvider` mounts one global dialog at the app root (`main.tsx`); `useConfirm()` returns `confirm(options) => Promise<boolean>`; callers `await confirm(...)` and act on the result — no per-component dialog state or JSX needed
 - Confirmation on all destructive deletes — `GardenItem`, `BedItem`, `PlantItem`, `PlantListSection`, `GardenDetail` all use the hook; delete handlers extracted as named `handleDelete` functions per React convention
 
@@ -192,6 +218,7 @@
 ## 2026-05-22 — ~0.5 hours
 
 **Completed:**
+
 - `FormRootError` component — styled callout (border, background, `AlertCircleIcon`) replacing plain `<p>` root errors across all dialogs and auth pages
 - Fixed `nonFieldErrors` camelCase bug in `errors.ts` — `non_field_errors` checks updated to match camelCase API responses; fallback no longer leaks field key names to the user
 - Edit and delete actions on garden detail page — Edit opens `GardenDialog` pre-filled; Delete navigates back to `/gardens` on success; matches `BedDetail` button pattern
@@ -206,6 +233,7 @@
 ## 2026-05-22 — ~2 hours
 
 **Completed:**
+
 - `PlacementGrid` generic UI component extracted to `components/ui/` — shared by `BedGrid` (plant placements) and new `GardenGrid` (bed placements); owns CSS grid rendering, cell iteration, multi-cell span, empty cell button, hover-to-remove overlay
 - `BedGrid` refactored to thin data-fetching wrapper around `PlacementGrid`
 - `BedPlacement` model, serializer, viewset, and URLs — `GET/POST /api/gardens/:id/bed-placements/`, `DELETE /api/gardens/:id/bed-placements/:id/`; bounds validation in serializer
@@ -218,9 +246,11 @@
 **Next up:** Revisit form root error display UI — padding and layout are functional but visually rough; see repro steps below
 
 **Repro for form root error (resize validation):**
+
 1. Create a garden with dimensions e.g. 10 × 10 ft
 2. Place a bed in the layout (e.g. a 4 × 4 ft bed at position col 7, row 7)
 3. Edit the garden and reduce width or length to e.g. 5 × 5 ft → error should appear
+
 - Same pattern for bed → plant: place a plant on the bed grid, then shrink the bed so the plant goes out of bounds
 
 ---
@@ -228,6 +258,7 @@
 ## 2026-05-21 — ~4 hours
 
 **Completed:**
+
 - Full frontend code audit and cleanup — redundant code extracted, SRP enforced, naming standardized, type inconsistencies fixed:
   - `StatusBadge` component + `STATUS_CLASSES`/`statusLabel` centralized in `src/lib/plants.ts`
   - `groupByGarden` utility in `src/lib/beds.ts`; `getTodayISO()`/`formatObservationDate()` in `src/lib/dates.ts`
@@ -258,6 +289,7 @@
 ## 2026-05-21 — ~3 hours
 
 **Completed:**
+
 - `Garden` model — `length`, `width`, `unit` fields added; `UNIT_CHOICES` moved to module level (shared by `Garden` and `GardenBed`)
 - `GardenDialog` — merged `EditGardenDialog` into single create/edit component; inline form removed from gardens page
 - "Add" button consistency — all three "all" pages now have a header row with an Add button; `BedDialog.gardenId` and `UserPlantDialog.gardenId/bedId` made optional with inline selectors
@@ -282,6 +314,7 @@
 ## 2026-05-20 — ~2 hours
 
 **Completed:**
+
 - `PlantPlacement` model — `OneToOneField` → `UserPlant`, FK → `GardenBed`, `x/y/width/height` integers; sq-ft grid normalization (convert bed unit at render time); migration applied to Docker DB
 - `PlantPlacementSerializer` — bounds validation, user ownership check; `bed_grid_dimensions()` helper in serializers.py
 - `PlantPlacementViewSet` — list, create, partial_update, destroy; ownership via `_get_bed()`; URL routes nested under bed (`/api/gardens/:id/beds/:bedId/placements/`)
@@ -298,6 +331,7 @@
 ## 2026-05-20 — ~3 hours
 
 **Completed:**
+
 - `Observation` model — `user_plant` FK, `observed_date`, `type`, `note`, `previous_status`, `new_status`; ordered chronologically (`observed_date`, `created_at` ascending); `GET/POST /api/.../observations/` and `DELETE .../observations/:id/`
 - Auto-observation on status change — creation moved to `UserPlantSerializer.create()`/`update()` so it has access to the user's timezone for local date derivation
 - `UserProfile` model — `timezone` CharField, auto-created via `post_save` signal; `GET/PATCH /api/auth/profile/`; timezone sent by frontend as part of login and register payloads (no separate request)
@@ -314,6 +348,7 @@
 ## 2026-05-18 — ~1.5 hours
 
 **Completed:**
+
 - Move plant between beds — PATCH `bed` field on `UserPlant`; backend `validate_bed` enforces target bed ownership; `moveUserPlant` API fn; `MovePlantDialog` two-step wizard (pick existing bed or create a new one inline, no stacked dialogs); `CardActionsMenu` extended with optional `onMove` prop; wired into `BedDetail` and `AllPlants`
 - Full edit/delete/move actions on `AllPlants` page — previously a read-only list
 - UI fixes: native `<select>` down arrow replaced with custom `ChevronDownIcon` via `appearance-none` in `NativeSelectField`; `DropdownMenu` popup alignment fixed by removing `w-(--anchor-width)` from popup class; move dialog bed buttons given visible `border-border` so they read as selectable items
@@ -325,6 +360,7 @@
 ## 2026-05-17 — ~1 hour
 
 **Completed:**
+
 - Extracted `CardActionsMenu` to `components/ui/card-actions-menu.tsx` — shared edit/delete dropdown; replaces ~15 lines of repeated `DropdownMenu` boilerplate in `GardenItem` and `BedItem`
 - Extracted `bedHasDetails` utility to `src/lib/beds.ts` — replaces 4 copies of the inline `bed.facing || bed.avgSunlightHours != null || bed.soilType || bed.notes` condition; accepts optional `includeNotes` param for the compact (no-notes) variant
 - Renamed `BedMeta` component → `BedDetails` and `bedHasMeta` → `bedHasDetails` across all files
@@ -336,6 +372,7 @@
 ## 2026-05-17 — ~3 hours
 
 **Completed:**
+
 - View all beds page (`/beds`) — flat list grouped by garden; query key `['beds', 'all']`
 - View all plants page (`/plants`) — flat list with status badges and links to bed/garden
 - "Beds" and "Plants" nav links added
@@ -352,6 +389,7 @@
 ## 2026-05-17 — ~2 hours
 
 **Completed:**
+
 - Docker + Docker Compose — frontend, backend, and PostgreSQL all run with `docker compose up -d`; hot reload works in both services via volume mounts; DB healthcheck ensures backend waits for Postgres before starting
 - Fixed `requirements.txt` — `djangorestframework-simplejwt` was missing
 - Updated all three READMEs with Docker workflow and accurate stack info
@@ -365,6 +403,7 @@
 ## 2026-05-16 — ~4 hours
 
 **Completed:**
+
 - Bed detail page at `/gardens/:id/beds/:bedId` — dedicated bookmarkable page per bed with full metadata and plant management
 - Simplified bed cards on garden detail — clicking navigates to bed detail, edit/delete still accessible from dropdown
 - Plant catalog picker — searchable by name, filterable by category pills, selected plant chip persists across filter switches

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: garden_ai_e2e
+      POSTGRES_USER: garden_ai
+      POSTGRES_PASSWORD: password
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garden_ai -d garden_ai_e2e"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env.e2e
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8001/api
+    ports:
+      - "5174:5173"
+    depends_on:
+      backend:
+        condition: service_healthy

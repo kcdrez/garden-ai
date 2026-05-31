@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
   "css.validate": false,
-  "scss.validate": false
+  "scss.validate": false,
+  "playwright.configFile": "e2e/playwright.config.ts"
 }

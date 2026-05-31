@@ -235,6 +235,7 @@ These are explicitly out of scope, at least initially:
 - Observation list on `/plants` — "Observations" action in `CardActionsMenu` opens `PlantObservationsSheet` per plant without navigating away from the list
 - Plant canvas icons — `plantEmoji()` maps 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets (drop in `src/assets/garden_icons/`, add to `PLANT_IMAGES` in `src/lib/plants.ts`); Ideogram prompt and priority list of shared-emoji plants documented in the file; tomato and squash done
 - Sort order for gardens and beds — dropdown on AllGardens, GardenDetail, and AllBeds with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; `useSortedList` hook with localStorage persistence; `SortableGrid<T>` generic component owns all DnD boilerplate (DndContext + SortableContext + SortableCard); `@dnd-kit/sortable` added
+- E2E tests — Playwright against the full Docker stack (frontend + backend + DB); 18 tests covering auth, gardens, beds, and plants (create/edit/delete/place on canvas/observe); setup project replaces `globalSetup` so VS Code extension triggers seed + auth before individual tests; CI runs on every PR and merge to `main`
 
 ## 📋 Planned
 
@@ -264,13 +265,8 @@ These are explicitly out of scope, at least initially:
 
 ### Bug Fixes (tracked)
 
-### Testing
-
-- **Frontend e2e tests** — Playwright against the full local stack (Docker); cover critical paths: register, create garden/bed/plant, place plant on grid, add observation; run in CI on merge to `main`
-
 ### Deployment & Infrastructure
 
-- Playwright e2e tests running in CI against the full stack
 - Serve static/media files via S3
 - Advanced AWS: RDS (managed PostgreSQL), ElastiCache (Redis), ECS/Fargate (containerized backend)
 - **Semantic versioning** — separate FE and BE version numbers (e.g. `1.2.3`) displayed in the app footer; auto-incremented on every merge to `main` via GitHub Actions using `semantic-release` and conventional commits (`feat:`, `fix:`, `chore:`); FE version read from `package.json` at build time via Vite env var, BE version from a `VERSION` file or `pyproject.toml` exposed at `/api/version/`; frontend fetches BE version on load and renders both in a footer chip so it's easy to confirm a deploy went live without comparing SHAs
@@ -321,9 +317,6 @@ These are explicitly out of scope, at least initially:
 
 ### AI Integration
 
-- ~~OpenAI API integration (backend-controlled, not exposed directly to frontend)~~ ✅ shipped
-- ~~AI chat endpoint with conversation history (AIConversation model)~~ ✅ shipped
-- ~~Prompt builder and dynamic context assembly system~~ ✅ shipped
 - Rate limiting / per-user message quotas (basic daily cap + input length validation)
 - AI-powered garden recommendations
 - AI-powered plant compatibility analysis
