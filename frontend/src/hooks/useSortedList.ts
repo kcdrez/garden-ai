@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 
 export type SortMode = 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc' | 'custom';
@@ -91,6 +91,18 @@ export function useSortedList<T extends SortableItem>(
     },
     [storageKey],
   );
+
+  // Seed (or re-seed) the custom order when it's empty or fully stale (no stored IDs
+  // match any current item — happens when all items were deleted and recreated).
+  useEffect(() => {
+    if (sortMode !== 'custom' || items.length === 0) return;
+    const hasOverlap = customOrder.some((id) => items.some((item) => item.id === id));
+    if (customOrder.length === 0 || !hasOverlap) {
+      const seeded = sortItems(items, 'name-asc').map((i) => i.id);
+      setCustomOrder(seeded);
+      writeStorage(`${storageKey}-order`, seeded);
+    }
+  }, [sortMode, customOrder, items, storageKey]);
 
   const sorted = useMemo(() => {
     if (sortMode !== 'custom') return sortItems(items, sortMode);

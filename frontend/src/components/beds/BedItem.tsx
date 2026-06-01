@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { BedSingleIcon } from 'lucide-react';
+import { BedSingleIcon, GripVerticalIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { isCardNavigationSuppressed } from '@/lib/utils';
@@ -23,10 +23,11 @@ import { useConfirm } from '@/hooks/useConfirm';
 type Props = {
   gardenId: string;
   bed: GardenBed;
+  isDraggable?: boolean;
 };
 
 
-export default function BedItem({ gardenId, bed }: Props) {
+export default function BedItem({ gardenId, bed, isDraggable = false }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -55,7 +56,10 @@ export default function BedItem({ gardenId, bed }: Props) {
       <Card className="cursor-pointer hover:bg-muted/40 transition-colors" onClick={handleCardClick}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BedSingleIcon className="size-4 text-primary" />
+            {isDraggable
+              ? <GripVerticalIcon className="size-4 text-muted-foreground shrink-0" />
+              : <BedSingleIcon className="size-4 text-primary shrink-0" />
+            }
             <Link
               to={routes.bedDetail(gardenId, bed.id)}
               onClick={(e) => e.stopPropagation()}

@@ -32,7 +32,7 @@ export default function BedGroupSection({ gardenId, gardenName, beds, sortMode, 
         items={beds}
         sortMode={sortMode}
         onReorder={onReorder}
-        renderItem={(bed) => <BedItem gardenId={gardenId} bed={bed} />}
+        renderItem={(bed, isDraggable) => <BedItem gardenId={gardenId} bed={bed} isDraggable={isDraggable} />}
       />
     </section>
   );

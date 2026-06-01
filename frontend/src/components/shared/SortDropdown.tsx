@@ -14,7 +14,7 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'name-desc', label: 'Name (Z–A)' },
   { value: 'date-desc', label: 'Date Created (Newest)' },
   { value: 'date-asc', label: 'Date Created (Oldest)' },
-  { value: 'custom', label: 'Custom Order' },
+  { value: 'custom', label: 'Custom (Drag & Drop)' },
 ];
 
 export default function SortDropdown({ value, onChange, className }: Props) {

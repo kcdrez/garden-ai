@@ -38,7 +38,7 @@ export default function Gardens() {
           items={sorted}
           sortMode={sortMode}
           onReorder={handleReorder}
-          renderItem={(g) => <GardenItem garden={g} />}
+          renderItem={(g, isDraggable) => <GardenItem garden={g} isDraggable={isDraggable} />}
         />
       </QueryState>
 
