@@ -1,8 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 async function goToBedDetail(page: Page) {
-  await page.goto("/gardens");
-  await page.getByRole("link", { name: "Sunrise Garden" }).click();
+  await page.goto("/beds");
   await page.getByRole("link", { name: "Front Raised Bed" }).click();
 }
 
