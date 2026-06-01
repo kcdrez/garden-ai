@@ -8,7 +8,10 @@ from .models import AIConversation
 _PERSONA = (
     "You are a knowledgeable gardening assistant. "
     "Be specific and practical. Base your advice on the context provided. "
-    "If you don't know something, say so."
+    "If you don't know something, say so. "
+    "Plants are placed on a freeform square-foot canvas: coordinates are measured in feet from the "
+    "top-left corner of the bed, and each plant's footprint (width x height) is user-defined and "
+    "not snapped to a grid — a plant placed at 1.5 x 2.0 ft occupies that exact area."
 )
 
 
@@ -113,7 +116,10 @@ def _build_bed_context(bed: GardenBed) -> str:
 
         try:
             p = up.placement
-            lines.append(f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, {p.width} x {p.height} ft")
+            pos = f"Position: ({p.x:.1f}, {p.y:.1f}) ft from top-left, footprint: {p.width:.1f} x {p.height:.1f} ft"
+            if up.plant.default_spacing_ft:
+                pos += f" (catalog recommends {up.plant.default_spacing_ft} ft spacing)"
+            lines.append(pos)
         except PlantPlacement.DoesNotExist:
             lines.append("Not yet placed — user is planning to add this plant to the bed")
 
@@ -175,10 +181,13 @@ def _build_plant_context(user_plant: UserPlant) -> str:
     lines.append(status_line)
 
     if placement:
-        lines.append(
+        pos = (
             f"Position: ({placement.x:.1f}, {placement.y:.1f}) ft from top-left, "
-            f"{placement.width} x {placement.height} ft"
+            f"footprint: {placement.width:.1f} x {placement.height:.1f} ft"
         )
+        if plant.default_spacing_ft:
+            pos += f" (catalog recommends {plant.default_spacing_ft} ft spacing)"
+        lines.append(pos)
     else:
         lines.append("Not yet placed on canvas")
 

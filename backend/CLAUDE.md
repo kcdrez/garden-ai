@@ -70,6 +70,32 @@ Django monolith with modular apps:
 
 ---
 
+# 🤖 AI App (`ai/`)
+
+## Rate limiting
+
+Enforced in `AIConversationViewSet.message` before any processing: counts `AIMessage` records with `role=USER` for the current user where `created_at__date` equals today (UTC). Returns 429 with `{"detail": "..."}` if at or over `_DAILY_MESSAGE_LIMIT` (currently 20). Resets on UTC calendar day. See `/docs/production-notes.md` for what this would need to become in production.
+
+## Context builder (`ai/context_builder.py`)
+
+`build_context(conversation)` produces the system prompt for the OpenAI call. Three scopes, each with increasing detail:
+
+- **Garden scope** — garden name/description/dimensions, then each bed's metadata and a one-line plant summary (name + status). No placement coordinates.
+- **Bed scope** — garden + bed metadata (dimensions, facing, sunlight, soil), then per-plant detail: species, description, status, start date, placement, and up to 3 recent observations.
+- **Plant scope** — garden + bed metadata, other plants in the bed (name + status), then full plant detail: species, description, status, start date, placement, notes, and up to 10 recent observations.
+
+**Placement format** (bed and plant scope):
+```
+Position: (x, y) ft from top-left, footprint: W x H ft (catalog recommends N ft spacing)
+```
+- Coordinates and footprint are in feet, continuous (not grid-snapped)
+- `catalog recommends N ft spacing` is appended only when `Plant.default_spacing_ft` is set
+- The persona explicitly tells the model that placements are freeform and not grid-locked
+
+**When updating the context builder**, keep the persona in sync if the canvas model changes (e.g. sub-foot resolution, rotation).
+
+---
+
 # 🧫 Testing
 
 Testing is a learning goal for this project. As features mature, add:

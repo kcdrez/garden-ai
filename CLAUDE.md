@@ -4,6 +4,7 @@ This file provides project-wide context. Stack, conventions, and tooling details
 
 - Frontend: `/frontend/CLAUDE.md`
 - Backend: `/backend/CLAUDE.md`
+- Production considerations: `/docs/production-notes.md` — shortcuts consciously taken for the portfolio context, and what would need to change for a real production app
 
 ---
 
