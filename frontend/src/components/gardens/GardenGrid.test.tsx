@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { fetchBedPlacements, createBedPlacement, moveBedPlacement, deleteBedPlacement } from '@/api/beds';
+import { fetchBedPlacements, createBedPlacement, moveBedPlacement, deleteBedPlacement, deleteBed } from '@/api/beds';
 import { mockGarden, mockBed } from '@/test/fixtures';
 import GardenGrid from './GardenGrid';
 
@@ -9,6 +9,16 @@ vi.mock('@/api/beds', () => ({
   createBedPlacement: vi.fn(),
   moveBedPlacement: vi.fn(),
   deleteBedPlacement: vi.fn(),
+  deleteBed: vi.fn(),
+}));
+
+vi.mock('@/hooks/useConfirm', () => ({
+  useConfirm: () => vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/components/beds/BedDialog', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Edit Bed Dialog" /> : null,
 }));
 
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -50,6 +60,7 @@ const mockFetchBedPlacements = vi.mocked(fetchBedPlacements);
 const mockCreateBedPlacement = vi.mocked(createBedPlacement);
 const mockMoveBedPlacement = vi.mocked(moveBedPlacement);
 const mockDeleteBedPlacement = vi.mocked(deleteBedPlacement);
+const mockDeleteBed = vi.mocked(deleteBed);
 
 const garden = { ...mockGarden, length: 20, width: 20, unit: 'ft' as const };
 const placement = { id: 'bp-1', bed: 'bed-1', garden: 'garden-1', x: 0, y: 0, bedWidthFt: 4, bedHeightFt: 4, createdAt: '', updatedAt: '' };
@@ -66,6 +77,7 @@ describe('GardenGrid', () => {
     mockCreateBedPlacement.mockResolvedValue(placement);
     mockMoveBedPlacement.mockResolvedValue(placement);
     mockDeleteBedPlacement.mockResolvedValue(undefined);
+    mockDeleteBed.mockResolvedValue(undefined);
   });
 
   it('returns null when garden has no dimensions', () => {
@@ -92,11 +104,12 @@ describe('GardenGrid', () => {
     expect(screen.getByText('Raised Bed 1')).toBeInTheDocument();
   });
 
-  it('hides unplaced beds panel when all beds are placed', async () => {
+  it('shows zero state when all beds are placed', async () => {
     mockFetchBedPlacements.mockResolvedValue([placement]);
     renderGardenGrid();
     await screen.findByTestId('placement-canvas');
-    expect(screen.queryByText(/unplaced beds/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/unplaced beds/i)).toBeInTheDocument();
+    expect(screen.getByText(/all beds are placed/i)).toBeInTheDocument();
   });
 
   it('opens PlaceBedDialog when the canvas is clicked', async () => {
@@ -137,9 +150,29 @@ describe('GardenGrid', () => {
     mockFetchBedPlacements.mockResolvedValue([placement]);
     renderGardenGrid();
     await screen.findByTestId('canvas-item-bp-1');
-    await user.click(screen.getByRole('button', { name: /remove from layout bp-1/i }));
+    await user.click(screen.getByRole('button', { name: /Remove From Layout bp-1/i }));
     await waitFor(() => {
       expect(mockDeleteBedPlacement).toHaveBeenCalledWith('garden-1', 'bp-1');
+    });
+  });
+
+  it('opens BedDialog when Edit menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchBedPlacements.mockResolvedValue([placement]);
+    renderGardenGrid();
+    await screen.findByTestId('canvas-item-bp-1');
+    await user.click(screen.getByRole('button', { name: /^edit bp-1$/i }));
+    expect(screen.getByRole('dialog', { name: /edit bed dialog/i })).toBeInTheDocument();
+  });
+
+  it('calls deleteBed when Delete menu item is clicked', async () => {
+    const user = userEvent.setup();
+    mockFetchBedPlacements.mockResolvedValue([placement]);
+    renderGardenGrid();
+    await screen.findByTestId('canvas-item-bp-1');
+    await user.click(screen.getByRole('button', { name: /^delete bp-1$/i }));
+    await waitFor(() => {
+      expect(mockDeleteBed).toHaveBeenCalledWith('garden-1', 'bed-1');
     });
   });
 });
