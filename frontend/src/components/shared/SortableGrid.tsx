@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import type { SortMode } from '@/hooks/useSortedList';
@@ -20,6 +20,10 @@ export default function SortableGrid<T extends { id: string }>({
   renderItem,
   className,
 }: Props<T>) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -28,7 +32,7 @@ export default function SortableGrid<T extends { id: string }>({
   }
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
         <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
           {items.map((item) => (
