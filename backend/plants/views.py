@@ -69,6 +69,7 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
                 w, h = placement_fields["width"], placement_fields["height"]
                 PlantPlacement.objects.create(
                     user_plant=cloned,
+                    bed=original.bed,
                     x=max(0.0, min(placement_fields["x"], bed_w - w)),
                     y=max(0.0, min(placement_fields["y"], bed_h - h)),
                     width=w,

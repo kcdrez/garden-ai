@@ -199,6 +199,51 @@ class UserPlantAPITests(APITestCase):
         )
         self.assertFalse(PlantPlacement.objects.filter(user_plant=self.user_plant).exists())
 
+    # --- Clone ---
+
+    def _clone_url(self, garden_id, bed_id, plant_id):
+        return reverse("user-plant-clone", kwargs={"garden_id": garden_id, "bed_id": bed_id, "plant_id": plant_id})
+
+    def test_clone_creates_new_plant(self):
+        res = self.client.post(self._clone_url(self.garden.id, self.bed.id, self.user_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(UserPlant.objects.filter(bed=self.bed, plant=self.plant).count(), 2)
+
+    def test_clone_copies_fields(self):
+        self.user_plant.variety = "Cherry"
+        self.user_plant.notes = "fragile"
+        self.user_plant.save()
+        res = self.client.post(self._clone_url(self.garden.id, self.bed.id, self.user_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
+        self.assertEqual(clone.plant, self.plant)
+        self.assertEqual(clone.status, self.user_plant.status)
+        self.assertEqual(clone.variety, "Cherry")
+        self.assertEqual(clone.notes, "fragile")
+
+    def test_clone_with_placement_creates_placement_with_bed(self):
+        res = self.client.post(
+            self._clone_url(self.garden.id, self.bed.id, self.user_plant.id),
+            {"x": "1.0", "y": "1.0", "width": "1.0", "height": "1.0"},
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
+        placement = PlantPlacement.objects.get(user_plant=clone)
+        self.assertEqual(placement.bed, self.bed)
+        self.assertAlmostEqual(placement.x, 1.0)
+        self.assertAlmostEqual(placement.y, 1.0)
+
+    def test_clone_without_placement_data_creates_no_placement(self):
+        res = self.client.post(self._clone_url(self.garden.id, self.bed.id, self.user_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
+        self.assertFalse(PlantPlacement.objects.filter(user_plant=clone).exists())
+
+    def test_clone_other_users_plant_returns_404(self):
+        other_plant = UserPlant.objects.create(bed=self.other_bed, plant=self.plant, status="planted")
+        res = self.client.post(self._clone_url(self.other_garden.id, self.other_bed.id, other_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class PlantPlacementAPITests(APITestCase):
     def setUp(self):
