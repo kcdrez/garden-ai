@@ -12,7 +12,6 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import { auth } from './auth/auth';
-import { LoadingSpinner } from './components/ui/query-state';
 
 function requireAuth() {
   if (!auth.isLoggedIn()) return redirect('/login');
@@ -23,8 +22,9 @@ function Home() {
   return (
     <div className="text-center py-12">
       <h1>Welcome to Garden AI</h1>
-      <p className="text-muted-foreground">Manage and visualize your home garden layouts.</p>
-      <LoadingSpinner />
+      <p className="text-muted-foreground">
+        Manage and visualize your home garden layouts.
+      </p>
     </div>
   );
 }

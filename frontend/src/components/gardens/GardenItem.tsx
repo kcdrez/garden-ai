@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { LeafIcon } from 'lucide-react';
+import { LeafIcon, GripVerticalIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
 import { routes } from '@/lib/routes';
@@ -19,9 +19,10 @@ import { useConfirm } from '@/hooks/useConfirm';
 
 type Props = {
   garden: Garden;
+  isDraggable?: boolean;
 };
 
-export default function GardenItem({ garden }: Props) {
+export default function GardenItem({ garden, isDraggable = false }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -51,7 +52,10 @@ export default function GardenItem({ garden }: Props) {
       >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <LeafIcon className="size-4 text-primary" />
+            {isDraggable
+              ? <GripVerticalIcon className="size-4 text-muted-foreground shrink-0" />
+              : <LeafIcon className="size-4 text-primary shrink-0" />
+            }
             <Link
               to={routes.gardenDetail(garden.id)}
               onClick={(e) => e.stopPropagation()}

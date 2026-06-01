@@ -46,7 +46,7 @@ export default function GardenDetail() {
           items={sortedBeds}
           sortMode={sortMode}
           onReorder={handleReorder}
-          renderItem={(bed) => <BedItem gardenId={id!} bed={bed} />}
+          renderItem={(bed, isDraggable) => <BedItem gardenId={id!} bed={bed} isDraggable={isDraggable} />}
         />
       </QueryState>
 

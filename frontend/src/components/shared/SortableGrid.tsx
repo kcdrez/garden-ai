@@ -9,7 +9,7 @@ type Props<T extends { id: string }> = {
   items: T[];
   sortMode: SortMode;
   onReorder: (activeId: string, overId: string) => void;
-  renderItem: (item: T) => ReactNode;
+  renderItem: (item: T, isDraggable: boolean) => ReactNode;
   className?: string;
 };
 
@@ -37,7 +37,7 @@ export default function SortableGrid<T extends { id: string }>({
         <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
           {items.map((item) => (
             <SortableCard key={item.id} id={item.id} disabled={sortMode !== 'custom'}>
-              {renderItem(item)}
+              {renderItem(item, sortMode === 'custom')}
             </SortableCard>
           ))}
         </div>
