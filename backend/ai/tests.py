@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone as dt_timezone
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -31,7 +31,7 @@ class AIRateLimitTests(APITestCase):
                 content="test message",
             )
             if on_date is not None:
-                ts = datetime(on_date.year, on_date.month, on_date.day, tzinfo=dt_timezone.utc)
+                ts = datetime(on_date.year, on_date.month, on_date.day, tzinfo=UTC)
                 AIMessage.objects.filter(pk=msg.pk).update(created_at=ts)
 
     @patch("ai.views.send_message", return_value=("AI response", 10, 20))
