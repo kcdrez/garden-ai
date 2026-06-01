@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userPlantSchema, type UserPlantFormValues } from '@/schemas/plants';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
-import { USER_PLANT_STATUSES } from '@/types/plants';
 import type { UserPlant } from '@/types/plants';
 import { fetchPlants, updateUserPlant } from '@/api/plants';
 import { applyServerErrors } from '@/lib/errors';
@@ -11,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import { TextField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, TextAreaField } from '@/components/ui/form-fields';
 import PlantPicker from '@/components/plants/PlantPicker';
+import StatusPicker from '@/components/plants/StatusPicker';
 
 type Props = {
   open: boolean;
@@ -70,14 +70,8 @@ export default function UserPlantEditForm({ open, userPlant, onSuccess }: Props)
     <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
       <PlantPicker control={form.control} name="plant" plants={plants} />
       <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
-      <div className="grid grid-cols-2 gap-3">
-        <TextField control={form.control} name="startDate" label="Start Date" type="date" />
-        <NativeSelectField control={form.control} name="status" label="Status">
-          {USER_PLANT_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </NativeSelectField>
-      </div>
+      <TextField control={form.control} name="startDate" label="Start Date" type="date" />
+      <StatusPicker control={form.control} name="status" />
       <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
       <FormRootError message={form.formState.errors.root?.message} />
       <DialogFooter>

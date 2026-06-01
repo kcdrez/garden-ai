@@ -221,15 +221,15 @@ describe('PlacementCanvas', () => {
 
   it('renders zoom buttons for all levels', () => {
     render(<PlacementCanvas {...defaultProps} />);
-    for (const label of ['0.5×', '0.75×', '1×', '1.5×', '2×', '3×']) {
+    for (const label of ['0.25×', '0.5×', '1×', '2×', '3×']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
     }
   });
 
-  it('defaults to 0.75x zoom', () => {
+  it('defaults to 1x zoom', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} />);
     const svg = container.querySelector('svg')!;
-    expect(svg.style.width).toBe('75%');
+    expect(svg.style.width).toBe('100%');
   });
 
   it('changes SVG width when a zoom button is clicked', async () => {

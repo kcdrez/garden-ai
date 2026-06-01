@@ -15,7 +15,14 @@ export default function StatusChips({ gardenId, bedId, plant }: Props) {
   const changeStatus = useMutation({
     mutationFn: (status: UserPlantStatus) =>
       updateUserPlant(gardenId, bedId, plant.id, { status }),
-    onSuccess: () => {
+    onSuccess: (updatedPlant) => {
+      // Directly update known caches so the UI reflects the new status immediately,
+      // without waiting for a background refetch (staleTime: Infinity + initialData
+      // means the detail query may not refetch on its own after invalidation).
+      queryClient.setQueryData(['plants', 'user', 'detail', plant.id], updatedPlant);
+      queryClient.setQueryData<UserPlant[]>(['plants', 'user', bedId], (old) =>
+        old?.map((p) => (p.id === plant.id ? updatedPlant : p)) ?? old,
+      );
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
       queryClient.invalidateQueries({ queryKey: ['observations', plant.id] });
     },

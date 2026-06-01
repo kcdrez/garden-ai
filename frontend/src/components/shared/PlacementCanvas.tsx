@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 
-const ZOOM_LEVELS = [0.5, 0.75, 1, 1.5, 2, 3] as const;
+const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 3] as const;
 
 interface PlacementCanvasProps {
   widthFt: number;
@@ -20,6 +20,7 @@ interface PlacementCanvasProps {
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
   getMenuItems: (id: string) => CanvasMenuItem[];
   storageKey?: string;
+  defaultZoom?: (typeof ZOOM_LEVELS)[number];
   getItemLabel?: (id: string) => string;
 }
 
@@ -284,6 +285,7 @@ export default function PlacementCanvas({
   onResize,
   getMenuItems,
   storageKey,
+  defaultZoom = 1,
   getItemLabel,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -297,7 +299,7 @@ export default function PlacementCanvas({
         return parsed as (typeof ZOOM_LEVELS)[number];
       }
     }
-    return 0.75;
+    return defaultZoom;
   });
 
   function handleZoomChange(level: (typeof ZOOM_LEVELS)[number]) {

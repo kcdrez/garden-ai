@@ -16,20 +16,20 @@ vi.mock('@/hooks/useConfirm', () => ({
 vi.mock('@/components/ui/card-actions-menu', () => ({
   default: ({
     onEdit,
-    onClone,
+    onDuplicate,
     onMove,
     onObservations,
     onDelete,
   }: {
     onEdit: () => void;
-    onClone?: () => void;
+    onDuplicate?: () => void;
     onMove?: () => void;
     onObservations?: () => void;
     onDelete: () => void;
   }) => (
     <>
       <button onClick={onEdit}>Edit</button>
-      {onClone && <button onClick={onClone}>Clone</button>}
+      {onDuplicate && <button onClick={onDuplicate}>Duplicate</button>}
       {onMove && <button onClick={onMove}>Move to Bed</button>}
       {onObservations && <button onClick={onObservations}>Observations</button>}
       <button onClick={onDelete}>Delete</button>
@@ -132,12 +132,12 @@ describe('PlantItem', () => {
     await waitFor(() => expect(deleteUserPlant).not.toHaveBeenCalled());
   });
 
-  it('calls cloneUserPlant when Clone is clicked', async () => {
+  it('calls cloneUserPlant when Duplicate is clicked', async () => {
     const user = userEvent.setup();
     vi.mocked(cloneUserPlant).mockResolvedValueOnce(mockUserPlant);
     render(<ul><PlantItem plant={mockUserPlant} /></ul>);
 
-    await user.click(screen.getByRole('button', { name: /clone/i }));
+    await user.click(screen.getByRole('button', { name: /duplicate/i }));
 
     await waitFor(() =>
       expect(cloneUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1'),

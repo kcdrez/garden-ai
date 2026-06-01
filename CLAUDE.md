@@ -242,6 +242,7 @@ These are explicitly out of scope, at least initially:
 - Canvas zoom — `PlacementCanvas` has zoom controls (0.5×, 0.75×, 1×, 1.5×, 2×, 3×) defaulting to 0.75×; SVG CSS-scales inside an `overflow-x-auto` container; buttons stay constant pixel size via `hs / zoom`; production-grade alternative (viewBox pan+zoom) documented in `/docs/production-notes.md`
 - Canvas UX polish — "Remove From Layout" label (consistent MinusCircleIcon, Title Case) in both grids; zoom persists to localStorage per canvas via `storageKey` prop; hover tooltip (SVG `<title>`) via `getItemLabel` prop; bed context menu in `GardenGrid` extended with Edit and Delete
 - Garden detail refactor — canvas-only layout matching BedDetail; "Garden Beds" card grid and sort removed; "Add Bed" + "Unplaced Beds" h2 promoted into `GardenGrid`; garden dimensions shown in header; "Layout" sub-header added
+- Canvas + form UX polish — variety text label inside plant ellipse on bed canvas (variety-only, icon shifts up, letterSpacing 0); `StatusPicker` pill component replaces status dropdown in all plant forms; `PlantPicker` shows plant image/emoji in list rows and selected badge; zoom levels updated to `[0.25, 0.5, 1, 2, 3]` with smart bed-area default; BedGrid edit split from create (edit → `PlantEditForm` sheet); "Clone" renamed "Duplicate" everywhere; status UI bug fixed (frozen state in BedGrid + `setQueryData` in `StatusChips`); start date defaults to today in create form
 
 ## 📋 Planned
 

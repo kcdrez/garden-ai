@@ -52,6 +52,11 @@ vi.mock('@/components/plants/PlacePlantDialog', () => ({
 
 vi.mock('@/components/plants/UserPlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Create Plant Form" /> : null,
+}));
+
+vi.mock('@/components/plants/PlantEditForm', () => ({
+  default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Edit Plant Form" /> : null,
 }));
 
@@ -66,15 +71,15 @@ vi.mock('@/components/plants/PlantObservationsSheet', () => ({
 }));
 
 vi.mock('@/components/ui/card-actions-menu', () => ({
-  default: ({ onEdit, onClone, onMove, onDelete }: {
+  default: ({ onEdit, onDuplicate, onMove, onDelete }: {
     onEdit: () => void;
-    onClone?: () => void;
+    onDuplicate?: () => void;
     onMove?: () => void;
     onDelete: () => void;
   }) => (
     <div>
       <button onClick={onEdit}>Edit chip</button>
-      {onClone && <button onClick={onClone}>Clone chip</button>}
+      {onDuplicate && <button onClick={onDuplicate}>Duplicate chip</button>}
       {onMove && <button onClick={onMove}>Move chip</button>}
       <button onClick={onDelete}>Delete chip</button>
     </div>
@@ -230,12 +235,12 @@ describe('BedGrid', () => {
     // navigation is "Not implemented" in jsdom — confirmed by the warning in test output
   });
 
-  it('calls cloneUserPlant with placement coords when canvas Clone is clicked', async () => {
+  it('calls cloneUserPlant with placement coords when canvas Duplicate is clicked', async () => {
     const user = userEvent.setup();
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('canvas-item-pl-1');
-    await user.click(screen.getByRole('button', { name: /clone pl-1/i }));
+    await user.click(screen.getByRole('button', { name: /duplicate pl-1/i }));
     await waitFor(() => {
       expect(mockCloneUserPlant).toHaveBeenCalledWith(
         'garden-1', 'bed-1', 'plant-1',
@@ -269,10 +274,10 @@ describe('BedGrid', () => {
     renderBedGrid();
     await screen.findByTestId('placement-canvas');
     await user.click(screen.getByRole('button', { name: /create plant/i }));
-    expect(screen.getByRole('dialog', { name: /edit plant form/i })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /create plant form/i })).toBeInTheDocument();
   });
 
-  it('opens UserPlantDialog when unplaced chip Edit is clicked', async () => {
+  it('opens PlantEditForm when unplaced chip Edit is clicked', async () => {
     const user = userEvent.setup();
     renderBedGrid();
     await screen.findByText('Tomato');
@@ -280,11 +285,11 @@ describe('BedGrid', () => {
     expect(screen.getByRole('dialog', { name: /edit plant form/i })).toBeInTheDocument();
   });
 
-  it('calls cloneUserPlant when unplaced chip Clone is clicked', async () => {
+  it('calls cloneUserPlant when unplaced chip Duplicate is clicked', async () => {
     const user = userEvent.setup();
     renderBedGrid();
     await screen.findByText('Tomato');
-    await user.click(screen.getByRole('button', { name: /clone chip/i }));
+    await user.click(screen.getByRole('button', { name: /duplicate chip/i }));
     await waitFor(() => {
       expect(mockCloneUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1', undefined);
     });

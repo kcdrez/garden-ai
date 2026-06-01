@@ -54,17 +54,17 @@ describe('CardActionsMenu', () => {
     expect(onDelete).toHaveBeenCalledOnce();
   });
 
-  it('renders Clone when onClone is provided', () => {
-    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /clone/i })).toBeInTheDocument();
+  it('renders Duplicate when onDuplicate is provided', () => {
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onDuplicate={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /duplicate/i })).toBeInTheDocument();
   });
 
-  it('calls onClone when Clone is clicked', async () => {
+  it('calls onDuplicate when Duplicate is clicked', async () => {
     const user = userEvent.setup();
-    const onClone = vi.fn();
-    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onClone={onClone} />);
-    await user.click(screen.getByRole('button', { name: /clone/i }));
-    expect(onClone).toHaveBeenCalledOnce();
+    const onDuplicate = vi.fn();
+    render(<CardActionsMenu onEdit={vi.fn()} onDelete={vi.fn()} onDuplicate={onDuplicate} />);
+    await user.click(screen.getByRole('button', { name: /duplicate/i }));
+    expect(onDuplicate).toHaveBeenCalledOnce();
   });
 
   it('renders Move to Another Bed when onMove is provided', () => {

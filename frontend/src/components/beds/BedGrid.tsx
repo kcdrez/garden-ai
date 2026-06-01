@@ -10,6 +10,7 @@ import type { GardenBed } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
 import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
+import PlantEditForm from '@/components/plants/PlantEditForm';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
 import PlantObservationsSheet from '@/components/plants/PlantObservationsSheet';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
@@ -30,9 +31,9 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const navigate = useNavigate();
   const confirm = useConfirm();
   const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
-  const [editingPlant, setEditingPlant] = useState<UserPlant | null>(null);
-  const [movingPlant, setMovingPlant] = useState<UserPlant | null>(null);
-  const [observingPlant, setObservingPlant] = useState<UserPlant | null>(null);
+  const [editingPlantId, setEditingPlantId] = useState<string | null>(null);
+  const [movingPlantId, setMovingPlantId] = useState<string | null>(null);
+  const [observingPlantId, setObservingPlantId] = useState<string | null>(null);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
 
   const {
@@ -56,10 +57,19 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
   const widthFt = toFeet(bed.width, bed.unit);
   const heightFt = toFeet(bed.length, bed.unit);
+  const areaSqFt = widthFt * heightFt;
+  const smartDefaultZoom = areaSqFt <= 6 ? 0.25 : areaSqFt <= 20 ? 0.5 : 1;
 
   const userPlantById = new Map<string, UserPlant>(userPlants.map((p) => [p.id, p]));
   const placementById = new Map(placements.map((p) => [p.id, p]));
   const unplacedPlants = userPlants.filter((p) => !placements.some((pl) => pl.userPlant === p.id));
+
+  // Derive live plant references from the current userPlants list so that
+  // any re-render triggered by a mutation (e.g. status change) propagates
+  // into open sheets/dialogs without needing to reopen them.
+  const editingPlant = editingPlantId ? (userPlantById.get(editingPlantId) ?? null) : null;
+  const movingPlant = movingPlantId ? (userPlantById.get(movingPlantId) ?? null) : null;
+  const observingPlant = observingPlantId ? (userPlantById.get(observingPlantId) ?? null) : null;
 
   const items: CanvasItem[] = placements.map((p) => ({
     id: p.id,
@@ -87,15 +97,15 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       {
         label: 'Observations',
         icon: <ClipboardListIcon className="size-4" />,
-        onClick: () => { if (plant) setObservingPlant(plant); },
+        onClick: () => { if (plant) setObservingPlantId(plant.id); },
       },
       {
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
-        onClick: () => { if (plant) setEditingPlant(plant); },
+        onClick: () => { if (plant) setEditingPlantId(plant.id); },
       },
       {
-        label: 'Clone',
+        label: 'Duplicate',
         icon: <CopyIcon className="size-4" />,
         onClick: () => {
           if (!plant) return;
@@ -110,7 +120,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       {
         label: 'Move to Another Bed',
         icon: <ArrowRightLeftIcon className="size-4" />,
-        onClick: () => { if (plant) setMovingPlant(plant); },
+        onClick: () => { if (plant) setMovingPlantId(plant.id); },
       },
       {
         label: 'Delete',
@@ -151,8 +161,15 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           const cy = ry;
           const imgSrc = plant ? plantImage(plant.plantName) : null;
           const emoji = plant ? plantEmoji(plant.plantName, plant.plantCategory) : '🌱';
-          const emojiFontSize = Math.min(rx, ry) * 1.6;
-          const imgSize = Math.min(item.widthFt, item.heightFt) * 0.85;
+
+          const canvasLabel = plant?.variety ?? '';
+          // Shift icon upward only when a variety label is present
+          const iconCy = canvasLabel ? cy - ry * 0.2 : cy;
+          const emojiFontSize = Math.min(rx, ry) * 1.3;
+          const imgSize = Math.min(item.widthFt, item.heightFt) * 0.65;
+          const labelFontSize = Math.min(item.widthFt, item.heightFt) * 0.15;
+          const truncatedLabel = canvasLabel.length > 10 ? canvasLabel.slice(0, 9) + '…' : canvasLabel;
+
           return (
             <>
               <ellipse
@@ -165,7 +182,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
                 <image
                   href={imgSrc}
                   x={cx - imgSize / 2}
-                  y={cy - imgSize / 2}
+                  y={iconCy - imgSize / 2}
                   width={imgSize}
                   height={imgSize}
                   preserveAspectRatio="xMidYMid meet"
@@ -173,13 +190,27 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
                 />
               ) : (
                 <text
-                  x={cx} y={cy}
+                  x={cx} y={iconCy}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fontSize={emojiFontSize}
                   style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
                 >
                   {emoji}
+                </text>
+              )}
+              {truncatedLabel && (
+                <text
+                  x={cx}
+                  y={cy + ry * 0.62}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize={labelFontSize}
+                  fill="currentColor"
+                  opacity={0.85}
+                  style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+                >
+                  {truncatedLabel}
                 </text>
               )}
             </>
@@ -190,6 +221,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         onResize={(placementId, widthFt, heightFt) => resizePlacement({ placementId, widthFt, heightFt })}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-bed-${bedId}`}
+        defaultZoom={smartDefaultZoom}
         getItemLabel={(placementId) => {
           const placement = placementById.get(placementId);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
@@ -228,9 +260,9 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
                 {plant.variety && <span className="text-muted-foreground">{plant.variety}</span>}
                 <CardActionsMenu
                   label={`${plant.plantName} actions`}
-                  onEdit={() => setEditingPlant(plant)}
-                  onClone={() => clonePlant({ plantId: plant.id })}
-                  onMove={() => setMovingPlant(plant)}
+                  onEdit={() => setEditingPlantId(plant.id)}
+                  onDuplicate={() => clonePlant({ plantId: plant.id })}
+                  onMove={() => setMovingPlantId(plant.id)}
                   onDelete={() => handleUnplacedDelete(plant)}
                   isDeleting={isDeleting}
                 />
@@ -267,21 +299,23 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       <UserPlantDialog
         gardenId={gardenId}
         bedId={bedId}
-        open={addPlantOpen || !!editingPlant}
-        userPlant={editingPlant ?? undefined}
-        onOpenChange={(open) => {
-          if (!open) {
-            setAddPlantOpen(false);
-            setEditingPlant(null);
-          }
-        }}
+        open={addPlantOpen}
+        onOpenChange={(open) => { if (!open) setAddPlantOpen(false); }}
       />
+
+      {editingPlant && (
+        <PlantEditForm
+          userPlant={editingPlant}
+          open
+          onOpenChange={(open) => { if (!open) setEditingPlantId(null); }}
+        />
+      )}
 
       {movingPlant && (
         <MovePlantDialog
           userPlant={movingPlant}
           open
-          onOpenChange={(open) => { if (!open) setMovingPlant(null); }}
+          onOpenChange={(open) => { if (!open) setMovingPlantId(null); }}
         />
       )}
 
@@ -291,7 +325,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           gardenId={gardenId}
           bedId={bedId}
           open
-          onOpenChange={(open) => { if (!open) setObservingPlant(null); }}
+          onOpenChange={(open) => { if (!open) setObservingPlantId(null); }}
         />
       )}
     </>

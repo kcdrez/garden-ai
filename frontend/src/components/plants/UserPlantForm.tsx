@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { USER_PLANT_STATUSES } from '@/types/plants';
 import { userPlantCreateSchema, type UserPlantCreateFormValues } from '@/schemas/plants';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { fetchPlants } from '@/api/plants';
@@ -11,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
+import { TextField, NumberField, TextAreaField } from '@/components/ui/form-fields';
 import PlantPicker from '@/components/plants/PlantPicker';
+import StatusPicker from '@/components/plants/StatusPicker';
 
 type Props = {
   open: boolean;
@@ -27,7 +27,7 @@ type Props = {
 const getDefaultValues = (): UserPlantCreateFormValues => ({
   plant: '',
   variety: '',
-  startDate: '',
+  startDate: new Date().toISOString().slice(0, 10),
   status: 'planned',
   notes: '',
   quantity: '1',
@@ -79,14 +79,8 @@ export default function UserPlantForm({
         <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <TextField control={form.control} name="startDate" label="Start Date" type="date" />
-        <NativeSelectField control={form.control} name="status" label="Status">
-          {USER_PLANT_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </NativeSelectField>
-      </div>
+      <TextField control={form.control} name="startDate" label="Start Date" type="date" />
+      <StatusPicker control={form.control} name="status" />
 
       <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
 

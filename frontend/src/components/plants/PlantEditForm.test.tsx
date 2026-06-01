@@ -34,8 +34,8 @@ describe('PlantEditForm', () => {
   it('pre-fills the status from the plant', async () => {
     render(<PlantEditForm userPlant={mockUserPlant} open={true} onOpenChange={onOpenChange} />);
 
-    const statusSelect = await screen.findByRole('combobox', { name: /status/i });
-    expect((statusSelect as HTMLSelectElement).value).toBe('growing');
+    const growingButton = await screen.findByRole('button', { name: /growing/i });
+    expect(growingButton).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('calls updateUserPlant with the updated values on submit', async () => {

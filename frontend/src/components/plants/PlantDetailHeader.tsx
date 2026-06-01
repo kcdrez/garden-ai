@@ -58,7 +58,7 @@ export default function PlantDetailHeader({ plant }: Props) {
             onClick={() => cloneMutation.mutate()}
           >
             <CopyIcon className="size-4" />
-            Clone
+            Duplicate
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <PencilIcon className="size-4" />

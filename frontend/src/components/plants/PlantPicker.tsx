@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useController, type Control, type FieldValues, type FieldPath } from 'react-hook-form';
-import { SearchIcon, CheckIcon, LeafIcon } from 'lucide-react';
+import { SearchIcon, CheckIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Plant, PlantCategory } from '@/types/plants';
 import { PLANT_CATEGORIES } from '@/types/plants';
+import { plantEmoji, plantImage } from '@/lib/plants';
 import { Input } from '@/components/ui/input';
 
 type Props<
@@ -82,7 +83,10 @@ function PlantPicker<
 
         {selectedPlant ? (
           <div className="flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-primary/10 text-primary w-fit">
-            <LeafIcon className="size-3 shrink-0" />
+            {plantImage(selectedPlant.commonName)
+              ? <img src={plantImage(selectedPlant.commonName)!} className="size-4 object-contain" />
+              : <span className="text-sm leading-none" style={{ letterSpacing: 0 }}>{plantEmoji(selectedPlant.commonName, selectedPlant.category)}</span>
+            }
             <span className="font-medium">{selectedPlant.commonName}</span>
             <span className="text-primary/60 capitalize">{selectedPlant.category}</span>
           </div>
@@ -107,7 +111,13 @@ function PlantPicker<
                         isSelected ? 'bg-primary/10 font-medium' : 'hover:bg-muted',
                       )}
                     >
-                      <span>{plant.commonName}</span>
+                      <span className="flex items-center gap-2">
+                        {plantImage(plant.commonName)
+                          ? <img src={plantImage(plant.commonName)!} className="size-4 object-contain shrink-0" />
+                          : <span className="text-base leading-none" style={{ letterSpacing: 0 }}>{plantEmoji(plant.commonName, plant.category)}</span>
+                        }
+                        <span>{plant.commonName}</span>
+                      </span>
                       <span className="flex items-center gap-2 shrink-0">
                         <span className="text-xs text-muted-foreground capitalize">
                           {plant.category}

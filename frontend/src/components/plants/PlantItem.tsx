@@ -47,7 +47,7 @@ export default function PlantItem({ plant }: Props) {
         <CardActionsMenu
           label="Plant actions"
           onEdit={() => setEditOpen(true)}
-          onClone={() => cloneMutation.mutate()}
+          onDuplicate={() => cloneMutation.mutate()}
           onMove={() => setMoveOpen(true)}
           onObservations={() => setObservationsOpen(true)}
           onDelete={handleDelete}

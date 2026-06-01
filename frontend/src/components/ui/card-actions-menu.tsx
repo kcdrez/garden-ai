@@ -11,13 +11,13 @@ type Props = {
   onEdit: () => void;
   onDelete: () => void;
   onMove?: () => void;
-  onClone?: () => void;
+  onDuplicate?: () => void;
   onObservations?: () => void;
   isDeleting?: boolean;
   label?: string;
 };
 
-export default function CardActionsMenu({ onEdit, onDelete, onMove, onClone, onObservations, isDeleting = false, label }: Props) {
+export default function CardActionsMenu({ onEdit, onDelete, onMove, onDuplicate, onObservations, isDeleting = false, label }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -31,10 +31,10 @@ export default function CardActionsMenu({ onEdit, onDelete, onMove, onClone, onO
           <PencilIcon />
           Edit
         </DropdownMenuItem>
-        {onClone && (
-          <DropdownMenuItem onClick={onClone}>
+        {onDuplicate && (
+          <DropdownMenuItem onClick={onDuplicate}>
             <CopyIcon />
-            Clone
+            Duplicate
           </DropdownMenuItem>
         )}
         {onMove && (

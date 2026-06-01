@@ -54,7 +54,7 @@ describe('UserPlantEditForm', () => {
     expect(await screen.findByRole('button', { name: /tomato/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/variety/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/start date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/status/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /planned/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
   });
 
@@ -116,6 +116,6 @@ describe('UserPlantEditForm', () => {
     expect(screen.getByLabelText(/variety/i)).toHaveValue('Cherry');
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Planted by the fence');
     expect(screen.getByLabelText(/start date/i)).toHaveValue('2024-03-01');
-    expect(screen.getByLabelText(/status/i)).toHaveValue('growing');
+    expect(screen.getByRole('button', { name: /growing/i })).toHaveAttribute('aria-pressed', 'true');
   });
 });

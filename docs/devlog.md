@@ -2,6 +2,23 @@
 
 ---
 
+## 2026-06-01 — ~1.5 hours
+
+**Completed:**
+
+- Status update bug fixed — `BedGrid` now stores plant IDs (not full objects) for `observingPlantId`/`editingPlantId`/`movingPlantId`; live plant derived from `userPlantById` on each render so status changes propagate into open sheets; `StatusChips` also calls `setQueryData` directly for immediate cache update without waiting on refetch
+- Edit form on bed page is now a sheet — `BedGrid` splits create/edit: `UserPlantDialog` handles create only, `PlantEditForm` (existing sheet) handles edit
+- Clone → Duplicate — renamed across all UI surfaces (`BedGrid`, `CardActionsMenu`, `PlantItem`, `PlantDetailHeader`)
+- Start date defaults to today — `UserPlantForm` create form pre-fills `startDate` with today so newly created plants always have a date; edit form pre-populated correctly as a result
+- Canvas variety label — variety name rendered as text inside the ellipse on `BedGrid` canvas; only shown when variety exists; icon shifts up to make room; `letterSpacing: 0`; image size reduced slightly to accommodate label
+- `StatusPicker` component — pill-based RHF-controlled status selector (`aria-pressed` for accessibility) replaces `NativeSelectField` for status in `UserPlantForm`, `PlantEditForm`, and `UserPlantEditForm`; consistent with `StatusChips` in the timeline
+- PlantPicker emoji/image — plant's PNG image (or emoji fallback) shown in the scrollable list and selected badge; image-first, emoji fallback
+- Zoom levels updated — `PlacementCanvas` levels changed to `[0.25, 0.5, 1, 2, 3]`; new `defaultZoom` prop; `BedGrid` computes smart default from bed area (≤6 sq ft → 0.25×, ≤20 → 0.5×, otherwise 1×)
+
+**Next up:** Resize beds on the garden layout canvas — `GardenGrid` doesn't pass `onResize` to `PlacementCanvas`; requires a `resizeBedPlacement` API call and decoupling placement size from bed dimensions
+
+---
+
 ## 2026-06-01 — ~30 min
 
 **Completed:**
