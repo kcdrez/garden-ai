@@ -118,7 +118,7 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Garden** `timezone` field _(planned)_ — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
-**Plant catalog** is a global shared catalog (41 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed. **Pending addition:** Blackberry — needs to be added to the catalog via a new data migration.
+**Plant catalog** is a global shared catalog (54 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
 
 **PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
 
@@ -293,15 +293,17 @@ These are explicitly out of scope, at least initially:
 ### Tracking & Journaling
 
 - Garden notes and journaling
-- Harvest tracking
+- **Harvest log** — track weight, date, and notes per harvest; builds a per-plant/per-bed yield history over seasons; AI can use this data for recommendations ("your tomatoes in Bed 1 yielded 12 lbs last summer")
 - Yield estimation and tracking
 - Image uploads for plant/garden tracking
+- **Planting calendar** — timeline view showing when each plant was started, transplanted, and harvested; useful for planning the next season against past history
 - Progress photo timelines
+- **Print/export garden layout** — export the canvas as PNG or PDF for printing and taking outside
 
 ### Garden Health
 
-- Companion planting recommendations
-- Crop rotation tracking and recommendations
+- **Companion planting indicators** — visually flag plant pairs on the canvas that are good/bad neighbors (e.g. tomatoes + basil = compatible, tomatoes + fennel = incompatible); data from a seeded compatibility table or AI; could render as a subtle glow or warning icon on the canvas item
+- Crop rotation tracking and recommendations — `Season` model (planned) groups plantings by year; flag beds where the same plant family is being repeated
 - Pest and disease tracking
 - Soil and nutrient tracking
 - Fertilizing schedules and reminders
@@ -310,10 +312,11 @@ These are explicitly out of scope, at least initially:
 
 ### Planning & Reminders
 
+- **Season / year view** — group plantings by growing year via the `Season` model (already planned); lets users see what was in each bed in prior years; foundation for crop rotation warnings
 - Task management and reminders
 - Notification system for gardening tasks
 - Frost date awareness and seasonal guidance
-- Weather-aware gardening insights
+- **Weather-aware observations** — when logging an observation, optionally attach current weather for the garden's location automatically (temperature, conditions); low-friction way to build a weather + plant health correlation log
 - Integration with external plant/weather data sources
 
 ### Discovery & Sharing
