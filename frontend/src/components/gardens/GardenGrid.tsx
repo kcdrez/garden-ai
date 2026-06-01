@@ -92,6 +92,15 @@ export default function GardenGrid({
             0.2,
             Math.min(item.widthFt, item.heightFt) * 0.18,
           );
+          const availableWidth = item.widthFt - 0.2;
+          const charRatio = 0.55;
+          const nameFontSize = bed?.name
+            ? Math.min(fontSize, availableWidth / (bed.name.length * charRatio))
+            : fontSize;
+          const dimText = bed ? formatDimensions(bed) : '';
+          const dimFontSize = dimText
+            ? Math.min(fontSize * 0.8, availableWidth / (dimText.length * charRatio))
+            : fontSize * 0.8;
           return (
             <>
               <rect
@@ -105,10 +114,10 @@ export default function GardenGrid({
               />
               <text
                 x={item.widthFt / 2}
-                y={item.heightFt / 2 - fontSize * 0.6}
+                y={item.heightFt / 2 - nameFontSize * 0.6}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize={fontSize}
+                fontSize={nameFontSize}
                 className="fill-foreground"
                 style={{
                   userSelect: 'none',
@@ -121,10 +130,10 @@ export default function GardenGrid({
               {bed && (
                 <text
                   x={item.widthFt / 2}
-                  y={item.heightFt / 2 + fontSize * 0.7}
+                  y={item.heightFt / 2 + dimFontSize * 0.7}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize={fontSize * 0.8}
+                  fontSize={dimFontSize}
                   className="fill-muted-foreground"
                   style={{
                     userSelect: 'none',
@@ -132,7 +141,7 @@ export default function GardenGrid({
                     letterSpacing: 0,
                   }}
                 >
-                  {formatDimensions(bed)}
+                  {dimText}
                 </text>
               )}
             </>

@@ -79,6 +79,8 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
+      const gId = gardenId ?? bed?.garden;
+      if (gId) queryClient.invalidateQueries({ queryKey: ['bed-placements', gId] });
       onOpenChange(false);
     },
     onError: (err) => {

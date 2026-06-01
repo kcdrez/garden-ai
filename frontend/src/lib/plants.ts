@@ -3,10 +3,10 @@ import { USER_PLANT_STATUSES } from '@/types/plants';
 // Ideogram prompt: "Flat design icon of a [veggie], similar to an emoji, transparent background, consistent vegetable illustration style, no text"
 // To add a new image: drop a PNG named <plant-name-lowercase>.png into src/assets/garden_icons/
 // Missing images (falls back to emoji):
-//   Vegetables: bell pepper, broccoli, carrot, cucumber, garlic, green bean, jalapeño, onion, pea, potato, pumpkin, sweet corn
-//   Fruits:     blueberry, cantaloupe, strawberry, watermelon
-//   Flowers:    lavender, marigold, nasturtium, sunflower, zinnia
-//   Herbs:      dill, mint, oregano, rosemary, sage, thyme
+//   Vegetables: arugula, asparagus, beet, bell pepper, broccoli, cabbage, carrot, cucumber, eggplant, garlic, green bean, jalapeño, leek, onion, pea, potato, pumpkin, rutabaga, sweet corn, sweet potato, swiss chard
+//   Fruits:     blackberry, blueberry, cantaloupe, strawberry, watermelon
+//   Flowers:    calendula, echinacea, lavender, marigold, nasturtium, sunflower, zinnia
+//   Herbs:      dill, fennel, lemon balm, mint, oregano, rosemary, sage, thyme
 const plantImageModules = import.meta.glob('@/assets/garden_icons/*.png', {
   eager: true,
   import: 'default',
@@ -39,11 +39,19 @@ const PLANT_EMOJIS: Record<string, string> = {
   Onion: '🧅',
   'Sweet Corn': '🌽',
   Potato: '🥔',
+  Blackberry: '🫐',
   Strawberry: '🍓',
   Raspberry: '🫐',
   Blueberry: '🫐',
   Watermelon: '🍉',
   Cantaloupe: '🍈',
+  Eggplant: '🍆',
+  'Sweet Potato': '🍠',
+  Cabbage: '🥬',
+  'Swiss Chard': '🥬',
+  Arugula: '🥬',
+  Calendula: '🌼',
+  Echinacea: '🌺',
   Sunflower: '🌻',
   Marigold: '🌼',
   Nasturtium: '🌸',
