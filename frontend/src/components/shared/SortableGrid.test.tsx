@@ -12,6 +12,9 @@ vi.mock('@dnd-kit/core', () => ({
     return <div>{children}</div>;
   },
   closestCenter: vi.fn(),
+  PointerSensor: vi.fn(),
+  useSensor: vi.fn(),
+  useSensors: vi.fn(() => []),
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
