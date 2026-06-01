@@ -19,6 +19,8 @@ interface PlacementCanvasProps {
   onMove: (id: string, xFt: number, yFt: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
   getMenuItems: (id: string) => CanvasMenuItem[];
+  storageKey?: string;
+  getItemLabel?: (id: string) => string;
 }
 
 const PAD = 0.4;
@@ -115,6 +117,7 @@ function DraggableItem({
   containerWidthFt,
   containerHeightFt,
   zoom,
+  label,
   renderItem,
   onMove,
   onResize,
@@ -125,6 +128,7 @@ function DraggableItem({
   containerWidthFt: number;
   containerHeightFt: number;
   zoom: number;
+  label?: string;
   renderItem: (item: CanvasItem) => React.ReactNode;
   onMove: (id: string, x: number, y: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
@@ -249,6 +253,7 @@ function DraggableItem({
         onPointerEnter={() => setIsHovered(true)}
         onPointerLeave={() => setIsHovered(false)}
       >
+        {label && <title>{label}</title>}
         {/* Transparent hit rect — gives the <g> a defined area so pointerEnter/Leave fire reliably */}
         <rect x={0} y={0} width={size.w} height={size.h} fill="transparent" />
 
@@ -278,11 +283,27 @@ export default function PlacementCanvas({
   onMove,
   onResize,
   getMenuItems,
+  storageKey,
+  getItemLabel,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const bgClickStart = useRef<{ x: number; y: number } | null>(null);
   const [svgMenu, setSvgMenu] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(0.75);
+  const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
+    if (storageKey) {
+      const stored = localStorage.getItem(storageKey);
+      const parsed = Number(stored);
+      if (ZOOM_LEVELS.includes(parsed as (typeof ZOOM_LEVELS)[number])) {
+        return parsed as (typeof ZOOM_LEVELS)[number];
+      }
+    }
+    return 0.75;
+  });
+
+  function handleZoomChange(level: (typeof ZOOM_LEVELS)[number]) {
+    setZoom(level);
+    if (storageKey) localStorage.setItem(storageKey, String(level));
+  }
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);
@@ -333,7 +354,7 @@ export default function PlacementCanvas({
           <button
             key={level}
             type="button"
-            onClick={() => setZoom(level)}
+            onClick={() => handleZoomChange(level)}
             className={cn(
               'px-2 py-0.5 text-xs rounded border transition-colors',
               zoom === level
@@ -417,6 +438,7 @@ export default function PlacementCanvas({
             containerWidthFt={widthFt}
             containerHeightFt={heightFt}
             zoom={zoom}
+            label={getItemLabel?.(item.id)}
             renderItem={renderItem}
             onMove={onMove}
             onResize={onResize}

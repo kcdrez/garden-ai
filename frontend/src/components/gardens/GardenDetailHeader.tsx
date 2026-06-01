@@ -50,6 +50,9 @@ export default function GardenDetailHeader({ garden }: Props) {
           {garden.description && (
             <p className="text-muted-foreground mt-1">{garden.description}</p>
           )}
+          {garden.length != null && garden.width != null && (
+            <p className="text-muted-foreground mt-1">{garden.length} × {garden.width} {garden.unit}</p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>

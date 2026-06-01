@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExternalLinkIcon, Trash2Icon } from 'lucide-react';
+import { EditIcon, ExternalLinkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useBedPlacementActions } from '@/hooks/useBedPlacementActions';
 import { toFeet, formatDimensions } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
+import { deleteBed } from '@/api/beds';
+import { useConfirm } from '@/hooks/useConfirm';
 import type { Garden, GardenBed } from '@/types/gardens';
+import BedDialog from '@/components/beds/BedDialog';
 import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
 import PlacementCanvas from '@/components/shared/PlacementCanvas';
 import type { CanvasMenuItem } from '@/types/canvas';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/query-state';
 
 interface GardenGridProps {
@@ -23,9 +28,19 @@ export default function GardenGrid({
   beds,
 }: GardenGridProps) {
   const navigate = useNavigate();
-  const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const confirm = useConfirm();
+  const queryClient = useQueryClient();
+  const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
+  const [editingBed, setEditingBed] = useState<GardenBed | null>(null);
+  const [addBedOpen, setAddBedOpen] = useState(false);
+
+  const deleteBedMutation = useMutation({
+    mutationFn: (bedId: string) => deleteBed(gardenId, bedId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: ['bed-placements', gardenId] });
+    },
+  });
 
   const {
     placements,
@@ -71,10 +86,27 @@ export default function GardenGrid({
         },
       },
       {
-        label: 'Remove from layout',
+        label: 'Edit',
+        icon: <EditIcon className="size-4" />,
+        onClick: () => { if (bed) setEditingBed(bed); },
+      },
+      {
+        label: 'Remove From Layout',
+        icon: <MinusCircleIcon className="size-4" />,
+        onClick: () => removePlacement(placementId),
+      },
+      {
+        label: 'Delete',
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
-        onClick: () => removePlacement(placementId),
+        onClick: async () => {
+          if (!bed) return;
+          const ok = await confirm({
+            title: 'Delete bed?',
+            description: `"${bed.name}" and all its plants will be permanently deleted.`,
+          });
+          if (ok) deleteBedMutation.mutate(bed.id);
+        },
       },
     ];
   }
@@ -150,13 +182,30 @@ export default function GardenGrid({
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
         onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
         getMenuItems={getMenuItems}
+        storageKey={`canvas-zoom-garden-${gardenId}`}
+        getItemLabel={(placementId) => {
+          const placement = placementById.get(placementId);
+          const bed = placement ? bedById.get(placement.bed) : undefined;
+          return bed?.name ?? '';
+        }}
       />
 
-      {unplacedBeds.length > 0 && (
-        <div className="mt-3">
-          <p className="text-xs text-muted-foreground mb-2">
-            Unplaced beds — click the canvas to place
-          </p>
+      <div className="mt-6">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h2>Unplaced Beds</h2>
+            {unplacedBeds.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-0.5">Click the garden layout to place</p>
+            )}
+          </div>
+          <Button size="sm" onClick={() => setAddBedOpen(true)}>
+            <PlusIcon className="size-4" />
+            Add Bed
+          </Button>
+        </div>
+        {unplacedBeds.length === 0 ? (
+          <p className="text-sm text-muted-foreground">All beds are placed in the garden.</p>
+        ) : (
           <div className="flex flex-wrap gap-2">
             {unplacedBeds.map((bed) => (
               <div
@@ -164,14 +213,12 @@ export default function GardenGrid({
                 className="flex flex-col px-3 py-1.5 bg-primary/10 border border-primary/20 rounded text-xs"
               >
                 <span>{bed.name}</span>
-                <span className="text-muted-foreground">
-                  {formatDimensions(bed)}
-                </span>
+                <span className="text-muted-foreground">{formatDimensions(bed)}</span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <PlaceBedDialog
         open={!!placingAt}
@@ -189,6 +236,21 @@ export default function GardenGrid({
         isPlacing={isCreating}
         placeError={createFailed ? getErrorMessage(createError) : null}
       />
+
+      <BedDialog
+        gardenId={gardenId}
+        open={addBedOpen}
+        onOpenChange={setAddBedOpen}
+      />
+
+      {editingBed && (
+        <BedDialog
+          gardenId={gardenId}
+          bed={editingBed}
+          open
+          onOpenChange={(open) => { if (!open) setEditingBed(null); }}
+        />
+      )}
     </>
   );
 }

@@ -253,12 +253,12 @@ describe('BedGrid', () => {
     expect(screen.getByRole('dialog', { name: /observations sheet/i })).toBeInTheDocument();
   });
 
-  it('calls deletePlacement when Remove from Bed menu item is clicked', async () => {
+  it('calls deletePlacement when Remove from layout menu item is clicked', async () => {
     const user = userEvent.setup();
     mockFetchPlacements.mockResolvedValue([placement]);
     renderBedGrid();
     await screen.findByTestId('canvas-item-pl-1');
-    await user.click(screen.getByRole('button', { name: /remove from bed pl-1/i }));
+    await user.click(screen.getByRole('button', { name: /Remove From Layout pl-1/i }));
     await waitFor(() => {
       expect(mockDeletePlacement).toHaveBeenCalledWith('garden-1', 'bed-1', 'pl-1');
     });

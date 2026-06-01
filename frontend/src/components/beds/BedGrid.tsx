@@ -75,7 +75,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
     return [
       {
-        label: 'Remove from Bed',
+        label: 'Remove From Layout',
         icon: <MinusCircleIcon className="size-4" />,
         onClick: () => removePlacement(placementId),
       },
@@ -189,6 +189,13 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
         onResize={(placementId, widthFt, heightFt) => resizePlacement({ placementId, widthFt, heightFt })}
         getMenuItems={getMenuItems}
+        storageKey={`canvas-zoom-bed-${bedId}`}
+        getItemLabel={(placementId) => {
+          const placement = placementById.get(placementId);
+          const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
+          if (!plant) return '';
+          return plant.variety ? `${plant.plantName} — ${plant.variety}` : plant.plantName;
+        }}
       />
 
       {mutationError && (

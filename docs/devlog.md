@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-06-01 — ~30 min
+
+**Completed:**
+
+- Four canvas quickies: renamed "Remove from Bed" → "Remove From Layout" (consistent label + MinusCircleIcon in both grids); canvas zoom persisted to localStorage per bed/garden via `storageKey` prop on `PlacementCanvas`; hover tooltip (SVG `<title>`) via `getItemLabel` prop; bed context menu in `GardenGrid` extended with Edit (opens `BedDialog`) and Delete (confirm → `deleteBed`)
+- Garden detail page refactored to canvas-only layout — removed the redundant "Garden Beds" card grid and sort dropdown; "Add Bed" button and "Unplaced Beds" h2 promoted into `GardenGrid` to match BedDetail structure; garden dimensions added to `GardenDetailHeader`; "Layout" sub-header added above the canvas
+
+**Next up:** Resize beds on the garden layout canvas — `GardenGrid` doesn't pass `onResize` to `PlacementCanvas`; requires a `resizeBedPlacement` API call and decoupling placement size from bed dimensions
+
+---
+
 ## 2026-05-31 — ~2 hours
 
 **Completed:**
