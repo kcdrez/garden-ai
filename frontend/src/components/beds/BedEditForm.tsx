@@ -63,6 +63,7 @@ export default function BedEditForm({ bed, open, onOpenChange }: Props) {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: ['bed-placements', bed.garden] });
       onOpenChange(false);
     },
     onError: (err) => {
