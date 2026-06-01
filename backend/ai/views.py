@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.utils import timezone
 from openai import OpenAIError
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -15,6 +16,7 @@ from .serializers import (
 )
 
 _HISTORY_LIMIT = 20
+_DAILY_MESSAGE_LIMIT = 20
 
 
 class AIConversationViewSet(
@@ -60,6 +62,18 @@ class AIConversationViewSet(
             conversation = AIConversation.objects.get(pk=conversation_id, user=request.user)
         except AIConversation.DoesNotExist as err:
             raise NotFound("Conversation not found.") from err
+
+        today = timezone.now().date()
+        daily_count = AIMessage.objects.filter(
+            conversation__user=request.user,
+            role=AIMessage.Role.USER,
+            created_at__date=today,
+        ).count()
+        if daily_count >= _DAILY_MESSAGE_LIMIT:
+            return Response(
+                {"detail": "Daily message limit reached. Try again tomorrow."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         serializer = SendMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

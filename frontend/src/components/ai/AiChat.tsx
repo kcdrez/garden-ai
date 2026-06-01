@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -73,6 +74,7 @@ export default function AiChat({ scope, entityId }: Props) {
     }
   }
 
+  const isRateLimited = axios.isAxiosError(mutation.error) && mutation.error.response?.status === 429;
   const messages = activeConversation?.messages ?? [];
 
   return (
@@ -138,7 +140,9 @@ export default function AiChat({ scope, entityId }: Props) {
 
         {mutation.isError && (
           <p className="text-sm text-destructive text-center">
-            {getErrorMessage(mutation.error)}
+            {isRateLimited
+              ? 'Daily message limit reached. Try again tomorrow.'
+              : getErrorMessage(mutation.error)}
           </p>
         )}
 
@@ -153,11 +157,11 @@ export default function AiChat({ scope, entityId }: Props) {
           placeholder="Ask a question… (Enter to send, Shift+Enter for new line)"
           className="resize-none"
           rows={2}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || isRateLimited}
         />
         <Button
           onClick={handleSend}
-          disabled={!input.trim() || mutation.isPending}
+          disabled={!input.trim() || mutation.isPending || isRateLimited}
           size="icon"
           aria-label="Send message"
         >
