@@ -216,4 +216,40 @@ describe('PlacementCanvas', () => {
     fireEvent.lostPointerCapture(outerG);
     expect(onResize).not.toHaveBeenCalled();
   });
+
+  // --- Zoom ---
+
+  it('renders zoom buttons for all levels', () => {
+    render(<PlacementCanvas {...defaultProps} />);
+    for (const label of ['0.5×', '0.75×', '1×', '1.5×', '2×', '3×']) {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('defaults to 0.75x zoom', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    const svg = container.querySelector('svg')!;
+    expect(svg.style.width).toBe('75%');
+  });
+
+  it('changes SVG width when a zoom button is clicked', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '2×' }));
+    expect(container.querySelector('svg')!.style.width).toBe('200%');
+  });
+
+  it('centers the SVG when zoom is below 1', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '0.5×' }));
+    expect(container.querySelector('svg')!.style.margin).toBe('0px auto');
+  });
+
+  it('does not center the SVG when zoom is 1 or above', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '1×' }));
+    expect(container.querySelector('svg')!.style.margin).toBe('');
+  });
 });
