@@ -1,56 +1,54 @@
 import type { PlantCategory, UserPlantStatus } from '@/types/plants';
 import { USER_PLANT_STATUSES } from '@/types/plants';
-import tomatoImg from '@/assets/garden_icons/tomato.png';
-import squashImg from '@/assets/garden_icons/squash.png';
-
 // Ideogram prompt: "Flat design icon of a [veggie], similar to an emoji, transparent background, consistent vegetable illustration style, no text"
-// Plants that share an emoji and need a custom image:
-//   Vegetables: Cucumber & Zucchini (🥒), Pumpkin (🎃 same as Squash), Lettuce & Spinach & Kale (🥬),
-//               Carrot & Radish (🥕), Potato & Rutabaga (🥔), Broccoli & Cauliflower (🥦)
-//   Fruits:     Raspberry & Blueberry (🫐)
-//   Flowers:    Nasturtium & Zinnia (🌸)
-//   Herbs:      all share 🌿 — Basil, Parsley, Cilantro, Chives, Dill, Mint, Rosemary, Thyme, Oregano, Sage
-const PLANT_IMAGES: Record<string, string> = {
-  'Tomato': tomatoImg,
-  'Squash': squashImg,
-};
+// To add a new image: drop a PNG named <plant-name-lowercase>.png into src/assets/garden_icons/
+// Missing images (falls back to emoji):
+//   Vegetables: bell pepper, broccoli, carrot, cucumber, garlic, green bean, jalapeño, onion, pea, potato, pumpkin, sweet corn
+//   Fruits:     blueberry, cantaloupe, strawberry, watermelon
+//   Flowers:    lavender, marigold, nasturtium, sunflower, zinnia
+//   Herbs:      dill, mint, oregano, rosemary, sage, thyme
+const plantImageModules = import.meta.glob('@/assets/garden_icons/*.png', {
+  eager: true,
+  import: 'default',
+});
 
 export function plantImage(name: string): string | null {
-  return PLANT_IMAGES[name] ?? null;
+  const key = `/src/assets/garden_icons/${name.toLowerCase()}.png`;
+  return (plantImageModules[key] as string) ?? null;
 }
 
 const PLANT_EMOJIS: Record<string, string> = {
-  'Tomato': '🍅',
-  'Cucumber': '🥒',
-  'Zucchini': '🥒',
-  'Squash': '🎃',
-  'Pumpkin': '🎃',
+  Tomato: '🍅',
+  Cucumber: '🥒',
+  Zucchini: '🥒',
+  Squash: '🎃',
+  Pumpkin: '🎃',
   'Bell Pepper': '🫑',
-  'Jalapeño': '🌶️',
-  'Lettuce': '🥬',
-  'Spinach': '🥬',
-  'Kale': '🥬',
-  'Carrot': '🥕',
-  'Radish': '🥕',
-  'Rutabaga': '🥔',
+  Jalapeño: '🌶️',
+  Lettuce: '🥬',
+  Spinach: '🥬',
+  Kale: '🥬',
+  Carrot: '🥕',
+  Radish: '🥕',
+  Rutabaga: '🥔',
   'Green Bean': '🫘',
-  'Pea': '🫛',
-  'Broccoli': '🥦',
-  'Cauliflower': '🥦',
-  'Garlic': '🧄',
-  'Onion': '🧅',
+  Pea: '🫛',
+  Broccoli: '🥦',
+  Cauliflower: '🥦',
+  Garlic: '🧄',
+  Onion: '🧅',
   'Sweet Corn': '🌽',
-  'Potato': '🥔',
-  'Strawberry': '🍓',
-  'Raspberry': '🫐',
-  'Blueberry': '🫐',
-  'Watermelon': '🍉',
-  'Cantaloupe': '🍈',
-  'Sunflower': '🌻',
-  'Marigold': '🌼',
-  'Nasturtium': '🌸',
-  'Zinnia': '🌸',
-  'Lavender': '💜',
+  Potato: '🥔',
+  Strawberry: '🍓',
+  Raspberry: '🫐',
+  Blueberry: '🫐',
+  Watermelon: '🍉',
+  Cantaloupe: '🍈',
+  Sunflower: '🌻',
+  Marigold: '🌼',
+  Nasturtium: '🌸',
+  Zinnia: '🌸',
+  Lavender: '💜',
 };
 
 const CATEGORY_EMOJIS: Record<PlantCategory, string> = {
@@ -68,9 +66,12 @@ export function plantEmoji(name: string, category: PlantCategory): string {
 export const STATUS_CLASSES: Record<UserPlantStatus, string> = {
   planned: 'bg-muted text-muted-foreground',
   planted: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  growing: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  fruiting: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  dormant: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  growing:
+    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  fruiting:
+    'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  dormant:
+    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
   removed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
 };
 
