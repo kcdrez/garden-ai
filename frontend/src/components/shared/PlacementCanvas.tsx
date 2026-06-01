@@ -4,8 +4,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
+
+const ZOOM_LEVELS = [0.5, 0.75, 1, 1.5, 2, 3] as const;
 
 interface PlacementCanvasProps {
   widthFt: number;
@@ -37,16 +40,18 @@ function PlacementItemControls({
   widthFt,
   heightFt,
   containerWidthFt,
+  zoom,
   onMenuOpen,
   onResizePointerDown,
 }: {
   widthFt: number;
   heightFt: number;
   containerWidthFt: number;
+  zoom: number;
   onMenuOpen: (x: number, y: number) => void;
   onResizePointerDown?: (e: React.PointerEvent<SVGRectElement>) => void;
 }) {
-  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42));
+  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42)) / zoom;
   const dotR = hs * 0.074;
   const dotSpacing = hs * 0.2;
   const buttonX = widthFt - hs;
@@ -109,6 +114,7 @@ function DraggableItem({
   item,
   containerWidthFt,
   containerHeightFt,
+  zoom,
   renderItem,
   onMove,
   onResize,
@@ -118,6 +124,7 @@ function DraggableItem({
   item: CanvasItem;
   containerWidthFt: number;
   containerHeightFt: number;
+  zoom: number;
   renderItem: (item: CanvasItem) => React.ReactNode;
   onMove: (id: string, x: number, y: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
@@ -252,6 +259,7 @@ function DraggableItem({
             widthFt={size.w}
             heightFt={size.h}
             containerWidthFt={containerWidthFt}
+            zoom={zoom}
             onMenuOpen={(x, y) => onMenuOpen(item.id, x, y)}
             onResizePointerDown={onResize ? handleResizePointerDown : undefined}
           />
@@ -274,6 +282,7 @@ export default function PlacementCanvas({
   const svgRef = useRef<SVGSVGElement>(null);
   const bgClickStart = useRef<{ x: number; y: number } | null>(null);
   const [svgMenu, setSvgMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(0.75);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);
@@ -318,12 +327,30 @@ export default function PlacementCanvas({
     : undefined;
 
   return (
-    <div className="overflow-auto">
+    <div className="space-y-2">
+      <div className="flex justify-end gap-1">
+        {ZOOM_LEVELS.map((level) => (
+          <button
+            key={level}
+            type="button"
+            onClick={() => setZoom(level)}
+            className={cn(
+              'px-2 py-0.5 text-xs rounded border transition-colors',
+              zoom === level
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/50',
+            )}
+          >
+            {level}×
+          </button>
+        ))}
+      </div>
+
+      <div className="overflow-x-auto min-h-[200px]">
       <svg
         ref={svgRef}
         viewBox={viewBox}
-        className="w-full h-auto"
-        style={{ maxHeight: '65vh', minHeight: '200px' }}
+        style={{ width: `${zoom * 100}%`, height: 'auto', display: 'block', margin: zoom < 1 ? '0 auto' : undefined }}
       >
         {/* Background: click-to-place target */}
         <rect
@@ -389,6 +416,7 @@ export default function PlacementCanvas({
             item={item}
             containerWidthFt={widthFt}
             containerHeightFt={heightFt}
+            zoom={zoom}
             renderItem={renderItem}
             onMove={onMove}
             onResize={onResize}
@@ -415,6 +443,7 @@ export default function PlacementCanvas({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      </div>
     </div>
   );
 }

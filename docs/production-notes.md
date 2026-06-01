@@ -16,3 +16,17 @@ Things that would need to be addressed before this app moves beyond a portfolio 
 - Add a rate limiting layer at the infrastructure level (Nginx rate limiting, Cloudflare, or an API gateway) as defense-in-depth so enforcement doesn't depend solely on application code.
 - Expose remaining daily quota in the API response so the frontend can show a "N messages remaining today" indicator without a separate request.
 - The current approach counts against UTC calendar days; production should respect the user's timezone (stored in `UserProfile.timezone`) or at minimum document the reset boundary clearly in the UI.
+
+---
+
+## Canvas Zoom (`PlacementCanvas`)
+
+**Current approach:** Zoom is implemented by scaling the SVG's CSS width (`zoom * 100%`) inside a fixed-height `overflow-auto` container. Preset levels (1×, 1.5×, 2×, 3×) are offered as buttons above the canvas. `toSVGPoint` uses `getScreenCTM().inverse()` so drag and resize coordinates auto-correct through the CSS scale — no changes to interaction math were needed.
+
+**Why it's acceptable now:** Minimal change, zero coordinate logic touched, scrollbars are a familiar UX.
+
+**What to change for production:**
+- Replace scrollable overflow with viewBox-based zoom + pan: shrink the `viewBox` to show a smaller region at higher resolution, and track a pan offset so the user can navigate anywhere on the canvas without scrollbars.
+- Add a pointer wheel handler (`onWheel`) on the SVG for scroll-to-zoom, and a pinch gesture handler for touch devices.
+- Pan on the background conflicts with click-to-place — resolve with a modifier key (Space + drag = pan) or a dedicated pan mode toggle in the toolbar.
+- `toSVGPoint` still works for viewBox zoom since it's coordinate-system-agnostic — the same zero-change property holds.

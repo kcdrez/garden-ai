@@ -237,6 +237,9 @@ These are explicitly out of scope, at least initially:
 - Plant canvas icons — `plantEmoji()` maps 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets (drop in `src/assets/garden_icons/`, add to `PLANT_IMAGES` in `src/lib/plants.ts`); Ideogram prompt and priority list of shared-emoji plants documented in the file; tomato and squash done
 - Sort order for gardens and beds — dropdown on AllGardens, GardenDetail, and AllBeds with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; `useSortedList` hook with localStorage persistence; `SortableGrid<T>` generic component owns all DnD boilerplate (DndContext + SortableContext + SortableCard); `@dnd-kit/sortable` added
 - E2E tests — Playwright against the full Docker stack (frontend + backend + DB); 18 tests covering auth, gardens, beds, and plants (create/edit/delete/place on canvas/observe); setup project replaces `globalSetup` so VS Code extension triggers seed + auth before individual tests; CI runs on every PR and merge to `main`
+- Semantic versioning — FE and BE version numbers auto-incremented on merge to `main` via `semantic-release` and conventional commits; FE version from `package.json` via Vite env var, BE from `VERSION` file at `/api/version/`; both displayed in the app footer
+- AI rate limiting — 20 messages/user/day enforced via DB count in `AIConversationViewSet.message`; returns 429 with `detail` message; frontend detects 429 and disables input with a specific message; resets on UTC calendar day
+- Canvas zoom — `PlacementCanvas` has zoom controls (0.5×, 0.75×, 1×, 1.5×, 2×, 3×) defaulting to 0.75×; SVG CSS-scales inside an `overflow-x-auto` container; buttons stay constant pixel size via `hs / zoom`; production-grade alternative (viewBox pan+zoom) documented in `/docs/production-notes.md`
 
 ## 📋 Planned
 
