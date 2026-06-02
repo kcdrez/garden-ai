@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-06-02 — ~1.5 hours
+
+**Completed:**
+
+- Resize beds on garden canvas — drag handle on bed placements in `GardenGrid`; `onResize` fires `updateBed` (PATCH bed dimensions directly rather than adding placement-level size fields); optimistic update via `makeOptimisticMutation` on the placement cache; error surfaces as inline message below canvas (cleared on next successful resize); uses `fromFeet` to convert back to the bed's native unit
+- `GardenBed.width`/`length`/`depth` changed from `PositiveIntegerField` to `FloatField` so canvas resize can store decimals (e.g. 3.7 ft); form entry still accepts integers; migration included
+- `fromFeet` added to `lib/beds.ts` as inverse of `toFeet`
+- Dead code removed — `plantColor` and `hashString` from `beds.ts` (only referenced by their own tests)
+- Tests added: `toFeet`/`fromFeet` unit tests, `GardenGrid` resize/error/clear tests, backend float-dimension test
+
+**Next up:** PlaceBedDialog "Create new bed" wizard — currently only lets you pick an existing unplaced bed; add a wizard step matching the PlacePlantDialog pattern so a bed can be created and placed in one flow
+
+---
+
 ## 2026-06-01 — ~1.5 hours
 
 **Completed:**
