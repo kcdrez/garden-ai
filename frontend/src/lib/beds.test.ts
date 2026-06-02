@@ -7,7 +7,9 @@ import {
   bedPlacementDimensions,
   bedHasDetails,
   groupByGarden,
-  plantColor,
+
+  toFeet,
+  fromFeet,
 } from './beds';
 
 describe('formatDimensions', () => {
@@ -92,17 +94,54 @@ describe('bedHasDetails', () => {
   });
 });
 
-describe('plantColor', () => {
-  it('returns hsl fill and stroke for a plant with a variety', () => {
-    const { fill, stroke } = plantColor('plant-1', 'Cherry');
-    expect(fill).toMatch(/^hsl\(/);
-    expect(stroke).toMatch(/^hsl\(/);
+
+describe('toFeet', () => {
+  it('ft is an identity conversion', () => {
+    expect(toFeet(4, 'ft')).toBe(4);
   });
 
-  it('returns hsl fill and stroke when variety is empty (no offset applied)', () => {
-    const { fill, stroke } = plantColor('plant-1', '');
-    expect(fill).toMatch(/^hsl\(/);
-    expect(stroke).toMatch(/^hsl\(/);
+  it('converts inches to feet', () => {
+    expect(toFeet(12, 'in')).toBeCloseTo(1);
+  });
+
+  it('converts cm to feet', () => {
+    expect(toFeet(30.48, 'cm')).toBeCloseTo(1);
+  });
+
+  it('converts meters to feet', () => {
+    expect(toFeet(1, 'm')).toBeCloseTo(3.28084);
+  });
+
+  it('falls back to factor 1 for an unknown unit', () => {
+    expect(toFeet(5, 'yd' as never)).toBe(5);
+  });
+});
+
+describe('fromFeet', () => {
+  it('ft is an identity conversion', () => {
+    expect(fromFeet(4, 'ft')).toBe(4);
+  });
+
+  it('converts feet to inches', () => {
+    expect(fromFeet(1, 'in')).toBeCloseTo(12);
+  });
+
+  it('converts feet to cm', () => {
+    expect(fromFeet(1, 'cm')).toBeCloseTo(30.48);
+  });
+
+  it('converts feet to meters', () => {
+    expect(fromFeet(3.28084, 'm')).toBeCloseTo(1);
+  });
+
+  it('is the inverse of toFeet for all units', () => {
+    for (const unit of ['ft', 'in', 'cm', 'm'] as const) {
+      expect(fromFeet(toFeet(5, unit), unit)).toBeCloseTo(5);
+    }
+  });
+
+  it('falls back to factor 1 for an unknown unit', () => {
+    expect(fromFeet(4, 'yd' as never)).toBe(4);
   });
 });
 

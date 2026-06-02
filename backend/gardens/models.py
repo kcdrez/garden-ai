@@ -39,9 +39,9 @@ class GardenBed(BaseModel):
 
     garden = models.ForeignKey(Garden, related_name="beds", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    length = models.PositiveIntegerField()
-    width = models.PositiveIntegerField()
-    depth = models.PositiveIntegerField(null=True, blank=True)
+    length = models.FloatField()
+    width = models.FloatField()
+    depth = models.FloatField(null=True, blank=True)
     unit = models.CharField(max_length=2, choices=UNIT_CHOICES, default="ft")
     facing = models.CharField(max_length=2, choices=FACING_CHOICES, null=True, blank=True)
     avg_sunlight_hours = models.PositiveSmallIntegerField(null=True, blank=True)
