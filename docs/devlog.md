@@ -2,15 +2,17 @@
 
 ---
 
-## 2026-06-03 — ~0.5 hours
+## 2026-06-03 — ~0.75 hours
 
 **Completed:**
 
 - Canvas overflow menu bug fix — `pointerdown` deselect listener was unmounting the toolbar before Radix dropdown item `onClick` could fire; fixed by skipping deselect when the click target is inside a Radix portal (`data-radix-popper-content-wrapper`) or dialog
 - Canvas keyboard shortcuts — Delete/Backspace removes selected item; Arrow nudges 0.25ft, Shift+Arrow nudges 1ft (full grid cell snap); Escape deselects; single-key menu shortcuts (e/r/v/o/d/m for plants, e/r/v for beds) via `shortcut?` field on `CanvasMenuItem`; shortcut hints displayed in toolbar buttons and overflow dropdown items
-- "Go to bed" renamed to "View Details" in GardenGrid for consistency with BedGrid
+- Tab/Shift+Tab cycles through placed items in visual order (top-to-bottom, left-to-right by position); `toToolbarAnchor` helper extracted for anchor computation
+- `=`/`+`/`-` zoom in/out without touching the zoom buttons; skips when modifiers held or focus is in an input/dialog
+- "View Details" label standardised across BedGrid and GardenGrid (was "Go to bed" in GardenGrid)
 
-**Next up:** Tab/Shift+Tab to cycle through canvas items, or pick up next feature from the planned list
+**Next up:** Pick up next feature from the planned list — companion planting indicators or harvest log are good candidates
 
 ---
 
