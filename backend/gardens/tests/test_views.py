@@ -210,6 +210,17 @@ class GardenBedAPITests(APITestCase):
         res = self.client.patch(self._detail_url(self.garden.id, self.bed.id), {"width": 6})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
+    def test_resize_accepts_float_dimensions(self):
+        res = self.client.patch(
+            self._detail_url(self.garden.id, self.bed.id),
+            {"width": 4.5, "length": 3.7},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.bed.refresh_from_db()
+        self.assertAlmostEqual(self.bed.width, 4.5)
+        self.assertAlmostEqual(self.bed.length, 3.7)
+
 
 class AllGardenBedsAPITests(APITestCase):
     def setUp(self):

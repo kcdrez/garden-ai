@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { EditIcon, ExternalLinkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useBedPlacementActions } from '@/hooks/useBedPlacementActions';
-import { toFeet, formatDimensions } from '@/lib/beds';
+import { toFeet, fromFeet, formatDimensions } from '@/lib/beds';
 import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
-import { deleteBed } from '@/api/beds';
+import { deleteBed, updateBed } from '@/api/beds';
 import { useConfirm } from '@/hooks/useConfirm';
-import type { Garden, GardenBed } from '@/types/gardens';
+import type { BedPlacement, Garden, GardenBed } from '@/types/gardens';
+import { makeOptimisticMutation } from '@/lib/mutations';
 import BedDialog from '@/components/beds/BedDialog';
 import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
 import PlacementCanvas from '@/components/shared/PlacementCanvas';
@@ -33,6 +34,7 @@ export default function GardenGrid({
   const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
   const [editingBed, setEditingBed] = useState<GardenBed | null>(null);
   const [addBedOpen, setAddBedOpen] = useState(false);
+  const [resizeError, setResizeError] = useState<string | null>(null);
 
   const deleteBedMutation = useMutation({
     mutationFn: (bedId: string) => deleteBed(gardenId, bedId),
@@ -53,6 +55,28 @@ export default function GardenGrid({
     createError,
     resetCreate,
   } = useBedPlacementActions(gardenId);
+
+  const bedPlacementsKey = ['bed-placements', gardenId] as const;
+
+  const resizeBedMutation = useMutation({
+    mutationFn: ({ bedId, unit, widthFt, heightFt }: {
+      placementId: string; bedId: string; unit: string; widthFt: number; heightFt: number;
+    }) =>
+      updateBed(gardenId, bedId, {
+        width: Math.round(fromFeet(widthFt, unit) * 10) / 10,
+        length: Math.round(fromFeet(heightFt, unit) * 10) / 10,
+      }),
+    ...makeOptimisticMutation<BedPlacement, { placementId: string; bedId: string; unit: string; widthFt: number; heightFt: number }>(
+      queryClient,
+      bedPlacementsKey,
+      (item, { widthFt, heightFt }) => ({ ...item, bedWidthFt: widthFt, bedHeightFt: heightFt }),
+      (err) => setResizeError(getErrorMessage(err)),
+    ),
+    onSuccess: () => {
+      setResizeError(null);
+      queryClient.invalidateQueries({ queryKey: ['beds'] });
+    },
+  });
 
   if (garden.width == null || garden.length == null) return null;
   if (isLoading) return <LoadingSpinner />;
@@ -181,6 +205,10 @@ export default function GardenGrid({
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
         onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
+        onResize={(placementId, widthFt, heightFt) => {
+          const bed = bedById.get(placementById.get(placementId)?.bed ?? '');
+          if (bed) resizeBedMutation.mutate({ placementId, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
+        }}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-garden-${gardenId}`}
         getItemLabel={(placementId) => {
@@ -189,6 +217,10 @@ export default function GardenGrid({
           return bed?.name ?? '';
         }}
       />
+
+      {resizeError && (
+        <p className="mt-2 text-sm text-destructive">{resizeError}</p>
+      )}
 
       <div className="mt-6">
         <div className="flex items-start justify-between mb-2">

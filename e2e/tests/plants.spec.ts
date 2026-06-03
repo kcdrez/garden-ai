@@ -9,7 +9,7 @@ async function createPlantInBed(page: Page, plantName: string) {
   await page.getByRole("button", { name: "Create Plant" }).click();
   await expect(page.getByRole("heading", { name: "Add Plant" })).toBeVisible();
   await page.getByLabel("Search plants").fill(plantName);
-  await page.getByRole("button", { name: new RegExp('^' + plantName) }).first().click();
+  await page.getByRole("button", { name: new RegExp(plantName) }).first().click();
   await page.getByRole("button", { name: "Add Plant" }).click();
   await expect(page.getByRole("heading", { name: "Add Plant" })).not.toBeVisible();
 }

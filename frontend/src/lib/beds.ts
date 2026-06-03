@@ -42,6 +42,10 @@ export function toFeet(dimension: number, unit: string): number {
   return dimension * (UNIT_TO_FEET[unit] ?? 1);
 }
 
+export function fromFeet(ft: number, unit: string): number {
+  return ft / (UNIT_TO_FEET[unit] ?? 1);
+}
+
 export function bedGridDimensions(bed: GardenBed): { cols: number; rows: number } {
   const factor = UNIT_TO_FEET[bed.unit] ?? 1;
   return {
@@ -67,21 +71,3 @@ export function bedPlacementDimensions(bed: GardenBed): { width: number; height:
   };
 }
 
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    hash = hash & hash; // coerce to 32-bit int
-  }
-  return hash;
-}
-
-export function plantColor(plantId: string, variety: string): { fill: string; stroke: string } {
-  const baseHue = Math.abs(hashString(plantId)) % 360;
-  const varietyOffset = variety ? (Math.abs(hashString(variety)) % 61) - 30 : 0;
-  const hue = (baseHue + varietyOffset + 360) % 360;
-  return {
-    fill: `hsl(${hue}, 55%, 75%)`,
-    stroke: `hsl(${hue}, 55%, 45%)`,
-  };
-}
