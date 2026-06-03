@@ -35,7 +35,8 @@ export function useBedPlacementActions(gardenId: string) {
   return {
     placements,
     isLoading,
-    createPlacement: (args: { bedId: string; x: number; y: number }) => createMutation.mutate(args),
+    createPlacement: (args: { bedId: string; x: number; y: number }, onSuccess?: () => void) =>
+      createMutation.mutate(args, { onSuccess }),
     movePlacement: (args: { placementId: string; x: number; y: number }) => moveMutation.mutate(args),
     removePlacement: (placementId: string) => deleteMutation.mutate(placementId),
     isCreating: createMutation.isPending,
