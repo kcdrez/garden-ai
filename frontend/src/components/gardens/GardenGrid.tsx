@@ -261,9 +261,10 @@ export default function GardenGrid({
           }
         }}
         cell={placingAt}
+        gardenId={gardenId}
         unplacedBeds={unplacedBeds}
         onPlace={(bedId) =>
-          createPlacement({ bedId, x: placingAt!.x, y: placingAt!.y })
+          createPlacement({ bedId, x: placingAt!.x, y: placingAt!.y }, () => setPlacingAt(null))
         }
         isPlacing={isCreating}
         placeError={createFailed ? getErrorMessage(createError) : null}
