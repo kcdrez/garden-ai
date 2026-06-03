@@ -249,4 +249,217 @@ describe('PlacementCanvas', () => {
     await user.click(screen.getByRole('button', { name: '1×' }));
     expect(container.querySelector('svg')!.style.margin).toBe('');
   });
+
+  // --- Zoom keyboard shortcuts ---
+
+  it('= key zooms in one level', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    fireEvent.keyDown(document.body, { key: '=' });
+    expect(container.querySelector('svg')!.style.width).toBe('200%');
+  });
+
+  it('+ key zooms in one level', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    fireEvent.keyDown(document.body, { key: '+' });
+    expect(container.querySelector('svg')!.style.width).toBe('200%');
+  });
+
+  it('- key zooms out one level', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '2×' }));
+    fireEvent.keyDown(document.body, { key: '-' });
+    expect(container.querySelector('svg')!.style.width).toBe('100%');
+  });
+
+  it('= key does nothing at max zoom', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '3×' }));
+    fireEvent.keyDown(document.body, { key: '=' });
+    expect(container.querySelector('svg')!.style.width).toBe('300%');
+  });
+
+  it('- key does nothing at min zoom', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: '0.25×' }));
+    fireEvent.keyDown(document.body, { key: '-' });
+    expect(container.querySelector('svg')!.style.width).toBe('25%');
+  });
+
+  it('zoom keys are ignored when a modifier key is held', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    fireEvent.keyDown(document.body, { key: '=', ctrlKey: true });
+    fireEvent.keyDown(document.body, { key: '=', metaKey: true });
+    expect(container.querySelector('svg')!.style.width).toBe('100%');
+  });
+
+  it('zoom keys are ignored when an input has focus', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: '=' });
+    expect(container.querySelector('svg')!.style.width).toBe('100%');
+    document.body.removeChild(input);
+  });
+
+  // --- Keyboard shortcuts (selection required) ---
+
+  it('Escape deselects the selected item', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  });
+
+  it('Delete fires the destructive menu item and deselects', () => {
+    const onDelete = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Edit', onClick: vi.fn(), primary: true },
+      { label: 'Delete', onClick: onDelete, variant: 'destructive' as const, primary: true },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    fireEvent.keyDown(document.body, { key: 'Delete' });
+    expect(onDelete).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+  });
+
+  it('Backspace also fires the destructive menu item', () => {
+    const onDelete = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Delete', onClick: onDelete, variant: 'destructive' as const, primary: true },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    fireEvent.keyDown(document.body, { key: 'Backspace' });
+    expect(onDelete).toHaveBeenCalled();
+  });
+
+  it('single-key shortcut fires the matching menu item and deselects', () => {
+    const onEdit = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Edit', onClick: onEdit, primary: true, shortcut: 'e' },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    fireEvent.keyDown(document.body, { key: 'e' });
+    expect(onEdit).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  });
+
+  it('single-key shortcut is ignored when a modifier key is held', () => {
+    const onEdit = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Edit', onClick: onEdit, primary: true, shortcut: 'e' },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    fireEvent.keyDown(document.body, { key: 'e', ctrlKey: true });
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it('keyboard shortcuts are ignored when an input has focus', () => {
+    const onDelete = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Delete', onClick: onDelete, variant: 'destructive' as const, primary: true },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'Delete' });
+    expect(onDelete).not.toHaveBeenCalled();
+    document.body.removeChild(input);
+  });
+
+  // --- Tab cycling ---
+
+  it('Tab selects the next item in visual order, not insertion order', () => {
+    const items = [
+      { id: 'a', x: 3, y: 3, widthFt: 1, heightFt: 1 }, // visually last  (index 0 in array)
+      { id: 'b', x: 0, y: 0, widthFt: 1, heightFt: 1 }, // visually first (index 1 in array)
+      { id: 'c', x: 1, y: 1, widthFt: 1, heightFt: 1 }, // visually middle (index 2 in array)
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Each DraggableItem renders 2 <g> elements; item at insertion index N → gs[N * 2].
+    // Select 'b' (insertion index 1, but visually first)
+    fireEvent.pointerDown(gs[2], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[2]);
+    expect(screen.getByRole('button', { name: 'Action-b' })).toBeInTheDocument();
+
+    // Tab should go to 'c' (visually next after 'b'), not 'a' (insertion next)
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    expect(screen.queryByRole('button', { name: 'Action-b' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Action-c' })).toBeInTheDocument();
+  });
+
+  it('Shift+Tab selects the previous item in visual order', () => {
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 }, // visually first
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 }, // visually second
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Select 'b' (insertion index 1, visually second)
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5 });
+    fireEvent.lostPointerCapture(gs[2]);
+    expect(screen.getByRole('button', { name: 'Action-b' })).toBeInTheDocument();
+
+    // Shift+Tab should go back to 'a'
+    fireEvent.keyDown(document.body, { key: 'Tab', shiftKey: true });
+    expect(screen.queryByRole('button', { name: 'Action-b' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Action-a' })).toBeInTheDocument();
+  });
+
+  it('Tab wraps from the last item to the first', () => {
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Select 'b' (insertion index 1, visually last)
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5 });
+    fireEvent.lostPointerCapture(gs[2]);
+
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    expect(screen.getByRole('button', { name: 'Action-a' })).toBeInTheDocument();
+  });
 });
