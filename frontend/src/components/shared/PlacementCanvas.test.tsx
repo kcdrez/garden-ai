@@ -14,8 +14,8 @@ const defaultProps = {
   onEmptyClick: vi.fn(),
   onMove: vi.fn(),
   getMenuItems: vi.fn(() => [
-    { label: 'Edit', onClick: vi.fn() },
-    { label: 'Delete', onClick: vi.fn(), variant: 'destructive' as const },
+    { label: 'Edit', onClick: vi.fn(), primary: true },
+    { label: 'Delete', onClick: vi.fn(), variant: 'destructive' as const, primary: true },
   ]),
 };
 
@@ -50,8 +50,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   defaultProps.renderItem.mockReturnValue(<rect data-testid="rendered-item" />);
   defaultProps.getMenuItems.mockReturnValue([
-    { label: 'Edit', onClick: vi.fn() },
-    { label: 'Delete', onClick: vi.fn(), variant: 'destructive' as const },
+    { label: 'Edit', onClick: vi.fn(), primary: true },
+    { label: 'Delete', onClick: vi.fn(), variant: 'destructive' as const, primary: true },
   ]);
 });
 
@@ -100,8 +100,8 @@ describe('PlacementCanvas', () => {
   it('calls onMove when an item is dragged to a new position', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
     const outerG = container.querySelector('g')!;
-    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
-    fireEvent.pointerMove(outerG, { clientX: 2.5, clientY: 2.5 });
+    fireEvent.pointerDown(outerG, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(outerG, { clientX: 110, clientY: 110 });
     fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
   });
@@ -121,55 +121,50 @@ describe('PlacementCanvas', () => {
     expect(defaultProps.onMove).not.toHaveBeenCalled();
   });
 
-  it('shows context menu items when the menu button is clicked', async () => {
+  it('shows toolbar buttons when an item is clicked', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
-
-    // hover to reveal the menu button
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-
-    // click the menu circle (onClick uses clientX/Y only — no SVG transform)
-    const menuCircle = container.querySelector('rect[fill="rgba(0,0,0,0.55)"]');
-    fireEvent.click(menuCircle!);
-
-    expect(screen.getByRole('menuitem', { name: /edit/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /delete/i })).toBeInTheDocument();
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
-  it('calls the menu item onClick and closes the menu when an item is clicked', async () => {
+  it('calls the toolbar action onClick and hides the toolbar when clicked', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
-    defaultProps.getMenuItems.mockReturnValue([{ label: 'Edit', onClick: onEdit }]);
+    defaultProps.getMenuItems.mockReturnValue([{ label: 'Edit', onClick: onEdit, primary: true }]);
 
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
 
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-    fireEvent.click(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')!);
-
-    await user.click(screen.getByRole('menuitem', { name: /edit/i }));
+    await user.click(screen.getByRole('button', { name: /edit/i }));
 
     expect(onEdit).toHaveBeenCalled();
-    expect(screen.queryByRole('menuitem', { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
   });
 
-  it('calls getMenuItems with the clicked item id', () => {
+  it('calls getMenuItems with the item id when selected', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
-
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-    fireEvent.click(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')!);
-
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.getMenuItems).toHaveBeenCalledWith('item-1');
   });
 
-  it('hides the menu button after pointerLeave', () => {
+  it('hides the toolbar when the canvas background is clicked', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-    expect(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')).toBeInTheDocument();
-    fireEvent.pointerLeave(innerG);
-    expect(container.querySelector('rect[fill="rgba(0,0,0,0.55)"]')).not.toBeInTheDocument();
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+
+    const bgRect = container.querySelector('rect')!;
+    fireEvent.pointerDown(bgRect, { clientX: 0, clientY: 0 });
+    fireEvent.pointerUp(bgRect, { clientX: 0, clientY: 0 });
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
   });
 
   it('ignores pointerMove before drag starts', () => {
@@ -182,8 +177,8 @@ describe('PlacementCanvas', () => {
   it('calls onMove when only y changes', () => {
     const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
     const outerG = container.querySelector('g')!;
-    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
-    fireEvent.pointerMove(outerG, { clientX: 1.75, clientY: 2.5 });
+    fireEvent.pointerDown(outerG, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(outerG, { clientX: 100, clientY: 110 });
     fireEvent.lostPointerCapture(outerG);
     expect(defaultProps.onMove).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
   });
@@ -193,11 +188,12 @@ describe('PlacementCanvas', () => {
     const { container } = render(
       <PlacementCanvas {...defaultProps} items={[item]} onResize={onResize} />,
     );
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-    const resizeHandleG = container.querySelectorAll('g')[2];
-    fireEvent.pointerDown(resizeHandleG, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     const outerG = container.querySelector('g')!;
+    // Click to select — reveals the resize handle
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    const resizeCircle = container.querySelector('circle')!;
+    fireEvent.pointerDown(resizeCircle, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     fireEvent.pointerMove(outerG, { clientX: 3.0, clientY: 3.0 });
     fireEvent.lostPointerCapture(outerG);
     expect(onResize).toHaveBeenCalledWith('item-1', expect.any(Number), expect.any(Number));
@@ -208,11 +204,12 @@ describe('PlacementCanvas', () => {
     const { container } = render(
       <PlacementCanvas {...defaultProps} items={[item]} onResize={onResize} />,
     );
-    const innerG = container.querySelectorAll('g')[1];
-    fireEvent.pointerEnter(innerG);
-    const resizeHandleG = container.querySelectorAll('g')[2];
-    fireEvent.pointerDown(resizeHandleG, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     const outerG = container.querySelector('g')!;
+    // Click to select — reveals the resize handle
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    const resizeCircle = container.querySelector('circle')!;
+    fireEvent.pointerDown(resizeCircle, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     fireEvent.lostPointerCapture(outerG);
     expect(onResize).not.toHaveBeenCalled();
   });

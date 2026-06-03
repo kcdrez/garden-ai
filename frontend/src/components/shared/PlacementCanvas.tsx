@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
+import { MoreHorizontalIcon } from 'lucide-react';
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
@@ -26,6 +28,7 @@ interface PlacementCanvasProps {
 
 const PAD = 0.4;
 const CLICK_THRESHOLD_FT = 0.15;
+const DRAG_THRESHOLD_PX = 6;
 const MIN_PLACEMENT_SIZE = 0.5;
 
 function toSVGPoint(
@@ -39,79 +42,8 @@ function toSVGPoint(
   return { x: svgPt.x, y: svgPt.y };
 }
 
-function PlacementItemControls({
-  widthFt,
-  heightFt,
-  containerWidthFt,
-  zoom,
-  onMenuOpen,
-  onResizePointerDown,
-}: {
-  widthFt: number;
-  heightFt: number;
-  containerWidthFt: number;
-  zoom: number;
-  onMenuOpen: (x: number, y: number) => void;
-  onResizePointerDown?: (e: React.PointerEvent<SVGRectElement>) => void;
-}) {
-  const hs = Math.max(0.144, Math.min(containerWidthFt * 0.034, 0.42)) / zoom;
-  const dotR = hs * 0.074;
-  const dotSpacing = hs * 0.2;
-  const buttonX = widthFt - hs;
-  const menuCx = buttonX + hs / 2;
-  const menuCy = hs / 2;
-  const resizeY = heightFt - hs;
 
-  return (
-    <>
-      <rect
-        x={buttonX}
-        y={0}
-        width={hs}
-        height={hs}
-        rx={hs * 0.22}
-        fill="rgba(0,0,0,0.55)"
-        stroke="rgba(255,255,255,0.45)"
-        strokeWidth={hs * 0.11}
-        style={{ cursor: 'pointer' }}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onMenuOpen(e.clientX, e.clientY);
-        }}
-      />
-      <circle cx={menuCx - dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-      <circle cx={menuCx}              cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-      <circle cx={menuCx + dotSpacing} cy={menuCy} r={dotR} fill="white" pointerEvents="none" />
-
-      {onResizePointerDown && (
-        <g style={{ cursor: 'se-resize' }} onPointerDown={onResizePointerDown}>
-          <rect
-            x={buttonX}
-            y={resizeY}
-            width={hs}
-            height={hs}
-            rx={hs * 0.22}
-            fill="rgba(0,0,0,0.55)"
-            stroke="rgba(255,255,255,0.45)"
-            strokeWidth={hs * 0.11}
-          />
-          {/* Corner bracket pointing SE */}
-          <path
-            d={`M ${buttonX + hs * 0.52},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.74} L ${buttonX + hs * 0.74},${resizeY + hs * 0.52}`}
-            stroke="white"
-            strokeWidth={hs * 0.148}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-            opacity={0.85}
-            pointerEvents="none"
-          />
-        </g>
-      )}
-    </>
-  );
-}
+type ToolbarAnchor = { top: number; left: number; width: number };
 
 function DraggableItem({
   item,
@@ -122,8 +54,8 @@ function DraggableItem({
   renderItem,
   onMove,
   onResize,
-  onMenuOpen,
-  isMenuActive,
+  onSelect,
+  isSelected,
 }: {
   item: CanvasItem;
   containerWidthFt: number;
@@ -133,21 +65,29 @@ function DraggableItem({
   renderItem: (item: CanvasItem) => React.ReactNode;
   onMove: (id: string, x: number, y: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
-  onMenuOpen: (id: string, x: number, y: number) => void;
-  isMenuActive: boolean;
+  onSelect: (id: string, anchor: ToolbarAnchor) => void;
+  isSelected: boolean;
 }) {
   const [pos, setPos] = useState({ x: item.x, y: item.y });
   const [size, setSize] = useState({ w: item.widthFt, h: item.heightFt });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+
   const dragStart = useRef<{
     svgX: number;
     svgY: number;
     itemX: number;
     itemY: number;
+    clientX: number;
+    clientY: number;
   } | null>(null);
-  const resizeStart = useRef<{ svgX: number; svgY: number; w: number; h: number } | null>(null);
+  const resizeStart = useRef<{
+    svgX: number;
+    svgY: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const hasMoved = useRef(false);
   const gRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
@@ -166,22 +106,37 @@ function DraggableItem({
       svgY: coords.y,
       itemX: pos.x,
       itemY: pos.y,
+      clientX: e.clientX,
+      clientY: e.clientY,
     };
+    hasMoved.current = false;
     setIsDragging(true);
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   }
 
-  function handleResizePointerDown(e: React.PointerEvent<SVGRectElement>) {
+  function handleResizePointerDown(e: React.PointerEvent<SVGElement>) {
     e.stopPropagation();
     const svg = gRef.current!.ownerSVGElement!;
     const coords = toSVGPoint(e.nativeEvent, svg);
-    resizeStart.current = { svgX: coords.x, svgY: coords.y, w: size.w, h: size.h };
+    resizeStart.current = {
+      svgX: coords.x,
+      svgY: coords.y,
+      w: size.w,
+      h: size.h,
+    };
     setIsResizing(true);
     gRef.current!.setPointerCapture(e.pointerId);
   }
 
   function handlePointerMove(e: React.PointerEvent<SVGGElement>) {
-    if (isDragging && dragStart.current) {
+    if (isDragging && !hasMoved.current && dragStart.current) {
+      const dx = e.clientX - dragStart.current.clientX;
+      const dy = e.clientY - dragStart.current.clientY;
+      if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) hasMoved.current = true;
+    } else if (isResizing && !hasMoved.current) {
+      hasMoved.current = true;
+    }
+    if (isDragging && hasMoved.current && dragStart.current) {
       const svg = gRef.current!.ownerSVGElement!;
       const coords = toSVGPoint(e.nativeEvent, svg);
       const newX = Math.max(
@@ -199,7 +154,7 @@ function DraggableItem({
         ),
       );
       setPos({ x: newX, y: newY });
-    } else if (isResizing && resizeStart.current) {
+    } else if (isResizing && hasMoved.current && resizeStart.current) {
       const svg = gRef.current!.ownerSVGElement!;
       const coords = toSVGPoint(e.nativeEvent, svg);
       const newW = Math.max(
@@ -226,8 +181,36 @@ function DraggableItem({
     if (isDragging) {
       setIsDragging(false);
       dragStart.current = null;
-      if (pos.x !== item.x || pos.y !== item.y) {
-        onMove(item.id, pos.x, pos.y);
+      if (hasMoved.current) {
+        if (pos.x !== item.x || pos.y !== item.y) onMove(item.id, pos.x, pos.y);
+        if (isSelected) {
+          const svg = gRef.current!.ownerSVGElement!;
+          const ctm = svg.getScreenCTM()!;
+          const tl = svg.createSVGPoint();
+          tl.x = pos.x; tl.y = pos.y;
+          const tlScreen = tl.matrixTransform(ctm);
+          const tr = svg.createSVGPoint();
+          tr.x = pos.x + size.w; tr.y = pos.y;
+          const trScreen = tr.matrixTransform(ctm);
+          onSelect(item.id, { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x });
+        }
+      } else {
+        // No movement — treat as a click and select this item
+        const svg = gRef.current!.ownerSVGElement!;
+        const ctm = svg.getScreenCTM()!;
+        const tl = svg.createSVGPoint();
+        tl.x = pos.x;
+        tl.y = pos.y;
+        const tlScreen = tl.matrixTransform(ctm);
+        const tr = svg.createSVGPoint();
+        tr.x = pos.x + size.w;
+        tr.y = pos.y;
+        const trScreen = tr.matrixTransform(ctm);
+        onSelect(item.id, {
+          top: tlScreen.y,
+          left: tlScreen.x,
+          width: trScreen.x - tlScreen.x,
+        });
       }
     } else if (isResizing) {
       setIsResizing(false);
@@ -238,12 +221,14 @@ function DraggableItem({
     }
   }
 
-  const showControls = (isHovered || isMenuActive) && !isDragging && !isResizing;
+  const handleR = Math.min(0.05 / zoom, Math.min(size.w, size.h) * 0.125);
 
   return (
     <g
       ref={gRef}
-      style={{ cursor: isDragging ? 'grabbing' : isResizing ? 'se-resize' : 'grab' }}
+      style={{
+        cursor: isDragging ? 'grabbing' : isResizing ? 'se-resize' : 'grab',
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onLostPointerCapture={handleLostPointerCapture}
@@ -251,24 +236,36 @@ function DraggableItem({
       <g
         transform={`translate(${pos.x}, ${pos.y})`}
         opacity={isDragging || isResizing ? 0.65 : 1}
-        onPointerEnter={() => setIsHovered(true)}
-        onPointerLeave={() => setIsHovered(false)}
       >
         {label && <title>{label}</title>}
-        {/* Transparent hit rect — gives the <g> a defined area so pointerEnter/Leave fire reliably */}
+        {/* Transparent hit rect — ensures the <g> has a defined pointer area */}
         <rect x={0} y={0} width={size.w} height={size.h} fill="transparent" />
 
         {renderItem({ ...item, x: pos.x, y: pos.y, widthFt: size.w, heightFt: size.h })}
 
-        {showControls && (
-          <PlacementItemControls
-            widthFt={size.w}
-            heightFt={size.h}
-            containerWidthFt={containerWidthFt}
-            zoom={zoom}
-            onMenuOpen={(x, y) => onMenuOpen(item.id, x, y)}
-            onResizePointerDown={onResize ? handleResizePointerDown : undefined}
-          />
+        {isSelected && (
+          <>
+            <rect
+              x={-0.06} y={-0.06}
+              width={size.w + 0.12} height={size.h + 0.12}
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth={0.055}
+              strokeDasharray="0.18 0.1"
+              rx={0.12}
+              pointerEvents="none"
+            />
+            {onResize && (
+              <circle
+                cx={size.w} cy={size.h} r={handleR}
+                fill="hsl(var(--primary))"
+                stroke="white"
+                strokeWidth={handleR * 0.35}
+                style={{ cursor: 'se-resize' }}
+                onPointerDown={handleResizePointerDown}
+              />
+            )}
+          </>
         )}
       </g>
     </g>
@@ -289,8 +286,25 @@ export default function PlacementCanvas({
   getItemLabel,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const bgClickStart = useRef<{ x: number; y: number } | null>(null);
-  const [svgMenu, setSvgMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{
+    id: string;
+    anchor: ToolbarAnchor;
+  } | null>(null);
+
+  useEffect(() => {
+    function handlePointerDown(e: PointerEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setSelectedItem(null);
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
   const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
     if (storageKey) {
       const stored = localStorage.getItem(storageKey);
@@ -324,33 +338,20 @@ export default function PlacementCanvas({
       coords.y - bgClickStart.current.y,
     );
     if (dist < CLICK_THRESHOLD_FT) {
-      onEmptyClick(
-        Math.max(0, Math.min(coords.x, widthFt)),
-        Math.max(0, Math.min(coords.y, heightFt)),
-      );
+      if (selectedItem) {
+        setSelectedItem(null);
+      } else {
+        onEmptyClick(
+          Math.max(0, Math.min(coords.x, widthFt)),
+          Math.max(0, Math.min(coords.y, heightFt)),
+        );
+      }
     }
     bgClickStart.current = null;
   }
 
-  // Virtual anchor so Base UI positions the menu at the SVG button's screen coordinates
-  const menuAnchor = svgMenu
-    ? {
-        getBoundingClientRect: () => ({
-          x: svgMenu.x,
-          y: svgMenu.y,
-          width: 0,
-          height: 0,
-          top: svgMenu.y,
-          left: svgMenu.x,
-          right: svgMenu.x,
-          bottom: svgMenu.y,
-          toJSON: () => ({}),
-        }),
-      }
-    : undefined;
-
   return (
-    <div className="space-y-2">
+    <div ref={containerRef} className="space-y-2">
       <div className="flex justify-end gap-1">
         {ZOOM_LEVELS.map((level) => (
           <button
@@ -369,104 +370,168 @@ export default function PlacementCanvas({
         ))}
       </div>
 
-      <div className="overflow-x-auto min-h-[200px]">
-      <svg
-        ref={svgRef}
-        viewBox={viewBox}
-        style={{ width: `${zoom * 100}%`, height: 'auto', display: 'block', margin: zoom < 1 ? '0 auto' : undefined }}
+      <div
+        className="overflow-x-auto min-h-[200px]"
+        onPointerDown={(e) => { if (e.target === e.currentTarget) setSelectedItem(null); }}
       >
-        {/* Background: click-to-place target */}
-        <rect
-          x={0}
-          y={0}
-          width={widthFt}
-          height={heightFt}
-          fill="transparent"
-          style={{ cursor: 'crosshair' }}
-          onPointerDown={handleBgPointerDown}
-          onPointerUp={handleBgPointerUp}
-        />
+        <svg
+          ref={svgRef}
+          viewBox={viewBox}
+          style={{
+            width: `${zoom * 100}%`,
+            height: 'auto',
+            display: 'block',
+            margin: zoom < 1 ? '0 auto' : undefined,
+          }}
+        >
+          {/* Background: click-to-place target */}
+          <rect
+            x={0}
+            y={0}
+            width={widthFt}
+            height={heightFt}
+            fill="transparent"
+            style={{ cursor: 'crosshair' }}
+            onPointerDown={handleBgPointerDown}
+            onPointerUp={handleBgPointerUp}
+          />
 
-        {/* 1-ft grid lines */}
-        {Array.from({ length: gridCols + 1 }, (_, i) => (
-          <line
-            key={`v${i}`}
-            x1={i} y1={0} x2={i} y2={heightFt}
-            stroke="currentColor" strokeWidth={0.025}
-            className="text-border/50"
+          {/* 1-ft grid lines */}
+          {Array.from({ length: gridCols + 1 }, (_, i) => (
+            <line
+              key={`v${i}`}
+              x1={i}
+              y1={0}
+              x2={i}
+              y2={heightFt}
+              stroke="currentColor"
+              strokeWidth={0.025}
+              className="text-border/50"
+              pointerEvents="none"
+            />
+          ))}
+          {Array.from({ length: gridRows + 1 }, (_, i) => (
+            <line
+              key={`h${i}`}
+              x1={0}
+              y1={i}
+              x2={widthFt}
+              y2={i}
+              stroke="currentColor"
+              strokeWidth={0.025}
+              className="text-border/50"
+              pointerEvents="none"
+            />
+          ))}
+
+          {/* Axis labels */}
+          {Array.from({ length: gridCols + 1 }, (_, i) => (
+            <text
+              key={`xl${i}`}
+              x={i}
+              y={-PAD * 0.4}
+              textAnchor="middle"
+              fontSize={PAD * 0.55}
+              className="fill-muted-foreground"
+              pointerEvents="none"
+              style={{ letterSpacing: 0 }}
+            >
+              {i}
+            </text>
+          ))}
+
+          {/* Boundary outline */}
+          <rect
+            x={0}
+            y={0}
+            width={widthFt}
+            height={heightFt}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={0.05}
+            className="text-border"
             pointerEvents="none"
           />
-        ))}
-        {Array.from({ length: gridRows + 1 }, (_, i) => (
-          <line
-            key={`h${i}`}
-            x1={0} y1={i} x2={widthFt} y2={i}
-            stroke="currentColor" strokeWidth={0.025}
-            className="text-border/50"
-            pointerEvents="none"
-          />
-        ))}
 
-        {/* Axis labels */}
-        {Array.from({ length: gridCols + 1 }, (_, i) => (
-          <text
-            key={`xl${i}`}
-            x={i} y={-PAD * 0.4}
-            textAnchor="middle"
-            fontSize={PAD * 0.55}
-            className="fill-muted-foreground"
-            pointerEvents="none"
-            style={{ letterSpacing: 0 }}
-          >
-            {i}
-          </text>
-        ))}
+          {/* Placed items */}
+          {items.map((item) => (
+            <DraggableItem
+              key={item.id}
+              item={item}
+              containerWidthFt={widthFt}
+              containerHeightFt={heightFt}
+              zoom={zoom}
+              label={getItemLabel?.(item.id)}
+              renderItem={renderItem}
+              onMove={onMove}
+              onResize={onResize}
+              onSelect={(id, anchor) => setSelectedItem({ id, anchor })}
+              isSelected={selectedItem?.id === item.id}
+            />
+          ))}
+        </svg>
 
-        {/* Boundary outline */}
-        <rect
-          x={0} y={0}
-          width={widthFt} height={heightFt}
-          fill="none"
-          stroke="currentColor" strokeWidth={0.05}
-          className="text-border"
-          pointerEvents="none"
-        />
-
-        {/* Placed items */}
-        {items.map((item) => (
-          <DraggableItem
-            key={item.id}
-            item={item}
-            containerWidthFt={widthFt}
-            containerHeightFt={heightFt}
-            zoom={zoom}
-            label={getItemLabel?.(item.id)}
-            renderItem={renderItem}
-            onMove={onMove}
-            onResize={onResize}
-            onMenuOpen={(id, x, y) => setSvgMenu({ id, x, y })}
-            isMenuActive={svgMenu?.id === item.id}
-          />
-        ))}
-      </svg>
-
-      {/* Menu lives outside the SVG so Base UI's HTML trigger works correctly */}
-      {svgMenu && (
-        <DropdownMenu open onOpenChange={(open) => { if (!open) setSvgMenu(null); }}>
-          <DropdownMenuContent side="bottom" align="end" anchor={menuAnchor}>
-            {getMenuItems(svgMenu.id).map((mi) => (
-              <DropdownMenuItem
-                key={mi.label}
-                variant={mi.variant}
-                onClick={() => { mi.onClick(); setSvgMenu(null); }}
+        {/* Floating selection toolbar */}
+        {selectedItem &&
+          (() => {
+            const menuItems = getMenuItems(selectedItem.id);
+            const primary = menuItems.filter((mi) => mi.primary);
+            const overflow = menuItems.filter((mi) => !mi.primary);
+            return (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: selectedItem.anchor.top - 44,
+                  left: selectedItem.anchor.left + selectedItem.anchor.width / 2,
+                  transform: 'translateX(-50%)',
+                  zIndex: 50,
+                }}
+                className="flex items-center bg-popover border border-border rounded-lg shadow-lg px-1 py-1"
               >
-                {mi.icon}
-                {mi.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+                {primary.map((mi) => (
+                  <button
+                    key={mi.label}
+                    type="button"
+                    aria-label={mi.label}
+                    onClick={() => { mi.onClick(); setSelectedItem(null); }}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2 py-1 rounded text-xs hover:bg-muted',
+                      mi.variant === 'destructive' ? 'text-destructive' : '',
+                    )}
+                  >
+                    {mi.icon && <span className="[&>svg]:size-3">{mi.icon}</span>}
+                    {mi.label}
+                  </button>
+                ))}
+
+                {overflow.length > 0 && (
+                  <>
+                    {primary.length > 0 && <div className="w-px h-4 bg-border mx-0.5" />}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        className="flex items-center px-2 py-1 rounded text-xs hover:bg-muted text-muted-foreground"
+                      >
+                        <MoreHorizontalIcon className="size-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="bottom" align="end">
+                        {overflow.map((mi) => (
+                          <DropdownMenuItem
+                            key={mi.label}
+                            variant={mi.variant}
+                            onClick={() => { mi.onClick(); setSelectedItem(null); }}
+                          >
+                            {mi.icon}
+                            {mi.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
+              </div>
+            );
+          })()}
+
       </div>
     </div>
   );

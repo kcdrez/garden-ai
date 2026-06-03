@@ -105,6 +105,7 @@ export default function GardenGrid({
       {
         label: 'Go to bed',
         icon: <ExternalLinkIcon className="size-4" />,
+        primary: true,
         onClick: () => {
           if (bed) navigate(routes.bedDetail(gardenId, bed.id));
         },
@@ -112,17 +113,20 @@ export default function GardenGrid({
       {
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
+        primary: true,
         onClick: () => { if (bed) setEditingBed(bed); },
       },
       {
         label: 'Remove From Layout',
         icon: <MinusCircleIcon className="size-4" />,
+        primary: true,
         onClick: () => removePlacement(placementId),
       },
       {
         label: 'Delete',
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
+        primary: true,
         onClick: async () => {
           if (!bed) return;
           const ok = await confirm({

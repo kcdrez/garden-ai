@@ -11,4 +11,5 @@ export interface CanvasMenuItem {
   icon?: React.ReactNode;
   onClick: () => void;
   variant?: 'destructive';
+  primary?: boolean;
 }
