@@ -103,6 +103,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
         onClick: () => { if (plant) setEditingPlantId(plant.id); },
+        primary: true,
       },
       {
         label: 'Duplicate',
@@ -126,6 +127,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         label: 'Delete',
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
+        primary: true,
         onClick: async () => {
           if (!plant) return;
           const ok = await confirm({
