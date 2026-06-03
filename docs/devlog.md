@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-06-03 — ~1.5 hours
+
+**Completed:**
+
+- E2E test fix — pre-existing `createPlantInBed` bug: regex `/^PlantName/` failed for plants without a PNG image (emoji span prefixes the button's accessible name); removed the `^` anchor
+- PlaceBedDialog "Create new bed" wizard — matches the PlacePlantDialog pattern; uses `quickBedSchema` form (name, length, width, unit); `useBedPlacementActions.createPlacement` now accepts an optional `onSuccess` callback so the dialog auto-closes after placement
+- Canvas selection model — replaced hover-triggered SVG controls with click-to-select; `PlacementItemControls` removed; floating HTML toolbar appears above selected item; toolbar shows `primary` items inline (icon + label) and overflow in a `···` dropdown; deselects on background/outside-container click; toolbar snaps to item's new position after drag; 6px drag threshold prevents accidental drags on intentional clicks
+- `primary` flag on `CanvasMenuItem` — callers mark 2–3 actions as primary; BedGrid: Edit + Delete; GardenGrid: all 4; remaining plant actions (View Details, Observations, Duplicate, Move to Another Bed, Remove From Layout) go to overflow
+- Resize handle moved to selection state — corner circle at BR of selection ring replaces the old hover resize button; size is `Math.min(0.05 / zoom, shortestDimension * 0.125)`
+
+**Next up:** Keyboard shortcuts — `Delete`/`Backspace` to remove the selected item, arrow keys to nudge position; builds directly on the click-to-select selection model
+
+---
+
 ## 2026-06-02 — ~1.5 hours
 
 **Completed:**
