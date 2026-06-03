@@ -45,6 +45,20 @@ function toSVGPoint(
 
 type ToolbarAnchor = { top: number; left: number; width: number };
 
+function toToolbarAnchor(
+  item: { x: number; y: number; widthFt: number },
+  svg: SVGSVGElement,
+): ToolbarAnchor {
+  const ctm = svg.getScreenCTM()!;
+  const tl = svg.createSVGPoint();
+  tl.x = item.x; tl.y = item.y;
+  const tlScreen = tl.matrixTransform(ctm);
+  const tr = svg.createSVGPoint();
+  tr.x = item.x + item.widthFt; tr.y = item.y;
+  const trScreen = tr.matrixTransform(ctm);
+  return { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x };
+}
+
 function DraggableItem({
   item,
   containerWidthFt,
@@ -344,6 +358,20 @@ export default function PlacementCanvas({
         }
       }
 
+      if (e.key === 'Tab') {
+        if (items.length === 0 || !svgRef.current) return;
+        e.preventDefault();
+        const sorted = [...items].sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+        const currentIndex = sorted.findIndex((i) => i.id === selectedItem.id);
+        const nextIndex = e.shiftKey
+          ? (currentIndex - 1 + sorted.length) % sorted.length
+          : (currentIndex + 1) % sorted.length;
+        const next = sorted[nextIndex];
+        const anchor = toToolbarAnchor(next, svgRef.current);
+        setSelectedItem({ id: next.id, anchor });
+        return;
+      }
+
       const NUDGE = e.shiftKey ? 1 : 0.25;
       const dx =
         e.key === 'ArrowLeft' ? -NUDGE : e.key === 'ArrowRight' ? NUDGE : 0;
@@ -359,23 +387,14 @@ export default function PlacementCanvas({
       const newY = Math.max(0, Math.min(item.y + dy, heightFt - item.heightFt));
       onMove(selectedItem.id, newX, newY);
 
-      const svg = svgRef.current;
-      const ctm = svg.getScreenCTM()!;
-      const tl = svg.createSVGPoint();
-      tl.x = newX; tl.y = newY;
-      const tlScreen = tl.matrixTransform(ctm);
-      const tr = svg.createSVGPoint();
-      tr.x = newX + item.widthFt; tr.y = newY;
-      const trScreen = tr.matrixTransform(ctm);
-      setSelectedItem({
-        id: selectedItem.id,
-        anchor: { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x },
-      });
+      const anchor = toToolbarAnchor({ ...item, x: newX, y: newY }, svgRef.current);
+      setSelectedItem({ id: selectedItem.id, anchor });
     }
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedItem, items, getMenuItems, onMove, widthFt, heightFt]);
+
   const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
     if (storageKey) {
       const stored = localStorage.getItem(storageKey);
@@ -391,6 +410,29 @@ export default function PlacementCanvas({
     setZoom(level);
     if (storageKey) localStorage.setItem(storageKey, String(level));
   }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const applyZoom = (level: (typeof ZOOM_LEVELS)[number]) => {
+        setZoom(level);
+        if (storageKey) localStorage.setItem(storageKey, String(level));
+      };
+      if (e.key === '=' || e.key === '+') {
+        const next = ZOOM_LEVELS[ZOOM_LEVELS.indexOf(zoom) + 1];
+        if (next !== undefined) { e.preventDefault(); applyZoom(next); }
+      } else if (e.key === '-') {
+        const prev = ZOOM_LEVELS[ZOOM_LEVELS.indexOf(zoom) - 1];
+        if (prev !== undefined) { e.preventDefault(); applyZoom(prev); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [zoom, storageKey]);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);
