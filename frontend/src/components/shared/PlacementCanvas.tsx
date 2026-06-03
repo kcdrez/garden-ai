@@ -295,9 +295,11 @@ export default function PlacementCanvas({
 
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
+      const target = e.target as HTMLElement;
       if (
         containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        !containerRef.current.contains(target) &&
+        !target.closest?.('[data-radix-popper-content-wrapper], [role="menu"], [role="dialog"], [role="alertdialog"]')
       ) {
         setSelectedItem(null);
       }
@@ -305,6 +307,75 @@ export default function PlacementCanvas({
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!selectedItem) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!selectedItem) return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+
+      if (e.key === 'Escape') {
+        setSelectedItem(null);
+        return;
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const deleteItem = getMenuItems(selectedItem.id).find(
+          (mi) => mi.variant === 'destructive',
+        );
+        deleteItem?.onClick();
+        setSelectedItem(null);
+        return;
+      }
+
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+        const match = getMenuItems(selectedItem.id).find(
+          (mi) => mi.shortcut === e.key,
+        );
+        if (match) {
+          e.preventDefault();
+          match.onClick();
+          setSelectedItem(null);
+          return;
+        }
+      }
+
+      const NUDGE = e.shiftKey ? 1 : 0.25;
+      const dx =
+        e.key === 'ArrowLeft' ? -NUDGE : e.key === 'ArrowRight' ? NUDGE : 0;
+      const dy =
+        e.key === 'ArrowUp' ? -NUDGE : e.key === 'ArrowDown' ? NUDGE : 0;
+      if (dx === 0 && dy === 0) return;
+      e.preventDefault();
+
+      const item = items.find((i) => i.id === selectedItem.id);
+      if (!item || !svgRef.current) return;
+
+      const newX = Math.max(0, Math.min(item.x + dx, widthFt - item.widthFt));
+      const newY = Math.max(0, Math.min(item.y + dy, heightFt - item.heightFt));
+      onMove(selectedItem.id, newX, newY);
+
+      const svg = svgRef.current;
+      const ctm = svg.getScreenCTM()!;
+      const tl = svg.createSVGPoint();
+      tl.x = newX; tl.y = newY;
+      const tlScreen = tl.matrixTransform(ctm);
+      const tr = svg.createSVGPoint();
+      tr.x = newX + item.widthFt; tr.y = newY;
+      const trScreen = tr.matrixTransform(ctm);
+      setSelectedItem({
+        id: selectedItem.id,
+        anchor: { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x },
+      });
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItem, items, getMenuItems, onMove, widthFt, heightFt]);
   const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
     if (storageKey) {
       const stored = localStorage.getItem(storageKey);
@@ -501,6 +572,9 @@ export default function PlacementCanvas({
                   >
                     {mi.icon && <span className="[&>svg]:size-3">{mi.icon}</span>}
                     {mi.label}
+                    {mi.shortcut && (
+                      <kbd className="ml-0.5 font-mono text-[10px] opacity-50">{mi.shortcut}</kbd>
+                    )}
                   </button>
                 ))}
 
@@ -522,6 +596,9 @@ export default function PlacementCanvas({
                           >
                             {mi.icon}
                             {mi.label}
+                            {mi.shortcut && (
+                              <kbd className="ml-auto pl-4 font-mono text-xs opacity-50">{mi.shortcut}</kbd>
+                            )}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
