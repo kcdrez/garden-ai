@@ -74,6 +74,21 @@ describe('ProfileForm', () => {
     );
   });
 
+  it('shows server field error when the mutation fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateProfile).mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { email: ['This email is already in use.'] } },
+    });
+    render(<ProfileForm profile={mockProfile} />);
+
+    await user.clear(screen.getByLabelText(/first name/i));
+    await user.type(screen.getByLabelText(/first name/i), 'Bob');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await screen.findByText(/this email is already in use/i);
+  });
+
   it('shows a validation error for an invalid email', async () => {
     const user = userEvent.setup();
     render(<ProfileForm profile={mockProfile} />);

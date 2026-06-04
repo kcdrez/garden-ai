@@ -18,8 +18,12 @@ vi.mock('@/hooks/useConfirm', () => ({
 }));
 
 vi.mock('@/components/beds/BedDialog', () => ({
-  default: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="Edit Bed Dialog" /> : null,
+  default: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) =>
+    open ? (
+      <div role="dialog" aria-label="Edit Bed Dialog">
+        <button onClick={() => onOpenChange(false)}>Close Bed Dialog</button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -51,10 +55,11 @@ vi.mock('@/components/shared/PlacementCanvas', () => ({
 }));
 
 vi.mock('@/components/gardens/PlaceBedDialog', () => ({
-  default: ({ open, onPlace }: { open: boolean; onPlace: (id: string) => void }) =>
+  default: ({ open, onPlace, onOpenChange }: { open: boolean; onPlace: (id: string) => void; onOpenChange: (open: boolean) => void }) =>
     open ? (
       <div role="dialog" aria-label="Place Bed Dialog">
         <button onClick={() => onPlace('bed-1')}>Place bed-1</button>
+        <button onClick={() => onOpenChange(false)}>Close Place Bed Dialog</button>
       </div>
     ) : null,
 }));
@@ -235,5 +240,34 @@ describe('GardenGrid', () => {
     await waitFor(() => {
       expect(screen.queryByText(/resizing would push plants/i)).not.toBeInTheDocument();
     });
+  });
+
+  it('opens BedDialog when Add Bed button is clicked', async () => {
+    const user = userEvent.setup();
+    renderGardenGrid();
+    await screen.findByTestId('placement-canvas');
+    await user.click(screen.getByRole('button', { name: /add bed/i }));
+    expect(screen.getByRole('dialog', { name: /edit bed dialog/i })).toBeInTheDocument();
+  });
+
+  it('closes PlaceBedDialog and resets state when dialog is dismissed', async () => {
+    const user = userEvent.setup();
+    renderGardenGrid();
+    await screen.findByTestId('placement-canvas');
+    await user.click(screen.getByRole('button', { name: /click canvas/i }));
+    expect(screen.getByRole('dialog', { name: /place bed dialog/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /close place bed dialog/i }));
+    expect(screen.queryByRole('dialog', { name: /place bed dialog/i })).not.toBeInTheDocument();
+  });
+
+  it('closes edit BedDialog and clears editing state when dialog is dismissed', async () => {
+    const user = userEvent.setup();
+    mockFetchBedPlacements.mockResolvedValue([placement]);
+    renderGardenGrid();
+    await screen.findByTestId('canvas-item-bp-1');
+    await user.click(screen.getByRole('button', { name: /edit bp-1/i }));
+    expect(screen.getByRole('dialog', { name: /edit bed dialog/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /close bed dialog/i }));
+    expect(screen.queryByRole('dialog', { name: /edit bed dialog/i })).not.toBeInTheDocument();
   });
 });

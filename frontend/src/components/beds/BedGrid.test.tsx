@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant, fetchCompanionHints } from '@/api/plants';
@@ -20,12 +21,13 @@ vi.mock('@/hooks/useConfirm', () => ({
 }));
 
 vi.mock('@/components/shared/PlacementCanvas', () => ({
-  default: ({ items, onEmptyClick, onMove, onResize, getMenuItems }: {
-    items: { id: string }[];
+  default: ({ items, onEmptyClick, onMove, onResize, getMenuItems, renderItem }: {
+    items: { id: string; widthFt: number; heightFt: number }[];
     onEmptyClick: (x: number, y: number) => void;
     onMove: (id: string, x: number, y: number) => void;
     onResize?: (id: string, w: number, h: number) => void;
     getMenuItems: (id: string) => { label: string; onClick: () => void }[];
+    renderItem: (item: { id: string; widthFt: number; heightFt: number }) => React.ReactNode;
   }) => (
     <div data-testid="placement-canvas">
       <button onClick={() => onEmptyClick(1.5, 2.0)}>Click canvas</button>
@@ -36,6 +38,7 @@ vi.mock('@/components/shared/PlacementCanvas', () => ({
           {getMenuItems(item.id).map((mi) => (
             <button key={mi.label} onClick={mi.onClick}>{mi.label} {item.id}</button>
           ))}
+          <svg>{renderItem(item)}</svg>
         </div>
       ))}
     </div>
@@ -350,6 +353,18 @@ describe('BedGrid', () => {
     }]);
     renderBedGrid();
     await screen.findByText(/companion planting/i);
+    expect(screen.getByText(/incompatible with/i)).toBeInTheDocument();
+  });
+
+  it('renders gradient ring when placed plant has both beneficial and harmful neighbors', async () => {
+    mockFetchPlacements.mockResolvedValue([placement]);
+    mockFetchCompanionHints.mockResolvedValue([
+      { plantAId: 'catalog-1', plantAName: 'Tomato', plantBId: 'catalog-2', plantBName: 'Basil', relationship: 'beneficial', notes: '' },
+      { plantAId: 'catalog-1', plantAName: 'Tomato', plantBId: 'catalog-3', plantBName: 'Fennel', relationship: 'harmful', notes: '' },
+    ]);
+    renderBedGrid();
+    await screen.findByText(/companion planting/i);
+    expect(screen.getByText(/benefits/i)).toBeInTheDocument();
     expect(screen.getByText(/incompatible with/i)).toBeInTheDocument();
   });
 });
