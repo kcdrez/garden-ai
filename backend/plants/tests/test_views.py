@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from gardens.models import Garden, GardenBed
-from plants.models import Observation, Plant, PlantPlacement, UserPlant
+from plants.models import CompanionPlanting, Observation, Plant, PlantPlacement, UserPlant
 
 
 class UserPlantAPITests(APITestCase):
@@ -522,3 +522,59 @@ class PlantModelTests(APITestCase):
         up = UserPlant.objects.create(bed=self.bed, plant=self.plant, status="planted")
         pp = PlantPlacement.objects.create(user_plant=up, bed=self.bed, x=1, y=2)
         self.assertIn("@ (1, 2)", str(pp))
+
+
+class CompanionHintsViewTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice_ch", password="testpass123")
+        self.other = User.objects.create_user(username="bob_ch", password="testpass123")
+        self.client.force_authenticate(user=self.user)
+
+        self.garden = Garden.objects.create(name="Alice's Garden", owner=self.user)
+        self.bed = GardenBed.objects.create(name="Bed 1", garden=self.garden, length=4, width=8)
+
+        plants = list(Plant.objects.order_by("id")[:2])
+        if str(plants[0].id) < str(plants[1].id):
+            self.plant_a, self.plant_b = plants[0], plants[1]
+        else:
+            self.plant_a, self.plant_b = plants[1], plants[0]
+
+        self.companion = CompanionPlanting.objects.create(
+            plant_a=self.plant_a,
+            plant_b=self.plant_b,
+            relationship=CompanionPlanting.Relationship.BENEFICIAL,
+            notes="Test pair",
+        )
+
+    def _url(self, garden_id=None, bed_id=None):
+        return reverse("companion-hints", kwargs={
+            "garden_id": garden_id or self.garden.id,
+            "bed_id": bed_id or self.bed.id,
+        })
+
+    def test_returns_empty_when_no_plants_in_bed(self):
+        res = self.client.get(self._url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, [])
+
+    def test_returns_empty_when_only_one_plant_of_pair_in_bed(self):
+        UserPlant.objects.create(bed=self.bed, plant=self.plant_a, status="planted")
+        res = self.client.get(self._url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, [])
+
+    def test_returns_hint_when_both_plants_in_bed(self):
+        UserPlant.objects.create(bed=self.bed, plant=self.plant_a, status="planted")
+        UserPlant.objects.create(bed=self.bed, plant=self.plant_b, status="planted")
+        res = self.client.get(self._url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]["relationship"], "beneficial")
+        self.assertEqual(res.data[0]["plant_a_name"], self.plant_a.common_name)
+        self.assertEqual(res.data[0]["plant_b_name"], self.plant_b.common_name)
+
+    def test_returns_404_for_other_users_bed(self):
+        other_garden = Garden.objects.create(name="Bob's Garden", owner=self.other)
+        other_bed = GardenBed.objects.create(name="Bob's Bed", garden=other_garden, length=4, width=8)
+        res = self.client.get(self._url(other_garden.id, other_bed.id))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

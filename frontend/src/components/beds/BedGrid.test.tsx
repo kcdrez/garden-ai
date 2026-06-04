@@ -1,6 +1,7 @@
+import React from 'react';
 import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
-import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement, cloneUserPlant, deleteUserPlant, fetchCompanionHints } from '@/api/plants';
 import { mockBed, mockUserPlant } from '@/test/fixtures';
 import BedGrid from './BedGrid';
 
@@ -12,6 +13,7 @@ vi.mock('@/api/plants', () => ({
   deletePlacement: vi.fn(),
   cloneUserPlant: vi.fn(),
   deleteUserPlant: vi.fn(),
+  fetchCompanionHints: vi.fn(),
 }));
 
 vi.mock('@/hooks/useConfirm', () => ({
@@ -19,12 +21,13 @@ vi.mock('@/hooks/useConfirm', () => ({
 }));
 
 vi.mock('@/components/shared/PlacementCanvas', () => ({
-  default: ({ items, onEmptyClick, onMove, onResize, getMenuItems }: {
-    items: { id: string }[];
+  default: ({ items, onEmptyClick, onMove, onResize, getMenuItems, renderItem }: {
+    items: { id: string; widthFt: number; heightFt: number }[];
     onEmptyClick: (x: number, y: number) => void;
     onMove: (id: string, x: number, y: number) => void;
     onResize?: (id: string, w: number, h: number) => void;
     getMenuItems: (id: string) => { label: string; onClick: () => void }[];
+    renderItem: (item: { id: string; widthFt: number; heightFt: number }) => React.ReactNode;
   }) => (
     <div data-testid="placement-canvas">
       <button onClick={() => onEmptyClick(1.5, 2.0)}>Click canvas</button>
@@ -35,6 +38,7 @@ vi.mock('@/components/shared/PlacementCanvas', () => ({
           {getMenuItems(item.id).map((mi) => (
             <button key={mi.label} onClick={mi.onClick}>{mi.label} {item.id}</button>
           ))}
+          <svg>{renderItem(item)}</svg>
         </div>
       ))}
     </div>
@@ -93,6 +97,7 @@ const mockResizePlacement = vi.mocked(resizePlacement);
 const mockDeletePlacement = vi.mocked(deletePlacement);
 const mockCloneUserPlant = vi.mocked(cloneUserPlant);
 const mockDeleteUserPlant = vi.mocked(deleteUserPlant);
+const mockFetchCompanionHints = vi.mocked(fetchCompanionHints);
 
 const bed = { ...mockBed, length: 8, width: 4, unit: 'ft' as const };
 const placement = { id: 'pl-1', userPlant: 'plant-1', bed: 'bed-1', x: 0, y: 0, width: 1.5, height: 1.5, createdAt: '', updatedAt: '' };
@@ -112,6 +117,7 @@ describe('BedGrid', () => {
     mockDeletePlacement.mockResolvedValue(undefined);
     mockCloneUserPlant.mockResolvedValue(mockUserPlant);
     mockDeleteUserPlant.mockResolvedValue(undefined);
+    mockFetchCompanionHints.mockResolvedValue([]);
   });
 
   it('shows loading spinner while placements load', () => {
@@ -311,5 +317,54 @@ describe('BedGrid', () => {
     await waitFor(() => {
       expect(mockDeleteUserPlant).toHaveBeenCalledWith('garden-1', 'bed-1', 'plant-1');
     });
+  });
+
+  // --- Companion planting panel ---
+
+  it('does not show companion panel when there are no hints', async () => {
+    renderBedGrid();
+    await screen.findByTestId('placement-canvas');
+    expect(screen.queryByText(/companion planting/i)).not.toBeInTheDocument();
+  });
+
+  it('shows companion panel with beneficial pair', async () => {
+    mockFetchCompanionHints.mockResolvedValue([{
+      plantAId: 'catalog-1',
+      plantAName: 'Tomato',
+      plantBId: 'catalog-2',
+      plantBName: 'Basil',
+      relationship: 'beneficial',
+      notes: '',
+    }]);
+    renderBedGrid();
+    await screen.findByText(/companion planting/i);
+    expect(screen.getByText(/benefits/i)).toBeInTheDocument();
+    expect(screen.getByText(/basil/i)).toBeInTheDocument();
+  });
+
+  it('shows companion panel with harmful pair', async () => {
+    mockFetchCompanionHints.mockResolvedValue([{
+      plantAId: 'catalog-1',
+      plantAName: 'Tomato',
+      plantBId: 'catalog-2',
+      plantBName: 'Fennel',
+      relationship: 'harmful',
+      notes: '',
+    }]);
+    renderBedGrid();
+    await screen.findByText(/companion planting/i);
+    expect(screen.getByText(/incompatible with/i)).toBeInTheDocument();
+  });
+
+  it('renders gradient ring when placed plant has both beneficial and harmful neighbors', async () => {
+    mockFetchPlacements.mockResolvedValue([placement]);
+    mockFetchCompanionHints.mockResolvedValue([
+      { plantAId: 'catalog-1', plantAName: 'Tomato', plantBId: 'catalog-2', plantBName: 'Basil', relationship: 'beneficial', notes: '' },
+      { plantAId: 'catalog-1', plantAName: 'Tomato', plantBId: 'catalog-3', plantBName: 'Fennel', relationship: 'harmful', notes: '' },
+    ]);
+    renderBedGrid();
+    await screen.findByText(/companion planting/i);
+    expect(screen.getByText(/benefits/i)).toBeInTheDocument();
+    expect(screen.getByText(/incompatible with/i)).toBeInTheDocument();
   });
 });

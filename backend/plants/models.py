@@ -73,6 +73,29 @@ class Observation(BaseModel):
         return f"{self.user_plant} — {self.type} on {self.observed_date}"
 
 
+class CompanionPlanting(BaseModel):
+    class Relationship(models.TextChoices):
+        BENEFICIAL = "beneficial", "Beneficial"
+        HARMFUL = "harmful", "Harmful"
+
+    plant_a = models.ForeignKey(Plant, related_name="companion_a_set", on_delete=models.CASCADE)
+    plant_b = models.ForeignKey(Plant, related_name="companion_b_set", on_delete=models.CASCADE)
+    relationship = models.CharField(max_length=20, choices=Relationship.choices)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["plant_a", "plant_b"], name="unique_companion_pair"),
+            models.CheckConstraint(
+                condition=models.Q(plant_a__lt=models.F("plant_b")),
+                name="companion_plant_a_lt_plant_b",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.plant_a} is {self.relationship} to {self.plant_b}"
+
+
 class PlantPlacement(BaseModel):
     user_plant = models.OneToOneField(UserPlant, related_name="placement", on_delete=models.CASCADE)
     bed = models.ForeignKey(GardenBed, related_name="placements", on_delete=models.CASCADE)

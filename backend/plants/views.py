@@ -7,8 +7,9 @@ from rest_framework.response import Response
 from core.utils import to_feet
 from gardens.models import Garden, GardenBed
 
-from .models import Observation, Plant, PlantPlacement, UserPlant
+from .models import CompanionPlanting, Observation, Plant, PlantPlacement, UserPlant
 from .serializers import (
+    CompanionHintSerializer,
     ObservationSerializer,
     ObservationUpdateSerializer,
     PlantPlacementSerializer,
@@ -132,6 +133,19 @@ class PlantPlacementViewSet(
         if user_plant.bed != bed:
             raise ValidationError({"user_plant": "This plant does not belong to this bed."})
         serializer.save(bed=bed)
+
+
+class CompanionHintsViewSet(BedScopedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = CompanionHintSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        bed = self._get_bed()
+        plant_ids = bed.user_plants.values_list("plant_id", flat=True).distinct()
+        return (
+            CompanionPlanting.objects.filter(plant_a_id__in=plant_ids, plant_b_id__in=plant_ids)
+            .select_related("plant_a", "plant_b")
+        )
 
 
 class ObservationViewSet(

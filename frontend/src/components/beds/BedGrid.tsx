@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { usePlantPlacementActions } from '@/hooks/usePlantPlacementActions';
+import { fetchCompanionHints } from '@/api/plants';
 import { routes } from '@/lib/routes';
 import { toFeet } from '@/lib/beds';
 import { plantEmoji, plantImage } from '@/lib/plants';
@@ -53,6 +55,11 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     isDeleting,
   } = usePlantPlacementActions(gardenId, bedId);
 
+  const { data: companionHints = [] } = useQuery({
+    queryKey: ['companion-hints', bedId],
+    queryFn: () => fetchCompanionHints(gardenId, bedId),
+  });
+
   if (isLoading) return <LoadingSpinner />;
 
   const widthFt = toFeet(bed.width, bed.unit);
@@ -63,6 +70,17 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const userPlantById = new Map<string, UserPlant>(userPlants.map((p) => [p.id, p]));
   const placementById = new Map(placements.map((p) => [p.id, p]));
   const unplacedPlants = userPlants.filter((p) => !placements.some((pl) => pl.userPlant === p.id));
+
+  // Map catalog plant ID → companion status for plants currently in this bed
+  const companionStatusByCatalogId = new Map<string, { hasBeneficial: boolean; hasHarmful: boolean }>();
+  for (const hint of companionHints) {
+    for (const catalogId of [hint.plantAId, hint.plantBId]) {
+      const existing = companionStatusByCatalogId.get(catalogId) ?? { hasBeneficial: false, hasHarmful: false };
+      if (hint.relationship === 'beneficial') existing.hasBeneficial = true;
+      if (hint.relationship === 'harmful') existing.hasHarmful = true;
+      companionStatusByCatalogId.set(catalogId, existing);
+    }
+  }
 
   // Derive live plant references from the current userPlants list so that
   // any re-render triggered by a mutation (e.g. status change) propagates
@@ -179,8 +197,40 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           const labelFontSize = Math.min(item.widthFt, item.heightFt) * 0.15;
           const truncatedLabel = canvasLabel.length > 10 ? canvasLabel.slice(0, 9) + '…' : canvasLabel;
 
+          const companionStatus = plant ? companionStatusByCatalogId.get(plant.plant) : undefined;
+          const hasBoth = companionStatus?.hasBeneficial && companionStatus?.hasHarmful;
+
           return (
             <>
+              {companionStatus?.hasBeneficial && !hasBoth && (
+                <ellipse
+                  cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
+                  fill="none" stroke="rgba(34,197,94,0.75)" strokeWidth={0.06}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+              {companionStatus?.hasHarmful && !hasBoth && (
+                <ellipse
+                  cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
+                  fill="none" stroke="rgba(239,68,68,0.75)" strokeWidth={0.06}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+              {hasBoth && (
+                <>
+                  <defs>
+                    <linearGradient id={`companion-gradient-${item.id}`} x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="rgba(34,197,94,0.75)" />
+                      <stop offset="100%" stopColor="rgba(239,68,68,0.75)" />
+                    </linearGradient>
+                  </defs>
+                  <ellipse
+                    cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
+                    fill="none" stroke={`url(#companion-gradient-${item.id})`} strokeWidth={0.06}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                </>
+              )}
               <ellipse
                 cx={cx} cy={cy} rx={rx} ry={ry}
                 fill="rgba(128,128,128,0.12)"
@@ -241,6 +291,29 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
       {mutationError && (
         <p className="mt-2 text-sm text-destructive">{mutationError}</p>
+      )}
+
+      {companionHints.length > 0 && (
+        <div className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+          <p className="font-medium mb-1 text-muted-foreground text-xs uppercase tracking-wide">Companion Planting</p>
+          <ul className="space-y-0.5">
+            {companionHints.map((hint) => (
+              <li key={`${hint.plantAId}-${hint.plantBId}`} className="flex items-center gap-1.5">
+                <span
+                  className="inline-block size-2 rounded-full shrink-0"
+                  style={{ background: hint.relationship === 'harmful' ? 'rgba(239,68,68,0.85)' : 'rgba(34,197,94,0.85)' }}
+                />
+                <span>
+                  {hint.relationship === 'harmful' ? (
+                    <><strong>{hint.plantAName}</strong> is incompatible with <strong>{hint.plantBName}</strong></>
+                  ) : (
+                    <><strong>{hint.plantAName}</strong> benefits <strong>{hint.plantBName}</strong></>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <div className="mt-6">
