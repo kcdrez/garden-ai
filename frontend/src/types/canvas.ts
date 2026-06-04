@@ -12,4 +12,5 @@ export interface CanvasMenuItem {
   onClick: () => void;
   variant?: 'destructive';
   primary?: boolean;
+  shortcut?: string;
 }

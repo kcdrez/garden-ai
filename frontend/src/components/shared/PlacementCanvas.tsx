@@ -45,6 +45,20 @@ function toSVGPoint(
 
 type ToolbarAnchor = { top: number; left: number; width: number };
 
+function toToolbarAnchor(
+  item: { x: number; y: number; widthFt: number },
+  svg: SVGSVGElement,
+): ToolbarAnchor {
+  const ctm = svg.getScreenCTM()!;
+  const tl = svg.createSVGPoint();
+  tl.x = item.x; tl.y = item.y;
+  const tlScreen = tl.matrixTransform(ctm);
+  const tr = svg.createSVGPoint();
+  tr.x = item.x + item.widthFt; tr.y = item.y;
+  const trScreen = tr.matrixTransform(ctm);
+  return { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x };
+}
+
 function DraggableItem({
   item,
   containerWidthFt,
@@ -295,9 +309,11 @@ export default function PlacementCanvas({
 
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
+      const target = e.target as HTMLElement;
       if (
         containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        !containerRef.current.contains(target) &&
+        !target.closest?.('[data-radix-popper-content-wrapper], [role="menu"], [role="dialog"], [role="alertdialog"]')
       ) {
         setSelectedItem(null);
       }
@@ -305,6 +321,80 @@ export default function PlacementCanvas({
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!selectedItem) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!selectedItem) return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+
+      if (e.key === 'Escape') {
+        setSelectedItem(null);
+        return;
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const deleteItem = getMenuItems(selectedItem.id).find(
+          (mi) => mi.variant === 'destructive',
+        );
+        deleteItem?.onClick();
+        setSelectedItem(null);
+        return;
+      }
+
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+        const match = getMenuItems(selectedItem.id).find(
+          (mi) => mi.shortcut === e.key,
+        );
+        if (match) {
+          e.preventDefault();
+          match.onClick();
+          setSelectedItem(null);
+          return;
+        }
+      }
+
+      if (e.key === 'Tab') {
+        if (items.length === 0 || !svgRef.current) return;
+        e.preventDefault();
+        const sorted = [...items].sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+        const currentIndex = sorted.findIndex((i) => i.id === selectedItem.id);
+        const nextIndex = e.shiftKey
+          ? (currentIndex - 1 + sorted.length) % sorted.length
+          : (currentIndex + 1) % sorted.length;
+        const next = sorted[nextIndex];
+        const anchor = toToolbarAnchor(next, svgRef.current);
+        setSelectedItem({ id: next.id, anchor });
+        return;
+      }
+
+      const NUDGE = e.shiftKey ? 1 : 0.25;
+      const dx =
+        e.key === 'ArrowLeft' ? -NUDGE : e.key === 'ArrowRight' ? NUDGE : 0;
+      const dy =
+        e.key === 'ArrowUp' ? -NUDGE : e.key === 'ArrowDown' ? NUDGE : 0;
+      if (dx === 0 && dy === 0) return;
+      e.preventDefault();
+
+      const item = items.find((i) => i.id === selectedItem.id);
+      if (!item || !svgRef.current) return;
+
+      const newX = Math.max(0, Math.min(item.x + dx, widthFt - item.widthFt));
+      const newY = Math.max(0, Math.min(item.y + dy, heightFt - item.heightFt));
+      onMove(selectedItem.id, newX, newY);
+
+      const anchor = toToolbarAnchor({ ...item, x: newX, y: newY }, svgRef.current);
+      setSelectedItem({ id: selectedItem.id, anchor });
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItem, items, getMenuItems, onMove, widthFt, heightFt]);
+
   const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
     if (storageKey) {
       const stored = localStorage.getItem(storageKey);
@@ -320,6 +410,29 @@ export default function PlacementCanvas({
     setZoom(level);
     if (storageKey) localStorage.setItem(storageKey, String(level));
   }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const applyZoom = (level: (typeof ZOOM_LEVELS)[number]) => {
+        setZoom(level);
+        if (storageKey) localStorage.setItem(storageKey, String(level));
+      };
+      if (e.key === '=' || e.key === '+') {
+        const next = ZOOM_LEVELS[ZOOM_LEVELS.indexOf(zoom) + 1];
+        if (next !== undefined) { e.preventDefault(); applyZoom(next); }
+      } else if (e.key === '-') {
+        const prev = ZOOM_LEVELS[ZOOM_LEVELS.indexOf(zoom) - 1];
+        if (prev !== undefined) { e.preventDefault(); applyZoom(prev); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [zoom, storageKey]);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);
@@ -501,6 +614,9 @@ export default function PlacementCanvas({
                   >
                     {mi.icon && <span className="[&>svg]:size-3">{mi.icon}</span>}
                     {mi.label}
+                    {mi.shortcut && (
+                      <kbd className="ml-0.5 font-mono text-[10px] opacity-50">{mi.shortcut}</kbd>
+                    )}
                   </button>
                 ))}
 
@@ -522,6 +638,9 @@ export default function PlacementCanvas({
                           >
                             {mi.icon}
                             {mi.label}
+                            {mi.shortcut && (
+                              <kbd className="ml-auto pl-4 font-mono text-xs opacity-50">{mi.shortcut}</kbd>
+                            )}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>

@@ -103,9 +103,10 @@ export default function GardenGrid({
     const bed = placement ? bedById.get(placement.bed) : undefined;
     return [
       {
-        label: 'Go to bed',
+        label: 'View Details',
         icon: <ExternalLinkIcon className="size-4" />,
         primary: true,
+        shortcut: 'v',
         onClick: () => {
           if (bed) navigate(routes.bedDetail(gardenId, bed.id));
         },
@@ -114,12 +115,14 @@ export default function GardenGrid({
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
         primary: true,
+        shortcut: 'e',
         onClick: () => { if (bed) setEditingBed(bed); },
       },
       {
         label: 'Remove From Layout',
         icon: <MinusCircleIcon className="size-4" />,
         primary: true,
+        shortcut: 'r',
         onClick: () => removePlacement(placementId),
       },
       {
@@ -127,6 +130,7 @@ export default function GardenGrid({
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
         primary: true,
+        shortcut: 'Del',
         onClick: async () => {
           if (!bed) return;
           const ok = await confirm({
