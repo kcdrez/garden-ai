@@ -3,10 +3,8 @@ import { USER_PLANT_STATUSES } from '@/types/plants';
 // Ideogram prompt: "Flat design icon of a [veggie], similar to an emoji, transparent background, consistent vegetable illustration style, no text"
 // To add a new image: drop a PNG named <plant-name-lowercase>.png into src/assets/garden_icons/
 // Missing images (falls back to emoji):
-//   Vegetables: arugula, asparagus, beet, bell pepper, broccoli, cabbage, carrot, cucumber, eggplant, garlic, green bean, jalapeño, leek, onion, pea, potato, rutabaga, sweet corn, sweet potato, swiss chard
-//   Fruits:     blueberry, cantaloupe, strawberry, watermelon
-//   Flowers:    calendula, echinacea, lavender, marigold, nasturtium, sunflower, zinnia
-//   Herbs:      dill, fennel, lemon balm, mint, oregano, sage, thyme
+//   Vegetables: cauliflower, lettuce, raddish, rutabaga, sage, spinach, squash, tomato, zucchini
+//   Flowers:    calendula, echinacea, lavender, marigold, nasturtium, sunflower
 const plantImageModules = import.meta.glob('@/assets/garden_icons/*.png', {
   eager: true,
   import: 'default',

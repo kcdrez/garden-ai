@@ -87,27 +87,32 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       {
         label: 'Remove From Layout',
         icon: <MinusCircleIcon className="size-4" />,
+        shortcut: 'r',
         onClick: () => removePlacement(placementId),
       },
       {
         label: 'View Details',
         icon: <ArrowUpRightIcon className="size-4" />,
+        shortcut: 'v',
         onClick: () => { if (plant) navigate(routes.plantDetail(plant.id)); },
       },
       {
         label: 'Observations',
         icon: <ClipboardListIcon className="size-4" />,
+        shortcut: 'o',
         onClick: () => { if (plant) setObservingPlantId(plant.id); },
       },
       {
         label: 'Edit',
         icon: <EditIcon className="size-4" />,
+        shortcut: 'e',
         onClick: () => { if (plant) setEditingPlantId(plant.id); },
         primary: true,
       },
       {
         label: 'Duplicate',
         icon: <CopyIcon className="size-4" />,
+        shortcut: 'd',
         onClick: () => {
           if (!plant) return;
           const p = placementById.get(placementId);
@@ -121,6 +126,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
       {
         label: 'Move to Another Bed',
         icon: <ArrowRightLeftIcon className="size-4" />,
+        shortcut: 'm',
         onClick: () => { if (plant) setMovingPlantId(plant.id); },
       },
       {
@@ -128,6 +134,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         icon: <Trash2Icon className="size-4" />,
         variant: 'destructive' as const,
         primary: true,
+        shortcut: 'Del',
         onClick: async () => {
           if (!plant) return;
           const ok = await confirm({
