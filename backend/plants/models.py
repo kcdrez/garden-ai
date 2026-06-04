@@ -86,7 +86,10 @@ class CompanionPlanting(BaseModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["plant_a", "plant_b"], name="unique_companion_pair"),
-            models.CheckConstraint(condition=models.Q(plant_a__lt=models.F("plant_b")), name="companion_plant_a_lt_plant_b"),
+            models.CheckConstraint(
+                condition=models.Q(plant_a__lt=models.F("plant_b")),
+                name="companion_plant_a_lt_plant_b",
+            ),
         ]
 
     def __str__(self):

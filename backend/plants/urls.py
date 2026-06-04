@@ -1,7 +1,14 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import AllUserPlantsViewSet, CompanionHintsViewSet, ObservationViewSet, PlantPlacementViewSet, PlantViewSet, UserPlantViewSet
+from .views import (
+    AllUserPlantsViewSet,
+    CompanionHintsViewSet,
+    ObservationViewSet,
+    PlantPlacementViewSet,
+    PlantViewSet,
+    UserPlantViewSet,
+)
 
 router = DefaultRouter()
 router.register(r"plants", PlantViewSet, basename="plant")

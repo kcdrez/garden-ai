@@ -534,7 +534,10 @@ class CompanionHintsViewTests(APITestCase):
         self.bed = GardenBed.objects.create(name="Bed 1", garden=self.garden, length=4, width=8)
 
         plants = list(Plant.objects.order_by("id")[:2])
-        self.plant_a, self.plant_b = (plants[0], plants[1]) if str(plants[0].id) < str(plants[1].id) else (plants[1], plants[0])
+        if str(plants[0].id) < str(plants[1].id):
+            self.plant_a, self.plant_b = plants[0], plants[1]
+        else:
+            self.plant_a, self.plant_b = plants[1], plants[0]
 
         self.companion = CompanionPlanting.objects.create(
             plant_a=self.plant_a,
