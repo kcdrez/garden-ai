@@ -2,7 +2,7 @@ import { render, screen } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import PlacementCanvas from './PlacementCanvas';
-import type { CanvasItem } from '@/types/canvas';
+import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 
 const item: CanvasItem = { id: 'item-1', x: 1, y: 1, widthFt: 1.5, heightFt: 1.5 };
 
@@ -13,7 +13,7 @@ const defaultProps = {
   renderItem: vi.fn(() => <rect data-testid="rendered-item" />),
   onEmptyClick: vi.fn(),
   onMove: vi.fn(),
-  getMenuItems: vi.fn(() => [
+  getMenuItems: vi.fn<(id: string) => CanvasMenuItem[]>(() => [
     { label: 'Edit', onClick: vi.fn(), primary: true },
     { label: 'Delete', onClick: vi.fn(), variant: 'destructive' as const, primary: true },
   ]),
