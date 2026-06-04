@@ -393,6 +393,55 @@ describe('PlacementCanvas', () => {
     document.body.removeChild(input);
   });
 
+  it('keyboard shortcuts are ignored when a textarea has focus', () => {
+    const onDelete = vi.fn();
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Delete', onClick: onDelete, variant: 'destructive' as const, primary: true },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+
+    const textarea = document.createElement('textarea');
+    document.body.appendChild(textarea);
+    fireEvent.keyDown(textarea, { key: 'Delete' });
+    expect(onDelete).not.toHaveBeenCalled();
+    document.body.removeChild(textarea);
+  });
+
+  it('Tab does nothing when there are no items', () => {
+    render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[]} />);
+    // No item to select, but confirm Tab on an empty canvas doesn't throw
+    expect(() => fireEvent.keyDown(document.body, { key: 'Tab' })).not.toThrow();
+    expect(container.querySelector('svg')).toBeInTheDocument();
+  });
+
+  it('pressing an unregistered key with item selected does nothing', () => {
+    defaultProps.getMenuItems.mockReturnValue([
+      { label: 'Edit', onClick: vi.fn(), primary: true, shortcut: 'e' },
+    ]);
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
+    fireEvent.lostPointerCapture(outerG);
+    // 'z' is not a registered shortcut — toolbar should stay visible
+    fireEvent.keyDown(document.body, { key: 'z' });
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+  });
+
+  it('= key writes to localStorage when storageKey is provided', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    const { container } = render(
+      <PlacementCanvas {...defaultProps} storageKey="test-canvas-zoom" />,
+    );
+    fireEvent.keyDown(document.body, { key: '=' });
+    expect(container.querySelector('svg')!.style.width).toBe('200%');
+    expect(setItem).toHaveBeenCalledWith('test-canvas-zoom', '2');
+    setItem.mockRestore();
+  });
+
   // --- Tab cycling ---
 
   it('Tab selects the next item in visual order, not insertion order', () => {
