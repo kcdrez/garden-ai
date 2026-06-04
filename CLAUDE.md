@@ -229,6 +229,7 @@ These are explicitly out of scope, at least initially:
 - Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
 - User profile page — `/profile` with inline edit form (first name, last name, email, timezone); backend `UserProfileSerializer` combines `User` + `UserProfile` fields in one endpoint; NavBar account dropdown links to it
 - AI integration — OpenAI-powered chat at garden/bed/plant scope; `AIConversation` + `AIMessage` models; context builder serializes garden hierarchy into system prompt; conversation history (last 20 msgs); global floating chat widget with per-entity history and markdown rendering
+- AI agentic actions — chat widget can execute real writes: `add_plant_to_bed` (bed scope) and `change_plant_status` (bed + plant scope); OpenAI tool call loop in `ai_service.py`; all tool execution scoped to `request.user`; context includes entity IDs and full plant catalog; confirmation chip shown in chat after action; queries invalidated automatically on success
 - Clone a plant — duplicate a `UserPlant` (same bed, catalog entry, status, start date, notes); backend `clone` action on `UserPlantViewSet`; available from canvas context menu, bed plant list, all-plants list, and plant detail page; `usePlantActions` hook centralises clone/delete/edit/move logic shared by `PlantItem` and `PlantDetailHeader`
 - Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
 - Bed detail refactor — `PlantListSection` removed; bed detail page is canvas-only; `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opens from canvas context menu "Observations" item preserving spatial context; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places clone adjacent to source at `x + width`, clamped by backend); unplaced plants section promoted with `h2` heading, zero state message, "Create Plant" button, and per-chip actions menu (Edit / Clone / Move to Another Bed / Delete)
@@ -293,7 +294,7 @@ These are explicitly out of scope, at least initially:
 ### Tracking & Journaling
 
 - Garden notes and journaling
-- **Harvest log** — track weight, date, and notes per harvest; builds a per-plant/per-bed yield history over seasons; AI can use this data for recommendations ("your tomatoes in Bed 1 yielded 12 lbs last summer")
+- **Harvest log** — deferred to design; harvest observations already work as freeform notes; structured quantity/unit data would require a separate `HarvestLog` model (not folding into `Observation` to avoid partial columns); revisit when yield aggregation is needed
 - Yield estimation and tracking
 - Image uploads for plant/garden tracking
 - **Planting calendar** — timeline view showing when each plant was started, transplanted, and harvested; useful for planning the next season against past history
@@ -338,7 +339,7 @@ These are explicitly out of scope, at least initially:
 
 ### AI Integration
 
-- Rate limiting / per-user message quotas (basic daily cap + input length validation)
+- **Expand agentic tools** — add more safe write actions: log an observation, delete a plant (with confirmation), move a plant to another bed; extend to garden scope (add plant to a named bed)
 - AI-powered garden recommendations
 - AI-powered plant compatibility analysis
 - AI-powered troubleshooting and diagnostics

@@ -1,7 +1,7 @@
 from django.db.models import Prefetch
 
 from gardens.models import Garden, GardenBed
-from plants.models import Observation, PlantPlacement, UserPlant
+from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
 from .models import AIConversation
 
@@ -58,10 +58,10 @@ def _build_garden_context(garden: Garden) -> str:
     lines += ["", f"### Beds ({len(bed_list)}):"]
 
     for bed in bed_list:
-        lines += ["", f"**{bed.name}**", _bed_meta(bed)]
+        lines += ["", f"**{bed.name}** [bed_id: {bed.pk}]", _bed_meta(bed)]
         plants = list(bed.user_plants.all())
         if plants:
-            summary = ", ".join(f"{_plant_label(p)} ({p.status})" for p in plants)
+            summary = ", ".join(f"{_plant_label(p)} ({p.status}) [plant_id: {p.pk}]" for p in plants)
             lines.append(f"Plants: {summary}")
         else:
             lines.append("Plants: none")
@@ -94,7 +94,7 @@ def _build_bed_context(bed: GardenBed) -> str:
     if other_names:
         lines.append(f"Other beds: {', '.join(other_names)}")
 
-    lines += ["", f"## Bed: {bed.name}", _bed_meta(bed)]
+    lines += ["", f"## Bed: {bed.name} [bed_id: {bed.pk}]", _bed_meta(bed)]
     if bed.soil_type:
         lines.append(f"Soil: {bed.soil_type}")
     if bed.notes:
@@ -104,7 +104,7 @@ def _build_bed_context(bed: GardenBed) -> str:
     lines += ["", f"### Plants ({len(plant_list)}):"]
 
     for up in plant_list:
-        lines += ["", f"**{_plant_label(up)}**"]
+        lines += ["", f"**{_plant_label(up)}** [plant_id: {up.pk}]"]
         lines.append(f"Species: {up.plant.scientific_name or up.plant.common_name} ({up.plant.category})")
         if up.plant.description:
             lines.append(f"Description: {up.plant.description}")
@@ -131,6 +131,10 @@ def _build_bed_context(bed: GardenBed) -> str:
         if recent:
             lines.append(f"Recent observations (last {len(recent)}):")
             lines.extend(_format_obs(o) for o in recent)
+
+    catalog = Plant.objects.all().order_by("category", "common_name")
+    lines += ["", "## Plant Catalog (available to add to this bed):"]
+    lines.extend(f"- {p.common_name} [catalog_id: {p.pk}] ({p.category})" for p in catalog)
 
     return "\n".join(lines)
 
@@ -166,10 +170,10 @@ def _build_plant_context(user_plant: UserPlant) -> str:
 
     other_list = list(other_plants)
     if other_list:
-        others = ", ".join(f"{_plant_label(p)} ({p.status})" for p in other_list)
+        others = ", ".join(f"{_plant_label(p)} ({p.status}) [plant_id: {p.pk}]" for p in other_list)
         lines.append(f"Other plants in this bed: {others}")
 
-    lines += ["", f"## Plant: {_plant_label(user_plant)}"]
+    lines += ["", f"## Plant: {_plant_label(user_plant)} [plant_id: {user_plant.pk}]"]
     plant = user_plant.plant
     lines.append(f"Species: {plant.scientific_name or plant.common_name} ({plant.category})")
     if plant.description:

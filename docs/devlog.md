@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-06-04 — ~1.5 hours
+
+**Completed:**
+
+- Harvest log scoping — decided freeform observation notes are sufficient for now; no schema changes needed; deferred structured harvest data to design
+- AI agentic actions — chat widget can now take real actions on behalf of the user; bed scope supports `add_plant_to_bed` and `change_plant_status` tools; plant scope supports `change_plant_status`; tool execution is scoped to `request.user` so prompt injection can never touch another user's data; `context_builder.py` now includes entity IDs and full plant catalog in bed scope context so the AI can reference them in tool calls; `send_message_with_tools` in `ai_service.py` handles the OpenAI tool call loop (first call → execute tool → second call for final text); `AiChatWidget` invalidates relevant queries on action and shows a green confirmation chip below the last assistant message
+- Removed dead `AiChat.tsx` (was never imported)
+- 12 new backend tests — `ToolExecutorTests` (executor unit tests: happy path, ownership enforcement, invalid inputs) and `AIToolViewTests` (view-level: action in response, no action, garden scope unchanged)
+
+**Next up:** Companion planting indicators or canvas keyboard shortcuts (further) — both are well-scoped for a single session
+
+---
+
 ## 2026-06-03 — ~0.75 hours
 
 **Completed:**
