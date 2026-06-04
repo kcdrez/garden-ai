@@ -125,7 +125,10 @@ class ToolExecutorTests(APITestCase):
         self.assertEqual(plant.status, UserPlant.Status.PLANNED)
 
     def test_add_plant_invalid_catalog_id_returns_error(self):
-        result = _exec_add_plant(self.user, {"catalog_id": "00000000-0000-0000-0000-000000000000", "bed_id": str(self.bed.pk)})
+        result = _exec_add_plant(
+            self.user,
+            {"catalog_id": "00000000-0000-0000-0000-000000000000", "bed_id": str(self.bed.pk)},
+        )
         self.assertTrue(result.get("error"))
 
     def test_add_plant_wrong_bed_returns_error(self):
