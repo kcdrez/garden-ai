@@ -6,6 +6,16 @@
 
 **Completed:**
 
+- Companion planting indicators — full end-to-end feature; `CompanionPlanting` model with beneficial/harmful relationship and a check constraint enforcing canonical pair ordering; 75-pair curated seed migration (48 beneficial, 27 harmful) rated ≥4/5 confidence; `GET /api/.../companion-hints/` endpoint returns only pairs where both plants are in the current bed; colored rings on BedGrid canvas items (green = beneficial neighbor, red = harmful, green-to-red linear gradient = both); compatibility summary panel below the canvas listing specific pairs by name; cache invalidation wired to plant create/clone/delete so rings appear immediately; seed data consolidated into a single migration after review
+
+**Next up:** Planting calendar — timeline view showing when each plant was started, transplanted, and harvested; observation data is already there to power it
+
+---
+
+## 2026-06-04 — ~1.5 hours
+
+**Completed:**
+
 - Harvest log scoping — decided freeform observation notes are sufficient for now; no schema changes needed; deferred structured harvest data to design
 - AI agentic actions — chat widget can now take real actions on behalf of the user; bed scope supports `add_plant_to_bed` and `change_plant_status` tools; plant scope supports `change_plant_status`; tool execution is scoped to `request.user` so prompt injection can never touch another user's data; `context_builder.py` now includes entity IDs and full plant catalog in bed scope context so the AI can reference them in tool calls; `send_message_with_tools` in `ai_service.py` handles the OpenAI tool call loop (first call → execute tool → second call for final text); `AiChatWidget` invalidates relevant queries on action and shows a green confirmation chip below the last assistant message
 - Removed dead `AiChat.tsx` (was never imported)
