@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import AllUserPlantsViewSet, ObservationViewSet, PlantPlacementViewSet, PlantViewSet, UserPlantViewSet
+from .views import AllUserPlantsViewSet, CompanionHintsViewSet, ObservationViewSet, PlantPlacementViewSet, PlantViewSet, UserPlantViewSet
 
 router = DefaultRouter()
 router.register(r"plants", PlantViewSet, basename="plant")
@@ -13,6 +13,7 @@ user_plant_detail = UserPlantViewSet.as_view(
 user_plant_clone = UserPlantViewSet.as_view({"post": "clone"})
 all_user_plants = AllUserPlantsViewSet.as_view({"get": "list"})
 all_user_plant_detail = AllUserPlantsViewSet.as_view({"get": "retrieve"})
+companion_hints = CompanionHintsViewSet.as_view({"get": "list"})
 observation_list = ObservationViewSet.as_view({"get": "list", "post": "create"})
 observation_detail = ObservationViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
 placement_list = PlantPlacementViewSet.as_view({"get": "list", "post": "create"})
@@ -45,6 +46,11 @@ urlpatterns = [*router.urls,
         "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/plants/<uuid:plant_id>/observations/<uuid:observation_id>/",
         observation_detail,
         name="observations-detail",
+    ),
+    path(
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/companion-hints/",
+        companion_hints,
+        name="companion-hints",
     ),
     path(
         "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/placements/",

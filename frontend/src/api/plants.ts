@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Observation, Plant, PlantPlacement, UserPlant, UserPlantPayload } from '@/types/plants';
+import type { CompanionHint, Observation, Plant, PlantPlacement, UserPlant, UserPlantPayload } from '@/types/plants';
 import type { ObservationFormValues } from '@/schemas/plants';
 
 export async function fetchPlants(): Promise<Plant[]> {
@@ -114,6 +114,11 @@ export async function deletePlacement(
   placementId: string,
 ): Promise<void> {
   await api.delete(`/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`);
+}
+
+export async function fetchCompanionHints(gardenId: string, bedId: string): Promise<CompanionHint[]> {
+  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/companion-hints/`);
+  return res.data;
 }
 
 export async function fetchObservations(

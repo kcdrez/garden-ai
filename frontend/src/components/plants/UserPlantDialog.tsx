@@ -61,6 +61,7 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
       createUserPlant(effectiveGardenId, effectiveBedId, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['companion-hints', effectiveBedId] });
       onOpenChange(false);
     },
   });

@@ -53,6 +53,17 @@ export type UserPlantPayload = {
   quantity?: number;
 };
 
+export type CompanionRelationship = "beneficial" | "harmful";
+
+export interface CompanionHint {
+  plantAId: string;
+  plantAName: string;
+  plantBId: string;
+  plantBName: string;
+  relationship: CompanionRelationship;
+  notes: string;
+}
+
 export interface PlantPlacement {
   id: string;
   userPlant: string;

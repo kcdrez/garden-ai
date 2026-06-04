@@ -6,7 +6,7 @@ from rest_framework import serializers
 from core.utils import to_feet
 from gardens.models import GardenBed
 
-from .models import Observation, Plant, PlantPlacement, UserPlant
+from .models import CompanionPlanting, Observation, Plant, PlantPlacement, UserPlant
 
 
 class PlantSerializer(serializers.ModelSerializer):
@@ -157,6 +157,17 @@ class ObservationSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "user_plant", "previous_status", "created_at", "updated_at"]
+
+
+class CompanionHintSerializer(serializers.ModelSerializer):
+    plant_a_id = serializers.UUIDField(source="plant_a.id")
+    plant_a_name = serializers.CharField(source="plant_a.common_name")
+    plant_b_id = serializers.UUIDField(source="plant_b.id")
+    plant_b_name = serializers.CharField(source="plant_b.common_name")
+
+    class Meta:
+        model = CompanionPlanting
+        fields = ["plant_a_id", "plant_a_name", "plant_b_id", "plant_b_name", "relationship", "notes"]
 
 
 class ObservationUpdateSerializer(serializers.ModelSerializer):

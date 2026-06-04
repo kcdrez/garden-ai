@@ -58,6 +58,7 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
       queryClient.invalidateQueries({ queryKey: ['plants', 'user', bedId] });
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['companion-hints', bedId] });
     },
     onError: (err) => setMutationError(getErrorMessage(err)),
   });
@@ -68,6 +69,7 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ['companion-hints', bedId] });
       setMutationError(null);
     },
     onError: (err) => setMutationError(getErrorMessage(err)),
