@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AllUserPlantsViewSet,
+    CalendarViewSet,
     CompanionHintsViewSet,
     ObservationViewSet,
     PlantPlacementViewSet,
@@ -20,6 +21,7 @@ user_plant_detail = UserPlantViewSet.as_view(
 user_plant_clone = UserPlantViewSet.as_view({"post": "clone"})
 all_user_plants = AllUserPlantsViewSet.as_view({"get": "list"})
 all_user_plant_detail = AllUserPlantsViewSet.as_view({"get": "retrieve"})
+calendar_list = CalendarViewSet.as_view({"get": "list"})
 companion_hints = CompanionHintsViewSet.as_view({"get": "list"})
 observation_list = ObservationViewSet.as_view({"get": "list", "post": "create"})
 observation_detail = ObservationViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
@@ -27,6 +29,7 @@ placement_list = PlantPlacementViewSet.as_view({"get": "list", "post": "create"}
 placement_detail = PlantPlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
 
 urlpatterns = [*router.urls,
+    path("calendar/", calendar_list, name="calendar"),
     path("userplants/", all_user_plants, name="all-user-plants"),
     path("userplants/<uuid:pk>/", all_user_plant_detail, name="all-user-plant-detail"),
     path(

@@ -37,6 +37,7 @@ export default function ObservationForm({ gardenId, bedId, plantId, onSuccess, o
       createObservation(gardenId, bedId, plantId, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
       form.reset(defaultValues());
       onSuccess();
     },

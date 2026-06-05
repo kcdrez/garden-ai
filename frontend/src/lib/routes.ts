@@ -11,4 +11,5 @@ export const routes = {
   allPlants: () => '/plants',
   plantDetail: (plantId: string) => `/plants/${plantId}`,
   profile: () => '/profile',
+  calendar: () => '/calendar',
 };

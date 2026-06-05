@@ -36,6 +36,9 @@ export default function NavBar() {
         <Link to={routes.allPlants()} className={buttonVariants({ variant: "ghost" })}>
           Plants
         </Link>
+        <Link to={routes.calendar()} className={buttonVariants({ variant: "ghost" })}>
+          Calendar
+        </Link>
       </div>
 
       <div className="flex items-center gap-2">

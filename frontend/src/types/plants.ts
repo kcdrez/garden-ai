@@ -76,6 +76,30 @@ export interface PlantPlacement {
   updatedAt: string;
 }
 
+export interface CalendarObservation {
+  id: string;
+  observedDate: string;
+  type: ObservationType;
+  note: string;
+  previousStatus: UserPlantStatus | "";
+  newStatus: UserPlantStatus | "";
+}
+
+export interface CalendarPlant {
+  id: string;
+  bed: string;
+  bedName: string;
+  gardenId: string;
+  gardenName: string;
+  plant: string;
+  plantName: string;
+  plantCategory: PlantCategory;
+  variety: string;
+  startDate: string;
+  status: UserPlantStatus;
+  observations: CalendarObservation[];
+}
+
 export const PLANT_CATEGORIES: { value: PlantCategory; label: string }[] = [
   { value: "vegetable", label: "Vegetable" },
   { value: "herb", label: "Herb" },

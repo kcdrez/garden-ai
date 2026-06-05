@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import transaction
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -9,6 +11,7 @@ from gardens.models import Garden, GardenBed
 
 from .models import CompanionPlanting, Observation, Plant, PlantPlacement, UserPlant
 from .serializers import (
+    CalendarPlantSerializer,
     CompanionHintSerializer,
     ObservationSerializer,
     ObservationUpdateSerializer,
@@ -146,6 +149,33 @@ class CompanionHintsViewSet(BedScopedMixin, mixins.ListModelMixin, viewsets.Gene
             CompanionPlanting.objects.filter(plant_a_id__in=plant_ids, plant_b_id__in=plant_ids)
             .select_related("plant_a", "plant_b")
         )
+
+
+class CalendarViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = CalendarPlantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get("year")
+        try:
+            year = int(year)
+        except (TypeError, ValueError):
+            year = date.today().year
+
+        garden_id = self.request.query_params.get("garden_id")
+
+        qs = (
+            UserPlant.objects.filter(bed__garden__owner=self.request.user)
+            .select_related("plant", "bed__garden")
+            .prefetch_related("observations")
+        )
+
+        if garden_id:
+            qs = qs.filter(bed__garden__id=garden_id)
+
+        qs = qs.filter(start_date__isnull=False, start_date__year__lte=year)
+
+        return qs.order_by("bed__garden__name", "bed__name", "plant__common_name", "-created_at")
 
 
 class ObservationViewSet(

@@ -1,6 +1,13 @@
 import { api } from './client';
-import type { CompanionHint, Observation, Plant, PlantPlacement, UserPlant, UserPlantPayload } from '@/types/plants';
+import type { CalendarPlant, CompanionHint, Observation, Plant, PlantPlacement, UserPlant, UserPlantPayload } from '@/types/plants';
 import type { ObservationFormValues } from '@/schemas/plants';
+
+export async function fetchCalendarPlants(year: number, gardenId?: string): Promise<CalendarPlant[]> {
+  const params: Record<string, string> = { year: String(year) };
+  if (gardenId) params.garden_id = gardenId;
+  const res = await api.get('/calendar/', { params });
+  return res.data ?? [];
+}
 
 export async function fetchPlants(): Promise<Plant[]> {
   const res = await api.get('/plants/');

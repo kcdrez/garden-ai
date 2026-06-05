@@ -1,5 +1,5 @@
 import type { Garden, GardenBed } from '@/types/gardens';
-import type { UserPlant } from '@/types/plants';
+import type { CalendarPlant, UserPlant } from '@/types/plants';
 import type { UserProfile } from '@/types/auth';
 
 export const mockProfile: UserProfile = {
@@ -59,6 +59,38 @@ export const mockUserPlant: UserPlant = {
   notes: '',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
+};
+
+export const mockCalendarPlant: CalendarPlant = {
+  id: 'plant-1',
+  bed: 'bed-1',
+  bedName: 'Raised Bed 1',
+  gardenId: 'garden-1',
+  gardenName: 'Front Yard',
+  plant: 'catalog-1',
+  plantName: 'Tomato',
+  plantCategory: 'vegetable',
+  variety: '',
+  startDate: '2026-03-01',
+  status: 'growing',
+  observations: [
+    {
+      id: 'obs-1',
+      observedDate: '2026-03-01',
+      type: 'status_change',
+      note: '',
+      previousStatus: '',
+      newStatus: 'planned',
+    },
+    {
+      id: 'obs-2',
+      observedDate: '2026-04-01',
+      type: 'status_change',
+      note: '',
+      previousStatus: 'planned',
+      newStatus: 'growing',
+    },
+  ],
 };
 
 export const mockBeds: GardenBed[] = [

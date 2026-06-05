@@ -175,3 +175,35 @@ class ObservationUpdateSerializer(serializers.ModelSerializer):
         model = Observation
         fields = ["id", "observed_date", "note"]
         read_only_fields = ["id"]
+
+
+class CalendarObservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Observation
+        fields = ["id", "observed_date", "type", "note", "previous_status", "new_status"]
+
+
+class CalendarPlantSerializer(serializers.ModelSerializer):
+    plant_name = serializers.CharField(source="plant.common_name", read_only=True)
+    plant_category = serializers.CharField(source="plant.category", read_only=True)
+    bed_name = serializers.CharField(source="bed.name", read_only=True)
+    garden_id = serializers.UUIDField(source="bed.garden.id", read_only=True)
+    garden_name = serializers.CharField(source="bed.garden.name", read_only=True)
+    observations = CalendarObservationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserPlant
+        fields = [
+            "id",
+            "bed",
+            "bed_name",
+            "garden_id",
+            "garden_name",
+            "plant",
+            "plant_name",
+            "plant_category",
+            "variety",
+            "start_date",
+            "status",
+            "observations",
+        ]

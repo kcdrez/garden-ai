@@ -241,6 +241,7 @@ These are explicitly out of scope, at least initially:
 - Semantic versioning — FE and BE version numbers auto-incremented on merge to `main` via `semantic-release` and conventional commits; FE version from `package.json` via Vite env var, BE from `VERSION` file at `/api/version/`; both displayed in the app footer
 - AI rate limiting — 20 messages/user/day enforced via DB count in `AIConversationViewSet.message`; returns 429 with `detail` message; frontend detects 429 and disables input with a specific message; resets on UTC calendar day
 - Companion planting indicators — `CompanionPlanting` model (beneficial/harmful, canonical pair ordering via check constraint); 75-pair curated seed data rated ≥4/5 confidence; `companion-hints` endpoint scoped to plants in the current bed; colored rings on BedGrid (green/red/gradient); compatibility summary panel below canvas; cache invalidation on plant create/clone/delete
+- Planting calendar — `/calendar` Gantt-style timeline; year picker; plants grouped by bed with clickable links; bars segmented by lifecycle phase (status_change observations); event dots (harvest, transplant, pest, disease, weather, note, removed); today line; `GET /api/calendar/` endpoint; `startDate` auto-synced from earliest status_change observation via Django signal + data migration; `STATUS_COLOR_CONFIG` single source of truth for pill and bar colors
 - Canvas zoom — `PlacementCanvas` has zoom controls (0.5×, 0.75×, 1×, 1.5×, 2×, 3×) defaulting to 0.75×; SVG CSS-scales inside an `overflow-x-auto` container; buttons stay constant pixel size via `hs / zoom`; production-grade alternative (viewBox pan+zoom) documented in `/docs/production-notes.md`
 - Canvas UX polish — "Remove From Layout" label (consistent MinusCircleIcon, Title Case) in both grids; zoom persists to localStorage per canvas via `storageKey` prop; hover tooltip (SVG `<title>`) via `getItemLabel` prop; bed context menu in `GardenGrid` extended with Edit and Delete
 - Garden detail refactor — canvas-only layout matching BedDetail; "Garden Beds" card grid and sort removed; "Add Bed" + "Unplaced Beds" h2 promoted into `GardenGrid`; garden dimensions shown in header; "Layout" sub-header added
@@ -284,6 +285,10 @@ These are explicitly out of scope, at least initially:
 - Seed starting and transplant planning
 - Seasonal planting schedules
 
+### Demo & Portfolio
+
+- **Demo seed data** — rich multi-season fixture (2–3 years of planting history across multiple beds) to showcase the calendar, crop rotation, and companion planting features; management command so it only runs on demand, never in CI or on a fresh dev DB
+
 ### Bug Fixes (tracked)
 
 ### Deployment & Infrastructure
@@ -298,7 +303,6 @@ These are explicitly out of scope, at least initially:
 - **Harvest log** — deferred to design; harvest observations already work as freeform notes; structured quantity/unit data would require a separate `HarvestLog` model (not folding into `Observation` to avoid partial columns); revisit when yield aggregation is needed
 - Yield estimation and tracking
 - Image uploads for plant/garden tracking
-- **Planting calendar** — timeline view showing when each plant was started, transplanted, and harvested; useful for planning the next season against past history
 - Progress photo timelines
 - **Print/export garden layout** — export the canvas as PNG or PDF for printing and taking outside
 
