@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
-import { MoreHorizontalIcon } from 'lucide-react';
+import { HelpCircleIcon, MoreHorizontalIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import CanvasShortcutsDialog from '@/components/shared/CanvasShortcutsDialog';
 import { cn } from '@/lib/utils';
 
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
@@ -306,6 +307,7 @@ export default function PlacementCanvas({
     id: string;
     anchor: ToolbarAnchor;
   } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
@@ -428,6 +430,9 @@ export default function PlacementCanvas({
       } else if (e.key === '-') {
         const prev = ZOOM_LEVELS[ZOOM_LEVELS.indexOf(zoom) - 1];
         if (prev !== undefined) { e.preventDefault(); applyZoom(prev); }
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setShowHelp(true);
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -481,6 +486,15 @@ export default function PlacementCanvas({
             {level}×
           </button>
         ))}
+        <div className="w-px h-4 bg-foreground/20 mx-1 self-center" />
+        <button
+          type="button"
+          aria-label="Keyboard shortcuts"
+          onClick={() => setShowHelp(true)}
+          className="px-2 py-0.5 text-xs rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+        >
+          <HelpCircleIcon className="size-3" />
+        </button>
       </div>
 
       <div
@@ -652,6 +666,9 @@ export default function PlacementCanvas({
           })()}
 
       </div>
+
+      <CanvasShortcutsDialog open={showHelp} onOpenChange={setShowHelp} />
     </div>
   );
 }
+
