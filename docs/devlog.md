@@ -2,6 +2,21 @@
 
 ---
 
+## 2026-06-05 — ~2.5 hours
+
+**Completed:**
+
+- Planting calendar — `/calendar` page with Gantt-style timeline; year picker (prev/next); plants grouped by bed with clickable garden/bed heading links; horizontal bars segmented by lifecycle phase (each `status_change` observation is a colored phase); event dots for harvest, transplant, pest, disease, weather, general, and removed; today line; month gridlines; legend with status swatches and event dots
+- `GET /api/calendar/` endpoint — returns all user plants with nested observations filtered by `start_date__year <= year`; optional `garden_id` filter; `CalendarPlantSerializer` with `CalendarObservationSerializer`
+- `startDate` signal sync — `sync_plant_start_date` post_save/post_delete signal on `Observation` keeps `UserPlant.start_date` in sync with the earliest `status_change` observation; data migration `0013` backfilled 23 existing plants; `startDate` is now a derived/cached field, not user-managed
+- `STATUS_COLOR_CONFIG` single source of truth — pills and Gantt bars both derive from one config object in `lib/plants.ts`; change one entry and both update
+- Calendar cache invalidation — `['calendar']` query key invalidated on observation create/edit/delete and status change
+- 14 new backend tests (`CalendarViewTests`, `StartDateSignalTests`); 12 new frontend tests (`CalendarPage`, `PlantingGantt`); all 96 BE + 660 FE tests passing
+
+**Next up:** Crop rotation warnings — flag beds where the same plant family is repeated year over year; builds directly on the planting calendar history
+
+---
+
 ## 2026-06-04 — ~1.5 hours
 
 **Completed:**
