@@ -143,12 +143,22 @@ export default function GardenGrid({
     ];
   }
 
+  async function handleDeleteItems(placementIds: string[]) {
+    const ok = await confirm({
+      title: `Remove ${placementIds.length} bed${placementIds.length > 1 ? 's' : ''} from layout?`,
+      description: 'The beds will be removed from the garden layout but not deleted.',
+    });
+    if (!ok) return;
+    for (const id of placementIds) removePlacement(id);
+  }
+
   return (
     <>
       <PlacementCanvas
         widthFt={gardenWidthFt}
         heightFt={gardenHeightFt}
         items={items}
+        onDeleteItems={handleDeleteItems}
         renderItem={(item) => {
           const placement = placementById.get(item.id);
           const bed = placement ? bedById.get(placement.bed) : undefined;

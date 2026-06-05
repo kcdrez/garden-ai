@@ -548,4 +548,131 @@ describe('PlacementCanvas', () => {
     fireEvent.keyDown(document.body, { key: 'Tab' });
     expect(screen.getByRole('button', { name: 'Action-a' })).toBeInTheDocument();
   });
+
+  // --- Multi-select ---
+
+  it('Shift+click adds a second item to the selection', () => {
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Click item 'a'
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+
+    // Shift+click item 'b'
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[2]);
+
+    // Multi-select toolbar appears
+    expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete all/i })).toBeInTheDocument();
+  });
+
+  it('Shift+click on an already-selected item deselects it', () => {
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Select both
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[2]);
+    expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
+
+    // Shift+click 'a' again to deselect it
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[0]);
+
+    // Back to single selection — full toolbar for 'b'
+    expect(screen.queryByText(/2 selected/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Action-b' })).toBeInTheDocument();
+  });
+
+  it('Delete key calls onDeleteItems with all selected ids when multiple are selected', () => {
+    const onDeleteItems = vi.fn();
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation(() => []);
+
+    const { container } = render(
+      <PlacementCanvas {...defaultProps} items={items} onDeleteItems={onDeleteItems} />,
+    );
+    const gs = container.querySelectorAll('g');
+
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[2]);
+
+    fireEvent.keyDown(document.body, { key: 'Delete' });
+    expect(onDeleteItems).toHaveBeenCalledWith(expect.arrayContaining(['a', 'b']));
+  });
+
+  it('Delete all button calls onDeleteItems and clears selection', async () => {
+    const user = userEvent.setup();
+    const onDeleteItems = vi.fn();
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation(() => []);
+
+    const { container } = render(
+      <PlacementCanvas {...defaultProps} items={items} onDeleteItems={onDeleteItems} />,
+    );
+    const gs = container.querySelectorAll('g');
+
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[2]);
+
+    await user.click(screen.getByRole('button', { name: /delete all/i }));
+    expect(onDeleteItems).toHaveBeenCalledWith(expect.arrayContaining(['a', 'b']));
+    expect(screen.queryByText(/selected/i)).not.toBeInTheDocument();
+  });
+
+  it('clicking unselected item without shift replaces multi-selection', () => {
+    const items = [
+      { id: 'a', x: 0, y: 0, widthFt: 1, heightFt: 1 },
+      { id: 'b', x: 2, y: 2, widthFt: 1, heightFt: 1 },
+    ];
+    defaultProps.getMenuItems.mockImplementation((id: string) => [
+      { label: `Action-${id}`, onClick: vi.fn(), primary: true },
+    ]);
+
+    const { container } = render(<PlacementCanvas {...defaultProps} items={items} />);
+    const gs = container.querySelectorAll('g');
+
+    // Select both
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+    fireEvent.pointerDown(gs[2], { clientX: 2.5, clientY: 2.5, shiftKey: true });
+    fireEvent.lostPointerCapture(gs[2]);
+    expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
+
+    // Click 'a' without shift — should replace selection
+    fireEvent.pointerDown(gs[0], { clientX: 0.5, clientY: 0.5 });
+    fireEvent.lostPointerCapture(gs[0]);
+    expect(screen.queryByText(/2 selected/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Action-a' })).toBeInTheDocument();
+  });
 });

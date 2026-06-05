@@ -173,12 +173,26 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     if (ok) deletePlant(plant.id);
   }
 
+  async function handleDeleteItems(placementIds: string[]) {
+    const plantIds = placementIds
+      .map(pid => placementById.get(pid)?.userPlant)
+      .filter((id): id is string => Boolean(id));
+    if (plantIds.length === 0) return;
+    const ok = await confirm({
+      title: `Delete ${plantIds.length} plant${plantIds.length > 1 ? 's' : ''}?`,
+      description: 'The selected plants will be permanently deleted.',
+    });
+    if (!ok) return;
+    for (const id of plantIds) deletePlant(id);
+  }
+
   return (
     <>
       <PlacementCanvas
         widthFt={widthFt}
         heightFt={heightFt}
         items={items}
+        onDeleteItems={handleDeleteItems}
         renderItem={(item) => {
           const placement = placementById.get(item.id);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
