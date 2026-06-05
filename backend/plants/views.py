@@ -66,6 +66,17 @@ class UserPlantViewSet(BedScopedMixin, viewsets.ModelViewSet):
                 start_date=original.start_date,
                 notes=original.notes,
             )
+            Observation.objects.bulk_create([
+                Observation(
+                    user_plant=cloned,
+                    observed_date=obs.observed_date,
+                    type=obs.type,
+                    note=obs.note,
+                    previous_status=obs.previous_status,
+                    new_status=obs.new_status,
+                )
+                for obs in original.observations.all()
+            ])
             if placement_fields:
                 bed = original.bed
                 bed_w = to_feet(bed.width, bed.unit)

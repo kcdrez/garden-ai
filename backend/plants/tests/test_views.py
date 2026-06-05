@@ -239,6 +239,40 @@ class UserPlantAPITests(APITestCase):
         clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
         self.assertFalse(PlantPlacement.objects.filter(user_plant=clone).exists())
 
+    def test_clone_copies_observations(self):
+        from datetime import date
+        Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date=date(2024, 3, 1),
+            type=Observation.Type.STATUS_CHANGE,
+            note="sprouted",
+            previous_status="planted",
+            new_status="growing",
+        )
+        Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date=date(2024, 4, 1),
+            type=Observation.Type.GENERAL,
+            note="looking healthy",
+        )
+        res = self.client.post(self._clone_url(self.garden.id, self.bed.id, self.user_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
+        self.assertEqual(clone.observations.count(), 2)
+        cloned_obs = clone.observations.order_by("observed_date")
+        self.assertEqual(cloned_obs[0].type, Observation.Type.STATUS_CHANGE)
+        self.assertEqual(cloned_obs[0].note, "sprouted")
+        self.assertEqual(cloned_obs[0].previous_status, "planted")
+        self.assertEqual(cloned_obs[0].new_status, "growing")
+        self.assertEqual(cloned_obs[1].type, Observation.Type.GENERAL)
+        self.assertEqual(cloned_obs[1].note, "looking healthy")
+
+    def test_clone_plant_with_no_observations_creates_none(self):
+        res = self.client.post(self._clone_url(self.garden.id, self.bed.id, self.user_plant.id))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        clone = UserPlant.objects.exclude(pk=self.user_plant.pk).get(bed=self.bed)
+        self.assertEqual(clone.observations.count(), 0)
+
     def test_clone_other_users_plant_returns_404(self):
         other_plant = UserPlant.objects.create(bed=self.other_bed, plant=self.plant, status="planted")
         res = self.client.post(self._clone_url(self.other_garden.id, self.other_bed.id, other_plant.id))

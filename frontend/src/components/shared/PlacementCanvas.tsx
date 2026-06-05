@@ -22,6 +22,8 @@ interface PlacementCanvasProps {
   onMove: (id: string, xFt: number, yFt: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
   onDeleteItems?: (ids: string[]) => void;
+  onCopyItem?: (id: string) => void;
+  onPasteItem?: () => void;
   getMenuItems: (id: string) => CanvasMenuItem[];
   storageKey?: string;
   defaultZoom?: (typeof ZOOM_LEVELS)[number];
@@ -298,6 +300,8 @@ export default function PlacementCanvas({
   onMove,
   onResize,
   onDeleteItems,
+  onCopyItem,
+  onPasteItem,
   getMenuItems,
   storageKey,
   defaultZoom = 1,
@@ -377,6 +381,13 @@ export default function PlacementCanvas({
         return;
       }
 
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedIds.size === 1) {
+        e.preventDefault();
+        const [id] = selectedIds;
+        onCopyItem?.(id);
+        return;
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         if (selectedIds.size === 1) {
@@ -440,7 +451,7 @@ export default function PlacementCanvas({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, items, getMenuItems, onMove, onDeleteItems, widthFt, heightFt]);
+  }, [selectedIds, items, getMenuItems, onMove, onDeleteItems, onCopyItem, widthFt, heightFt]);
 
   const [zoom, setZoom] = useState<(typeof ZOOM_LEVELS)[number]>(() => {
     if (storageKey) {
@@ -463,6 +474,13 @@ export default function PlacementCanvas({
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
       if (target.closest('[role="dialog"], [role="alertdialog"]')) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        onPasteItem?.();
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       const applyZoom = (level: (typeof ZOOM_LEVELS)[number]) => {
@@ -482,7 +500,7 @@ export default function PlacementCanvas({
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoom, storageKey]);
+  }, [zoom, storageKey, onPasteItem]);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);

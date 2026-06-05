@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-06-05 — ~0.5 hours
+
+**Completed:**
+
+- Canvas copy-paste (`Ctrl/Cmd+C` / `Ctrl/Cmd+V`) — copies selected plant placement; paste clones it 0.5ft offset from original, clamped to bed bounds; works independently of the "Duplicate" menu item; shortcuts added to `CanvasShortcutsDialog`
+- Clone always copies observations — `clone` action on `UserPlantViewSet` now `bulk_create`s all observations onto the cloned plant; makes backfilling multiple identical plants (e.g. 10 carrots planted same day) much faster; 2 new backend tests
+
+**Next up:** Non-plant canvas objects — allow placing structural/decorative items (trellis, pot, bench, etc.) on garden and bed canvases
+
+---
+
 ## 2026-06-05 — ~1.25 hours
 
 **Completed:**

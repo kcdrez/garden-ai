@@ -33,7 +33,11 @@ export default function CanvasShortcutsDialog({ open, onOpenChange }: CanvasShor
             <Shortcut keys={['↑ ↓ ← →']} label="Nudge 0.1 ft" />
             <Shortcut keys={['Shift', '↑↓←→']} label="Nudge 1 ft" />
             <Shortcut keys={['Del']} label="Remove item" />
+            <Shortcut keys={['Ctrl/⌘', 'C']} label="Copy item" />
             <Shortcut keys={['Letter']} label="Menu shortcuts (shown in toolbar)" />
+          </ShortcutSection>
+          <ShortcutSection title="Clipboard">
+            <Shortcut keys={['Ctrl/⌘', 'V']} label="Paste copied item" />
           </ShortcutSection>
         </div>
       </DialogContent>

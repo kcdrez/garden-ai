@@ -37,6 +37,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const [movingPlantId, setMovingPlantId] = useState<string | null>(null);
   const [observingPlantId, setObservingPlantId] = useState<string | null>(null);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
+  const [copiedPlacementId, setCopiedPlacementId] = useState<string | null>(null);
 
   const {
     placements,
@@ -186,6 +187,22 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     for (const id of plantIds) deletePlant(id);
   }
 
+  function handleCopyItem(placementId: string) {
+    setCopiedPlacementId(placementId);
+  }
+
+  function handlePasteItem() {
+    if (!copiedPlacementId) return;
+    const placement = placementById.get(copiedPlacementId);
+    if (!placement) return;
+    const plant = userPlantById.get(placement.userPlant);
+    if (!plant) return;
+    const OFFSET = 0.5;
+    const newX = Math.min(placement.x + OFFSET, widthFt - placement.width);
+    const newY = Math.min(placement.y + OFFSET, heightFt - placement.height);
+    clonePlant({ plantId: plant.id, placement: { x: newX, y: newY, width: placement.width, height: placement.height } });
+  }
+
   return (
     <>
       <PlacementCanvas
@@ -193,6 +210,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         heightFt={heightFt}
         items={items}
         onDeleteItems={handleDeleteItems}
+        onCopyItem={handleCopyItem}
+        onPasteItem={handlePasteItem}
         renderItem={(item) => {
           const placement = placementById.get(item.id);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
