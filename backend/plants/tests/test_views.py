@@ -668,7 +668,11 @@ class CalendarViewTests(APITestCase):
         res = self.client.get(self._url(year=2026))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         data = res.data[0]
-        for field in ("id", "bed", "bed_name", "garden_id", "garden_name", "plant_name", "start_date", "status", "observations"):
+        expected_fields = (
+            "id", "bed", "bed_name", "garden_id", "garden_name",
+            "plant_name", "start_date", "status", "observations",
+        )
+        for field in expected_fields:
             self.assertIn(field, data)
 
 
