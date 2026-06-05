@@ -198,17 +198,15 @@ function DraggableItem({
       dragStart.current = null;
       if (hasMoved.current) {
         if (pos.x !== item.x || pos.y !== item.y) onMove(item.id, pos.x, pos.y);
-        if (isSelected) {
-          const svg = gRef.current!.ownerSVGElement!;
-          const ctm = svg.getScreenCTM()!;
-          const tl = svg.createSVGPoint();
-          tl.x = pos.x; tl.y = pos.y;
-          const tlScreen = tl.matrixTransform(ctm);
-          const tr = svg.createSVGPoint();
-          tr.x = pos.x + size.w; tr.y = pos.y;
-          const trScreen = tr.matrixTransform(ctm);
-          onSelect(item.id, { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x });
-        }
+        const svg = gRef.current!.ownerSVGElement!;
+        const ctm = svg.getScreenCTM()!;
+        const tl = svg.createSVGPoint();
+        tl.x = pos.x; tl.y = pos.y;
+        const tlScreen = tl.matrixTransform(ctm);
+        const tr = svg.createSVGPoint();
+        tr.x = pos.x + size.w; tr.y = pos.y;
+        const trScreen = tr.matrixTransform(ctm);
+        onSelect(item.id, { top: tlScreen.y, left: tlScreen.x, width: trScreen.x - tlScreen.x });
       } else {
         // No movement — treat as a click and select this item
         const svg = gRef.current!.ownerSVGElement!;
@@ -272,6 +270,7 @@ function DraggableItem({
             />
             {onResize && (
               <circle
+                data-testid="resize-handle"
                 cx={size.w} cy={size.h} r={handleR}
                 fill="hsl(var(--primary))"
                 stroke="white"
@@ -374,7 +373,7 @@ export default function PlacementCanvas({
         return;
       }
 
-      const NUDGE = e.shiftKey ? 1 : 0.25;
+      const NUDGE = e.shiftKey ? 1 : 0.1;
       const dx =
         e.key === 'ArrowLeft' ? -NUDGE : e.key === 'ArrowRight' ? NUDGE : 0;
       const dy =
@@ -503,6 +502,7 @@ export default function PlacementCanvas({
       >
         <svg
           ref={svgRef}
+          data-testid="canvas-svg"
           viewBox={viewBox}
           style={{
             width: `${zoom * 100}%`,

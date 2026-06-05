@@ -199,42 +199,28 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
           const companionStatus = plant ? companionStatusByCatalogId.get(plant.plant) : undefined;
           const hasBoth = companionStatus?.hasBeneficial && companionStatus?.hasHarmful;
+          const companionStroke = companionStatus?.hasBeneficial && !hasBoth
+            ? 'rgba(34,197,94,0.85)'
+            : companionStatus?.hasHarmful && !hasBoth
+              ? 'rgba(239,68,68,0.85)'
+              : hasBoth
+                ? `url(#companion-gradient-${item.id})`
+                : 'rgba(128,128,128,0.3)';
 
           return (
             <>
-              {companionStatus?.hasBeneficial && !hasBoth && (
-                <ellipse
-                  cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
-                  fill="none" stroke="rgba(34,197,94,0.75)" strokeWidth={0.06}
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
-              {companionStatus?.hasHarmful && !hasBoth && (
-                <ellipse
-                  cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
-                  fill="none" stroke="rgba(239,68,68,0.75)" strokeWidth={0.06}
-                  style={{ pointerEvents: 'none' }}
-                />
-              )}
               {hasBoth && (
-                <>
-                  <defs>
-                    <linearGradient id={`companion-gradient-${item.id}`} x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="rgba(34,197,94,0.75)" />
-                      <stop offset="100%" stopColor="rgba(239,68,68,0.75)" />
-                    </linearGradient>
-                  </defs>
-                  <ellipse
-                    cx={cx} cy={cy} rx={rx + 0.08} ry={ry + 0.08}
-                    fill="none" stroke={`url(#companion-gradient-${item.id})`} strokeWidth={0.06}
-                    style={{ pointerEvents: 'none' }}
-                  />
-                </>
+                <defs>
+                  <linearGradient id={`companion-gradient-${item.id}`} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="rgba(34,197,94,0.85)" />
+                    <stop offset="100%" stopColor="rgba(239,68,68,0.85)" />
+                  </linearGradient>
+                </defs>
               )}
               <ellipse
                 cx={cx} cy={cy} rx={rx} ry={ry}
                 fill="rgba(128,128,128,0.12)"
-                stroke="rgba(128,128,128,0.3)"
+                stroke={companionStroke}
                 strokeWidth={0.04}
               />
               {imgSrc ? (

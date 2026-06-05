@@ -4,6 +4,11 @@ import { fireEvent } from '@testing-library/react';
 import PlacementCanvas from './PlacementCanvas';
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 
+vi.mock('@/components/shared/CanvasShortcutsDialog', () => ({
+  default: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Keyboard Shortcuts" /> : null,
+}));
+
 const item: CanvasItem = { id: 'item-1', x: 1, y: 1, widthFt: 1.5, heightFt: 1.5 };
 
 const defaultProps = {
@@ -192,7 +197,7 @@ describe('PlacementCanvas', () => {
     // Click to select — reveals the resize handle
     fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
     fireEvent.lostPointerCapture(outerG);
-    const resizeCircle = container.querySelector('circle')!;
+    const resizeCircle = screen.getByTestId('resize-handle');
     fireEvent.pointerDown(resizeCircle, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     fireEvent.pointerMove(outerG, { clientX: 3.0, clientY: 3.0 });
     fireEvent.lostPointerCapture(outerG);
@@ -208,7 +213,7 @@ describe('PlacementCanvas', () => {
     // Click to select — reveals the resize handle
     fireEvent.pointerDown(outerG, { clientX: 1.75, clientY: 1.75 });
     fireEvent.lostPointerCapture(outerG);
-    const resizeCircle = container.querySelector('circle')!;
+    const resizeCircle = screen.getByTestId('resize-handle');
     fireEvent.pointerDown(resizeCircle, { clientX: 2.0, clientY: 2.0, pointerId: 1 });
     fireEvent.lostPointerCapture(outerG);
     expect(onResize).not.toHaveBeenCalled();
@@ -224,83 +229,82 @@ describe('PlacementCanvas', () => {
   });
 
   it('defaults to 1x zoom', () => {
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
-    const svg = container.querySelector('svg')!;
-    expect(svg.style.width).toBe('100%');
+    render(<PlacementCanvas {...defaultProps} />);
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('100%');
   });
 
   it('changes SVG width when a zoom button is clicked', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '2×' }));
-    expect(container.querySelector('svg')!.style.width).toBe('200%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('200%');
   });
 
   it('centers the SVG when zoom is below 1', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '0.5×' }));
-    expect(container.querySelector('svg')!.style.margin).toBe('0px auto');
+    expect(screen.getByTestId('canvas-svg').style.margin).toBe('0px auto');
   });
 
   it('does not center the SVG when zoom is 1 or above', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '1×' }));
-    expect(container.querySelector('svg')!.style.margin).toBe('');
+    expect(screen.getByTestId('canvas-svg').style.margin).toBe('');
   });
 
   // --- Zoom keyboard shortcuts ---
 
   it('= key zooms in one level', () => {
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     fireEvent.keyDown(document.body, { key: '=' });
-    expect(container.querySelector('svg')!.style.width).toBe('200%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('200%');
   });
 
   it('+ key zooms in one level', () => {
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     fireEvent.keyDown(document.body, { key: '+' });
-    expect(container.querySelector('svg')!.style.width).toBe('200%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('200%');
   });
 
   it('- key zooms out one level', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '2×' }));
     fireEvent.keyDown(document.body, { key: '-' });
-    expect(container.querySelector('svg')!.style.width).toBe('100%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('100%');
   });
 
   it('= key does nothing at max zoom', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '3×' }));
     fireEvent.keyDown(document.body, { key: '=' });
-    expect(container.querySelector('svg')!.style.width).toBe('300%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('300%');
   });
 
   it('- key does nothing at min zoom', async () => {
     const user = userEvent.setup();
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: '0.25×' }));
     fireEvent.keyDown(document.body, { key: '-' });
-    expect(container.querySelector('svg')!.style.width).toBe('25%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('25%');
   });
 
   it('zoom keys are ignored when a modifier key is held', () => {
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     fireEvent.keyDown(document.body, { key: '=', ctrlKey: true });
     fireEvent.keyDown(document.body, { key: '=', metaKey: true });
-    expect(container.querySelector('svg')!.style.width).toBe('100%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('100%');
   });
 
   it('zoom keys are ignored when an input has focus', () => {
-    const { container } = render(<PlacementCanvas {...defaultProps} />);
+    render(<PlacementCanvas {...defaultProps} />);
     const input = document.createElement('input');
     document.body.appendChild(input);
     fireEvent.keyDown(input, { key: '=' });
-    expect(container.querySelector('svg')!.style.width).toBe('100%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('100%');
     document.body.removeChild(input);
   });
 
@@ -433,11 +437,9 @@ describe('PlacementCanvas', () => {
 
   it('= key writes to localStorage when storageKey is provided', () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem');
-    const { container } = render(
-      <PlacementCanvas {...defaultProps} storageKey="test-canvas-zoom" />,
-    );
+    render(<PlacementCanvas {...defaultProps} storageKey="test-canvas-zoom" />);
     fireEvent.keyDown(document.body, { key: '=' });
-    expect(container.querySelector('svg')!.style.width).toBe('200%');
+    expect(screen.getByTestId('canvas-svg').style.width).toBe('200%');
     expect(setItem).toHaveBeenCalledWith('test-canvas-zoom', '2');
     setItem.mockRestore();
   });
@@ -490,6 +492,41 @@ describe('PlacementCanvas', () => {
     fireEvent.keyDown(document.body, { key: 'Tab', shiftKey: true });
     expect(screen.queryByRole('button', { name: 'Action-b' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Action-a' })).toBeInTheDocument();
+  });
+
+  // --- Drag to select ---
+
+  it('selects item after drag (toolbar appears without a separate click)', () => {
+    const { container } = render(<PlacementCanvas {...defaultProps} items={[item]} />);
+    const outerG = container.querySelector('g')!;
+    fireEvent.pointerDown(outerG, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(outerG, { clientX: 110, clientY: 110 });
+    fireEvent.lostPointerCapture(outerG);
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+  });
+
+  // --- Help dialog ---
+
+  it('? key opens the shortcuts dialog', () => {
+    render(<PlacementCanvas {...defaultProps} />);
+    fireEvent.keyDown(document.body, { key: '?' });
+    expect(screen.getByRole('dialog', { name: /keyboard shortcuts/i })).toBeInTheDocument();
+  });
+
+  it('help button opens the shortcuts dialog', async () => {
+    const user = userEvent.setup();
+    render(<PlacementCanvas {...defaultProps} />);
+    await user.click(screen.getByRole('button', { name: /keyboard shortcuts/i }));
+    expect(screen.getByRole('dialog', { name: /keyboard shortcuts/i })).toBeInTheDocument();
+  });
+
+  it('? key is ignored when an input has focus', () => {
+    render(<PlacementCanvas {...defaultProps} />);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: '?' });
+    expect(screen.queryByRole('dialog', { name: /keyboard shortcuts/i })).not.toBeInTheDocument();
+    document.body.removeChild(input);
   });
 
   it('Tab wraps from the last item to the first', () => {
