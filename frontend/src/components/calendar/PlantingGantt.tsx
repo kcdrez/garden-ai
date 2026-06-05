@@ -226,7 +226,7 @@ export default function PlantingGantt({ plants, year }: Props) {
                       {/* Today line */}
                       {todayPct !== null && (
                         <div
-                          className="absolute inset-y-0 w-px bg-primary/40 z-10"
+                          className="absolute inset-y-0 w-px bg-red-500/50 z-10"
                           style={{ left: `${todayPct}%` }}
                         />
                       )}
