@@ -578,3 +578,143 @@ class CompanionHintsViewTests(APITestCase):
         other_bed = GardenBed.objects.create(name="Bob's Bed", garden=other_garden, length=4, width=8)
         res = self.client.get(self._url(other_garden.id, other_bed.id))
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class CalendarViewTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.other = User.objects.create_user(username="bob", password="testpass123")
+        self.client.force_authenticate(user=self.user)
+        self.garden = Garden.objects.create(name="Alice's Garden", owner=self.user)
+        self.bed = GardenBed.objects.create(name="Bed 1", garden=self.garden, length=4, width=8)
+        self.plant = Plant.objects.first()
+
+    def _url(self, year=2026, garden_id=None):
+        url = reverse("calendar") + f"?year={year}"
+        if garden_id:
+            url += f"&garden_id={garden_id}"
+        return url
+
+    def _make_plant(self, start_date, bed=None):
+        return UserPlant.objects.create(
+            bed=bed or self.bed, plant=self.plant, status="growing", start_date=start_date
+        )
+
+    # --- Auth ---
+
+    def test_requires_auth(self):
+        self.client.force_authenticate(user=None)
+        res = self.client.get(self._url())
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    # --- Filtering ---
+
+    def test_returns_plant_started_in_target_year(self):
+        self._make_plant("2026-03-01")
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_returns_plant_started_before_target_year(self):
+        self._make_plant("2025-06-01")
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_excludes_plant_started_after_target_year(self):
+        self._make_plant("2027-01-01")
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 0)
+
+    def test_excludes_plant_without_start_date(self):
+        self._make_plant(None)
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 0)
+
+    def test_does_not_return_other_users_plants(self):
+        other_garden = Garden.objects.create(name="Bob's Garden", owner=self.other)
+        other_bed = GardenBed.objects.create(name="Bob's Bed", garden=other_garden, length=4, width=8)
+        UserPlant.objects.create(bed=other_bed, plant=self.plant, status="growing", start_date="2026-01-01")
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 0)
+
+    def test_filters_by_garden_id(self):
+        garden2 = Garden.objects.create(name="Garden 2", owner=self.user)
+        bed2 = GardenBed.objects.create(name="Bed 2", garden=garden2, length=4, width=8)
+        self._make_plant("2026-01-01")
+        self._make_plant("2026-01-01", bed=bed2)
+        res = self.client.get(self._url(year=2026, garden_id=self.garden.id))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]["garden_name"], "Alice's Garden")
+
+    # --- Response shape ---
+
+    def test_returns_nested_observations(self):
+        up = self._make_plant("2026-01-01")
+        Observation.objects.create(
+            user_plant=up, observed_date="2026-03-01", type=Observation.Type.HARVEST
+        )
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data[0]["observations"]), 1)
+        self.assertEqual(res.data[0]["observations"][0]["type"], "harvest")
+
+    def test_response_includes_expected_fields(self):
+        self._make_plant("2026-05-01")
+        res = self.client.get(self._url(year=2026))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.data[0]
+        for field in ("id", "bed", "bed_name", "garden_id", "garden_name", "plant_name", "start_date", "status", "observations"):
+            self.assertIn(field, data)
+
+
+class StartDateSignalTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.garden = Garden.objects.create(name="Garden", owner=self.user)
+        self.bed = GardenBed.objects.create(name="Bed", garden=self.garden, length=4, width=8)
+        self.plant = Plant.objects.first()
+        self.user_plant = UserPlant.objects.create(
+            bed=self.bed, plant=self.plant, status="planned", start_date=None
+        )
+
+    def _make_obs(self, date, new_status="planned", obs_type=Observation.Type.STATUS_CHANGE):
+        return Observation.objects.create(
+            user_plant=self.user_plant,
+            observed_date=date,
+            type=obs_type,
+            new_status=new_status,
+        )
+
+    def _start_date(self):
+        self.user_plant.refresh_from_db()
+        return self.user_plant.start_date
+
+    def test_creating_status_change_sets_start_date(self):
+        self._make_obs("2026-03-01")
+        self.assertEqual(str(self._start_date()), "2026-03-01")
+
+    def test_earlier_observation_updates_start_date(self):
+        self._make_obs("2026-03-01")
+        self._make_obs("2026-01-15")
+        self.assertEqual(str(self._start_date()), "2026-01-15")
+
+    def test_deleting_earliest_recalculates_to_next(self):
+        obs_jan = self._make_obs("2026-01-15")
+        self._make_obs("2026-03-01")
+        obs_jan.delete()
+        self.assertEqual(str(self._start_date()), "2026-03-01")
+
+    def test_deleting_only_observation_sets_start_date_null(self):
+        obs = self._make_obs("2026-03-01")
+        obs.delete()
+        self.assertIsNone(self._start_date())
+
+    def test_non_status_change_observation_does_not_affect_start_date(self):
+        self._make_obs("2026-03-01")
+        self._make_obs("2026-01-01", obs_type=Observation.Type.HARVEST)
+        self.assertEqual(str(self._start_date()), "2026-03-01")

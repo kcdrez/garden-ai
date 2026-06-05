@@ -68,18 +68,30 @@ export function plantEmoji(name: string, category: PlantCategory): string {
   return PLANT_EMOJIS[name] ?? CATEGORY_EMOJIS[category] ?? '🌱';
 }
 
-export const STATUS_CLASSES: Record<UserPlantStatus, string> = {
-  planned: 'bg-muted text-muted-foreground',
-  planted: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  growing:
-    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  fruiting:
-    'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  dormant:
-    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  removed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+const STATUS_COLOR_CONFIG: Record<UserPlantStatus, { pill: string; bar: string }> = {
+  planned:  { pill: 'bg-muted text-muted-foreground',                                          bar: 'bg-slate-300 dark:bg-slate-400' },
+  planted:  { pill: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',        bar: 'bg-blue-300' },
+  growing:  { pill: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',    bar: 'bg-green-300' },
+  fruiting: { pill: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300', bar: 'bg-purple-300' },
+  dormant:  { pill: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',    bar: 'bg-amber-300' },
+  removed:  { pill: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',            bar: 'bg-red-300' },
 };
+
+export const STATUS_CLASSES: Record<UserPlantStatus, string> = Object.fromEntries(
+  Object.entries(STATUS_COLOR_CONFIG).map(([k, v]) => [k, v.pill]),
+) as Record<UserPlantStatus, string>;
+
+export const STATUS_BAR_CLASSES: Record<UserPlantStatus, string> = Object.fromEntries(
+  Object.entries(STATUS_COLOR_CONFIG).map(([k, v]) => [k, v.bar]),
+) as Record<UserPlantStatus, string>;
 
 export function statusLabel(status: UserPlantStatus): string {
   return USER_PLANT_STATUSES.find((s) => s.value === status)?.label ?? status;
 }
+
+// Anchored here so Tailwind scans these classes from a well-known file.
+// Used in PlantingGantt event dots.
+export const CALENDAR_EVENT_DOT_CLASSES = {
+  weather: 'bg-cyan-400',
+  general: 'bg-violet-400',
+} as const;

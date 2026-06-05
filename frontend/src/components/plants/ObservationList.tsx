@@ -68,6 +68,7 @@ function ObservationEditRow({ obs, gardenId, bedId, plantId, onDone }: EditRowPr
       updateObservation(gardenId, bedId, plantId, obs.id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
       onDone();
     },
   });
@@ -128,6 +129,7 @@ export default function ObservationList({
     mutationFn: (obsId: string) => deleteObservation(gardenId, bedId, plantId, obsId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
     },
   });
 

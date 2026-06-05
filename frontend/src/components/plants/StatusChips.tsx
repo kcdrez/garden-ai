@@ -25,6 +25,7 @@ export default function StatusChips({ gardenId, bedId, plant }: Props) {
       );
       queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
       queryClient.invalidateQueries({ queryKey: ['observations', plant.id] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
     },
   });
 
