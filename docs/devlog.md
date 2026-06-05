@@ -2,6 +2,18 @@
 
 ---
 
+## 2026-06-05 — ~1.25 hours
+
+**Completed:**
+
+- Canvas `?` shortcut overlay — `CanvasShortcutsDialog` extracted as its own component (SRP); `?` key and help button open a keyboard shortcut legend dialog
+- Canvas UX fixes — companion indicator moved onto container circle stroke (no separate outer ring); nudge reduced from 0.25ft to 0.1ft; drag now auto-selects the item on release
+- Multi-select — Shift/Cmd+click to toggle items in/out of selection; group drag moves all selected items together; group delete with single confirm dialog; simplified multi-select toolbar ("N selected" + Delete All); marching ants animation on selection ring for both single and multi-select; fixed selection ring color (was invisble due to `hsl(var(--primary))` not resolving against an oklch variable — fixed to `var(--primary)`)
+
+**Next up:** Undo/redo for canvas placement actions (Ctrl+Z/Y)
+
+---
+
 ## 2026-06-05 — ~2.5 hours
 
 **Completed:**
