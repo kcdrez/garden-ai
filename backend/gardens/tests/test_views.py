@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gardens.models import BedPlacement, Garden, GardenBed
+from gardens.models import BedPlacement, Garden, GardenBed, GardenFeaturePlacement
 
 
 class GardenAPITests(APITestCase):
@@ -313,6 +313,236 @@ class BedPlacementAPITests(APITestCase):
         res = self.client.delete(self._detail_url(placement.id))
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BedPlacement.objects.filter(id=placement.id).exists())
+
+
+class GardenFeaturePlacementAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="alice", password="testpass123")
+        self.other = User.objects.create_user(username="bob", password="testpass123")
+        self.client.force_authenticate(user=self.user)
+
+        self.garden = Garden.objects.create(name="Alice's Garden", owner=self.user, length=20, width=20)
+        self.bed = GardenBed.objects.create(name="Bed 1", garden=self.garden, length=4, width=8)
+        self.other_garden = Garden.objects.create(name="Bob's Garden", owner=self.other, length=20, width=20)
+        self.other_bed = GardenBed.objects.create(name="Bob's Bed", garden=self.other_garden, length=4, width=8)
+
+    def _garden_list_url(self):
+        return reverse("garden-features-list", kwargs={"garden_id": self.garden.id})
+
+    def _garden_detail_url(self, feature_id):
+        return reverse("garden-features-detail", kwargs={"garden_id": self.garden.id, "feature_placement_id": feature_id})
+
+    def _bed_list_url(self):
+        return reverse("bed-features-list", kwargs={"garden_id": self.garden.id, "bed_id": self.bed.id})
+
+    def _bed_detail_url(self, feature_id):
+        return reverse("bed-features-detail", kwargs={"garden_id": self.garden.id, "bed_id": self.bed.id, "feature_placement_id": feature_id})
+
+    def _make_garden_feature(self, **kwargs):
+        return GardenFeaturePlacement.objects.create(
+            user=self.user, garden=self.garden,
+            object_type="shed", x=1, y=1, width=2, height=2,
+            **kwargs,
+        )
+
+    def _make_bed_feature(self, **kwargs):
+        return GardenFeaturePlacement.objects.create(
+            user=self.user, bed=self.bed,
+            object_type="trellis", x=0, y=0, width=1, height=1,
+            **kwargs,
+        )
+
+    # --- Garden-scoped: list ---
+
+    def test_list_garden_features(self):
+        self._make_garden_feature()
+        res = self.client.get(self._garden_list_url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_list_garden_features_other_user_returns_404(self):
+        res = self.client.get(
+            reverse("garden-features-list", kwargs={"garden_id": self.other_garden.id})
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_excludes_other_users_features(self):
+        self._make_garden_feature()
+        GardenFeaturePlacement.objects.create(
+            user=self.other, garden=self.other_garden,
+            object_type="bench", x=0, y=0, width=1, height=1,
+        )
+        res = self.client.get(self._garden_list_url())
+        self.assertEqual(len(res.data), 1)
+
+    # --- Garden-scoped: create ---
+
+    def test_create_garden_feature(self):
+        res = self.client.post(
+            self._garden_list_url(),
+            {"objectType": "shed", "x": 1, "y": 1, "width": 2, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["object_type"], "shed")
+        self.assertEqual(res.data["shape"], "rect")
+
+    def test_create_garden_feature_shape_is_computed(self):
+        res = self.client.post(
+            self._garden_list_url(),
+            {"objectType": "fountain", "x": 0, "y": 0, "width": 2, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["shape"], "circle")
+
+    def test_create_custom_feature_requires_label(self):
+        res = self.client.post(
+            self._garden_list_url(),
+            {"objectType": "custom_rect", "x": 0, "y": 0, "width": 2, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_custom_feature_with_label_succeeds(self):
+        res = self.client.post(
+            self._garden_list_url(),
+            {"objectType": "custom_rect", "label": "Fairy Garden", "x": 0, "y": 0, "width": 2, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["label"], "Fairy Garden")
+
+    def test_create_garden_feature_in_other_users_garden_returns_404(self):
+        res = self.client.post(
+            reverse("garden-features-list", kwargs={"garden_id": self.other_garden.id}),
+            {"objectType": "shed", "x": 0, "y": 0, "width": 2, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    # --- Garden-scoped: update & delete ---
+
+    def test_patch_garden_feature_position(self):
+        feature = self._make_garden_feature()
+        res = self.client.patch(
+            self._garden_detail_url(feature.id),
+            {"x": 5, "y": 3},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        feature.refresh_from_db()
+        self.assertAlmostEqual(feature.x, 5)
+        self.assertAlmostEqual(feature.y, 3)
+
+    def test_patch_garden_feature_size(self):
+        feature = self._make_garden_feature()
+        res = self.client.patch(
+            self._garden_detail_url(feature.id),
+            {"width": 4, "height": 3},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        feature.refresh_from_db()
+        self.assertAlmostEqual(feature.width, 4)
+        self.assertAlmostEqual(feature.height, 3)
+
+    def test_delete_garden_feature(self):
+        feature = self._make_garden_feature()
+        res = self.client.delete(self._garden_detail_url(feature.id))
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(GardenFeaturePlacement.objects.filter(id=feature.id).exists())
+
+    def test_delete_other_users_garden_feature_returns_404(self):
+        feature = GardenFeaturePlacement.objects.create(
+            user=self.other, garden=self.other_garden,
+            object_type="shed", x=0, y=0, width=2, height=2,
+        )
+        res = self.client.delete(
+            reverse("garden-features-detail", kwargs={
+                "garden_id": self.other_garden.id,
+                "feature_placement_id": feature.id,
+            })
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(GardenFeaturePlacement.objects.filter(id=feature.id).exists())
+
+    # --- Bed-scoped: list ---
+
+    def test_list_bed_features(self):
+        self._make_bed_feature()
+        res = self.client.get(self._bed_list_url())
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+
+    def test_list_bed_features_other_users_garden_returns_404(self):
+        res = self.client.get(
+            reverse("bed-features-list", kwargs={
+                "garden_id": self.other_garden.id,
+                "bed_id": self.other_bed.id,
+            })
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    # --- Bed-scoped: create ---
+
+    def test_create_bed_feature(self):
+        res = self.client.post(
+            self._bed_list_url(),
+            {"objectType": "trellis", "x": 0, "y": 0, "width": 1, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data["object_type"], "trellis")
+        self.assertEqual(res.data["shape"], "rect")
+
+    def test_create_bed_feature_in_other_users_bed_returns_404(self):
+        res = self.client.post(
+            reverse("bed-features-list", kwargs={
+                "garden_id": self.other_garden.id,
+                "bed_id": self.other_bed.id,
+            }),
+            {"objectType": "trellis", "x": 0, "y": 0, "width": 1, "height": 2},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    # --- Bed-scoped: update & delete ---
+
+    def test_patch_bed_feature(self):
+        feature = self._make_bed_feature()
+        res = self.client.patch(
+            self._bed_detail_url(feature.id),
+            {"x": 2, "y": 1},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        feature.refresh_from_db()
+        self.assertAlmostEqual(feature.x, 2)
+
+    def test_delete_bed_feature(self):
+        feature = self._make_bed_feature()
+        res = self.client.delete(self._bed_detail_url(feature.id))
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(GardenFeaturePlacement.objects.filter(id=feature.id).exists())
+
+    # --- Model ---
+
+    def test_garden_feature_str(self):
+        feature = self._make_garden_feature()
+        self.assertIn("shed", str(feature).lower())
+
+    def test_check_constraint_requires_exactly_one_scope(self):
+        from django.db import IntegrityError, transaction
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                GardenFeaturePlacement.objects.create(
+                    user=self.user,
+                    garden=self.garden,
+                    bed=self.bed,
+                    object_type="shed",
+                    x=0, y=0, width=1, height=1,
+                )
 
 
 class GardenModelTests(APITestCase):

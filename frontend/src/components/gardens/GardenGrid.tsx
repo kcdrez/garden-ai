@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EditIcon, ExternalLinkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { EditIcon, ExternalLinkIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useBedPlacementActions } from '@/hooks/useBedPlacementActions';
+import { useGardenFeaturePlacementActions } from '@/hooks/useGardenFeaturePlacementActions';
 import { toFeet, fromFeet, formatDimensions } from '@/lib/beds';
+import { featureImage, featureEmoji, featureLabel, isCustomFeature } from '@/lib/features';
 import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
 import { deleteBed, updateBed } from '@/api/beds';
 import { useConfirm } from '@/hooks/useConfirm';
-import type { BedPlacement, Garden, GardenBed } from '@/types/gardens';
+import type { BedPlacement, Garden, GardenBed, GardenFeaturePlacement } from '@/types/gardens';
 import { makeOptimisticMutation } from '@/lib/mutations';
 import BedDialog from '@/components/beds/BedDialog';
-import PlaceBedDialog from '@/components/gardens/PlaceBedDialog';
+import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
+import PlaceOnCanvasDialog from '@/components/gardens/PlaceOnCanvasDialog';
 import PlacementCanvas from '@/components/shared/PlacementCanvas';
 import type { CanvasMenuItem } from '@/types/canvas';
 import { Button } from '@/components/ui/button';
@@ -34,6 +37,7 @@ export default function GardenGrid({
   const [placingAt, setPlacingAt] = useState<{ x: number; y: number } | null>(null);
   const [editingBed, setEditingBed] = useState<GardenBed | null>(null);
   const [addBedOpen, setAddBedOpen] = useState(false);
+  const [addFeatureOpen, setAddFeatureOpen] = useState(false);
   const [resizeError, setResizeError] = useState<string | null>(null);
 
   const deleteBedMutation = useMutation({
@@ -55,6 +59,14 @@ export default function GardenGrid({
     createError,
     resetCreate,
   } = useBedPlacementActions(gardenId);
+
+  const {
+    features,
+    createFeature,
+    moveFeature,
+    resizeFeature,
+    removeFeature,
+  } = useGardenFeaturePlacementActions(gardenId);
 
   const bedPlacementsKey = ['bed-placements', gardenId] as const;
 
@@ -86,11 +98,13 @@ export default function GardenGrid({
 
   const placementById = new Map(placements.map((p) => [p.id, p]));
   const bedById = new Map(beds.map((b) => [b.id, b]));
+  const featureById = new Map(features.map((f) => [f.id, f]));
+  const featureIds = new Set(features.map((f) => f.id));
   const unplacedBeds = beds.filter(
     (b) => !placements.some((p) => p.bed === b.id),
   );
 
-  const items = placements.map((p) => ({
+  const bedItems = placements.map((p) => ({
     id: p.id,
     x: p.x,
     y: p.y,
@@ -98,8 +112,36 @@ export default function GardenGrid({
     heightFt: p.bedHeightFt,
   }));
 
-  function getMenuItems(placementId: string): CanvasMenuItem[] {
-    const placement = placementById.get(placementId);
+  const featureItems = features.map((f) => ({
+    id: f.id,
+    x: f.x,
+    y: f.y,
+    widthFt: f.width,
+    heightFt: f.height,
+  }));
+
+  const items = [...bedItems, ...featureItems];
+
+  function getMenuItems(itemId: string): CanvasMenuItem[] {
+    if (featureIds.has(itemId)) {
+      const feature = featureById.get(itemId);
+      return [
+        {
+          label: 'Delete',
+          icon: <Trash2Icon className="size-4" />,
+          primary: true,
+          shortcut: 'Del',
+          variant: 'destructive' as const,
+          onClick: async () => {
+            const name = feature ? (feature.label || featureLabel(feature.objectType)) : 'this feature';
+            const ok = await confirm({ title: 'Delete feature?', description: `"${name}" will be permanently deleted.` });
+            if (ok) removeFeature(itemId);
+          },
+        },
+      ];
+    }
+
+    const placement = placementById.get(itemId);
     const bed = placement ? bedById.get(placement.bed) : undefined;
     return [
       {
@@ -123,7 +165,7 @@ export default function GardenGrid({
         icon: <MinusCircleIcon className="size-4" />,
         primary: true,
         shortcut: 'r',
-        onClick: () => removePlacement(placementId),
+        onClick: () => removePlacement(itemId),
       },
       {
         label: 'Delete',
@@ -143,13 +185,101 @@ export default function GardenGrid({
     ];
   }
 
-  async function handleDeleteItems(placementIds: string[]) {
+  async function handleDeleteItems(itemIds: string[]) {
+    const bedPlacementIds = itemIds.filter((id) => !featureIds.has(id));
+    const fIds = itemIds.filter((id) => featureIds.has(id));
+    if (bedPlacementIds.length === 0 && fIds.length === 0) return;
+
+    const total = bedPlacementIds.length + fIds.length;
+    const parts: string[] = [];
+    if (bedPlacementIds.length > 0) parts.push(`${bedPlacementIds.length} bed${bedPlacementIds.length > 1 ? 's' : ''} and all their plants`);
+    if (fIds.length > 0) parts.push(`${fIds.length} feature${fIds.length > 1 ? 's' : ''}`);
+
     const ok = await confirm({
-      title: `Remove ${placementIds.length} bed${placementIds.length > 1 ? 's' : ''} from layout?`,
-      description: 'The beds will be removed from the garden layout but not deleted.',
+      title: `Delete ${total} item${total > 1 ? 's' : ''}?`,
+      description: `${parts.join(' and ')} will be permanently deleted.`,
     });
     if (!ok) return;
-    for (const id of placementIds) removePlacement(id);
+    for (const id of bedPlacementIds) {
+      const placement = placementById.get(id);
+      if (placement) deleteBedMutation.mutate(placement.bed);
+    }
+    for (const id of fIds) removeFeature(id);
+  }
+
+  function renderFeatureItem(item: { widthFt: number; heightFt: number }, feature: GardenFeaturePlacement) {
+    const custom = isCustomFeature(feature.objectType);
+    const img = custom ? null : featureImage(feature.objectType);
+    const emoji = custom ? null : featureEmoji(feature.objectType);
+    const displayLabel = custom ? feature.label : (feature.label || featureLabel(feature.objectType));
+    const isCircle = feature.shape === 'circle';
+    const cx = item.widthFt / 2;
+    const cy = item.heightFt / 2;
+    const rx = item.widthFt / 2;
+    const ry = item.heightFt / 2;
+    const minDim = Math.min(item.widthFt, item.heightFt);
+    const imgSize = minDim * 0.6;
+    const emojiFontSize = minDim * 0.5;
+    const labelFontSize = Math.max(0.12, minDim * 0.14);
+    const charRatio = 0.55;
+    const maxLabelWidth = item.widthFt - 0.2;
+    const truncatedLabel = displayLabel.length * labelFontSize * charRatio > maxLabelWidth
+      ? displayLabel.slice(0, Math.floor(maxLabelWidth / (labelFontSize * charRatio)) - 1) + '…'
+      : displayLabel;
+    const iconCy = (!custom && displayLabel) ? cy - minDim * 0.08 : cy;
+
+    return (
+      <>
+        {isCircle ? (
+          <ellipse
+            cx={cx} cy={cy} rx={rx} ry={ry}
+            className="fill-amber-500/15 stroke-amber-600/50"
+            strokeWidth={0.05}
+          />
+        ) : (
+          <rect
+            x={0} y={0} width={item.widthFt} height={item.heightFt}
+            className="fill-amber-500/15 stroke-amber-600/50"
+            strokeWidth={0.05}
+            rx={0.1}
+          />
+        )}
+        {!custom && (img ? (
+          <image
+            href={img}
+            x={cx - imgSize / 2}
+            y={iconCy - imgSize / 2}
+            width={imgSize}
+            height={imgSize}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ pointerEvents: 'none' }}
+          />
+        ) : (
+          <text
+            x={cx} y={iconCy}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={emojiFontSize}
+            style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+          >
+            {emoji}
+          </text>
+        ))}
+        {truncatedLabel && (
+          <text
+            x={cx}
+            y={custom ? cy : isCircle ? cy + ry * 0.6 : item.heightFt - labelFontSize * 0.8}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={labelFontSize}
+            className="fill-amber-800 dark:fill-amber-300"
+            style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+          >
+            {truncatedLabel}
+          </text>
+        )}
+      </>
+    );
   }
 
   return (
@@ -160,6 +290,9 @@ export default function GardenGrid({
         items={items}
         onDeleteItems={handleDeleteItems}
         renderItem={(item) => {
+          if (featureIds.has(item.id)) {
+            return renderFeatureItem(item, featureById.get(item.id)!);
+          }
           const placement = placementById.get(item.id);
           const bed = placement ? bedById.get(placement.bed) : undefined;
           const fontSize = Math.max(
@@ -222,15 +355,29 @@ export default function GardenGrid({
           );
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
-        onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
-        onResize={(placementId, widthFt, heightFt) => {
-          const bed = bedById.get(placementById.get(placementId)?.bed ?? '');
-          if (bed) resizeBedMutation.mutate({ placementId, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
+        onMove={(itemId, x, y) => {
+          if (featureIds.has(itemId)) {
+            moveFeature({ featureId: itemId, x, y });
+          } else {
+            movePlacement({ placementId: itemId, x, y });
+          }
+        }}
+        onResize={(itemId, widthFt, heightFt) => {
+          if (featureIds.has(itemId)) {
+            resizeFeature({ featureId: itemId, width: widthFt, height: heightFt });
+          } else {
+            const bed = bedById.get(placementById.get(itemId)?.bed ?? '');
+            if (bed) resizeBedMutation.mutate({ placementId: itemId, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
+          }
         }}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-garden-${gardenId}`}
-        getItemLabel={(placementId) => {
-          const placement = placementById.get(placementId);
+        getItemLabel={(itemId) => {
+          if (featureIds.has(itemId)) {
+            const f = featureById.get(itemId);
+            return f ? (f.label || featureLabel(f.objectType)) : '';
+          }
+          const placement = placementById.get(itemId);
           const bed = placement ? bedById.get(placement.bed) : undefined;
           return bed?.name ?? '';
         }}
@@ -248,10 +395,16 @@ export default function GardenGrid({
               <p className="text-sm text-muted-foreground mt-0.5">Click the garden layout to place</p>
             )}
           </div>
-          <Button size="sm" onClick={() => setAddBedOpen(true)}>
-            <PlusIcon className="size-4" />
-            Add Bed
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setAddFeatureOpen(true)}>
+              <LandmarkIcon className="size-4" />
+              Add Feature
+            </Button>
+            <Button size="sm" onClick={() => setAddBedOpen(true)}>
+              <PlusIcon className="size-4" />
+              Add Bed
+            </Button>
+          </div>
         </div>
         {unplacedBeds.length === 0 ? (
           <p className="text-sm text-muted-foreground">All beds are placed in the garden.</p>
@@ -270,7 +423,7 @@ export default function GardenGrid({
         )}
       </div>
 
-      <PlaceBedDialog
+      <PlaceOnCanvasDialog
         open={!!placingAt}
         onOpenChange={(open) => {
           if (!open) {
@@ -286,12 +439,30 @@ export default function GardenGrid({
         }
         isPlacing={isCreating}
         placeError={createFailed ? getErrorMessage(createError) : null}
+        onPlaceFeature={(objectType, label) =>
+          createFeature(
+            { objectType, label, x: placingAt!.x, y: placingAt!.y, width: 2, height: 2 },
+            () => setPlacingAt(null),
+          )
+        }
       />
 
       <BedDialog
         gardenId={gardenId}
         open={addBedOpen}
         onOpenChange={setAddBedOpen}
+      />
+
+      <PlaceFeatureDialog
+        open={addFeatureOpen}
+        onOpenChange={setAddFeatureOpen}
+        scope="garden"
+        onPlace={(objectType, label) =>
+          createFeature(
+            { objectType, label, x: 0.5, y: 0.5, width: 2, height: 2 },
+            () => setAddFeatureOpen(false),
+          )
+        }
       />
 
       {editingBed && (

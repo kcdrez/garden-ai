@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { usePlantPlacementActions } from '@/hooks/usePlantPlacementActions';
+import { useBedFeaturePlacementActions } from '@/hooks/useBedFeaturePlacementActions';
 import { fetchCompanionHints } from '@/api/plants';
 import { routes } from '@/lib/routes';
 import { toFeet } from '@/lib/beds';
 import { plantEmoji, plantImage } from '@/lib/plants';
+import { featureImage, featureEmoji, featureLabel, isCustomFeature } from '@/lib/features';
 import { getErrorMessage } from '@/lib/errors';
-import type { GardenBed } from '@/types/gardens';
+import type { GardenBed, GardenFeaturePlacement } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
-import PlacePlantDialog from '@/components/plants/PlacePlantDialog';
+import PlaceOnBedCanvasDialog from '@/components/beds/PlaceOnBedCanvasDialog';
+import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
 import UserPlantDialog from '@/components/plants/UserPlantDialog';
 import PlantEditForm from '@/components/plants/PlantEditForm';
 import MovePlantDialog from '@/components/plants/MovePlantDialog';
@@ -37,6 +40,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const [movingPlantId, setMovingPlantId] = useState<string | null>(null);
   const [observingPlantId, setObservingPlantId] = useState<string | null>(null);
   const [addPlantOpen, setAddPlantOpen] = useState(false);
+  const [addFeatureOpen, setAddFeatureOpen] = useState(false);
   const [copiedPlacementId, setCopiedPlacementId] = useState<string | null>(null);
 
   const {
@@ -56,6 +60,14 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     isDeleting,
   } = usePlantPlacementActions(gardenId, bedId);
 
+  const {
+    features,
+    createFeature,
+    moveFeature,
+    resizeFeature,
+    removeFeature,
+  } = useBedFeaturePlacementActions(gardenId, bedId);
+
   const { data: companionHints = [] } = useQuery({
     queryKey: ['companion-hints', bedId],
     queryFn: () => fetchCompanionHints(gardenId, bedId),
@@ -70,6 +82,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
 
   const userPlantById = new Map<string, UserPlant>(userPlants.map((p) => [p.id, p]));
   const placementById = new Map(placements.map((p) => [p.id, p]));
+  const featureById = new Map(features.map((f) => [f.id, f]));
+  const featureIds = new Set(features.map((f) => f.id));
   const unplacedPlants = userPlants.filter((p) => !placements.some((pl) => pl.userPlant === p.id));
 
   // Map catalog plant ID → companion status for plants currently in this bed
@@ -90,7 +104,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const movingPlant = movingPlantId ? (userPlantById.get(movingPlantId) ?? null) : null;
   const observingPlant = observingPlantId ? (userPlantById.get(observingPlantId) ?? null) : null;
 
-  const items: CanvasItem[] = placements.map((p) => ({
+  const plantItems: CanvasItem[] = placements.map((p) => ({
     id: p.id,
     x: p.x,
     y: p.y,
@@ -98,7 +112,36 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     heightFt: p.height,
   }));
 
-  function getMenuItems(placementId: string): CanvasMenuItem[] {
+  const featureItems: CanvasItem[] = features.map((f) => ({
+    id: f.id,
+    x: f.x,
+    y: f.y,
+    widthFt: f.width,
+    heightFt: f.height,
+  }));
+
+  const items: CanvasItem[] = [...plantItems, ...featureItems];
+
+  function getMenuItems(itemId: string): CanvasMenuItem[] {
+    if (featureIds.has(itemId)) {
+      const feature = featureById.get(itemId);
+      return [
+        {
+          label: 'Delete',
+          icon: <Trash2Icon className="size-4" />,
+          primary: true,
+          shortcut: 'Del',
+          variant: 'destructive' as const,
+          onClick: async () => {
+            const name = feature ? (feature.label || featureLabel(feature.objectType)) : 'this feature';
+            const ok = await confirm({ title: 'Delete feature?', description: `"${name}" will be permanently deleted.` });
+            if (ok) removeFeature(itemId);
+          },
+        },
+      ];
+    }
+
+    const placementId = itemId;
     const placement = placementById.get(placementId);
     const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
 
@@ -174,17 +217,26 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     if (ok) deletePlant(plant.id);
   }
 
-  async function handleDeleteItems(placementIds: string[]) {
+  async function handleDeleteItems(itemIds: string[]) {
+    const fIds = itemIds.filter((id) => featureIds.has(id));
+    const placementIds = itemIds.filter((id) => !featureIds.has(id));
     const plantIds = placementIds
       .map(pid => placementById.get(pid)?.userPlant)
       .filter((id): id is string => Boolean(id));
-    if (plantIds.length === 0) return;
+    if (plantIds.length === 0 && fIds.length === 0) return;
+
+    const total = plantIds.length + fIds.length;
+    const parts: string[] = [];
+    if (plantIds.length > 0) parts.push(`${plantIds.length} plant${plantIds.length > 1 ? 's' : ''}`);
+    if (fIds.length > 0) parts.push(`${fIds.length} feature${fIds.length > 1 ? 's' : ''}`);
+
     const ok = await confirm({
-      title: `Delete ${plantIds.length} plant${plantIds.length > 1 ? 's' : ''}?`,
-      description: 'The selected plants will be permanently deleted.',
+      title: `Delete ${total} item${total > 1 ? 's' : ''}?`,
+      description: `${parts.join(' and ')} will be permanently deleted.`,
     });
     if (!ok) return;
     for (const id of plantIds) deletePlant(id);
+    for (const id of fIds) removeFeature(id);
   }
 
   function handleCopyItem(placementId: string) {
@@ -203,6 +255,81 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     clonePlant({ plantId: plant.id, placement: { x: newX, y: newY, width: placement.width, height: placement.height } });
   }
 
+  function renderFeatureItem(item: { widthFt: number; heightFt: number }, feature: GardenFeaturePlacement) {
+    const custom = isCustomFeature(feature.objectType);
+    const img = custom ? null : featureImage(feature.objectType);
+    const emoji = custom ? null : featureEmoji(feature.objectType);
+    const displayLabel = custom ? feature.label : (feature.label || featureLabel(feature.objectType));
+    const isCircle = feature.shape === 'circle';
+    const cx = item.widthFt / 2;
+    const cy = item.heightFt / 2;
+    const rx = item.widthFt / 2;
+    const ry = item.heightFt / 2;
+    const minDim = Math.min(item.widthFt, item.heightFt);
+    const imgSize = minDim * 0.6;
+    const emojiFontSize = minDim * 0.5;
+    const labelFontSize = Math.max(0.12, minDim * 0.14);
+    const charRatio = 0.55;
+    const maxLabelWidth = item.widthFt - 0.2;
+    const truncatedLabel = displayLabel.length * labelFontSize * charRatio > maxLabelWidth
+      ? displayLabel.slice(0, Math.floor(maxLabelWidth / (labelFontSize * charRatio)) - 1) + '…'
+      : displayLabel;
+    const iconCy = (!custom && displayLabel) ? cy - minDim * 0.08 : cy;
+
+    return (
+      <>
+        {isCircle ? (
+          <ellipse
+            cx={cx} cy={cy} rx={rx} ry={ry}
+            className="fill-amber-500/15 stroke-amber-600/50"
+            strokeWidth={0.04}
+          />
+        ) : (
+          <rect
+            x={0} y={0} width={item.widthFt} height={item.heightFt}
+            className="fill-amber-500/15 stroke-amber-600/50"
+            strokeWidth={0.04}
+            rx={0.08}
+          />
+        )}
+        {!custom && (img ? (
+          <image
+            href={img}
+            x={cx - imgSize / 2}
+            y={iconCy - imgSize / 2}
+            width={imgSize}
+            height={imgSize}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ pointerEvents: 'none' }}
+          />
+        ) : (
+          <text
+            x={cx} y={iconCy}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={emojiFontSize}
+            style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+          >
+            {emoji}
+          </text>
+        ))}
+        {truncatedLabel && (
+          <text
+            x={cx}
+            y={custom ? cy : isCircle ? cy + ry * 0.6 : item.heightFt - labelFontSize * 0.8}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={labelFontSize}
+            className="fill-amber-800 dark:fill-amber-300"
+            style={{ userSelect: 'none', pointerEvents: 'none', letterSpacing: 0 }}
+          >
+            {truncatedLabel}
+          </text>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <PlacementCanvas
@@ -213,6 +340,9 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         onCopyItem={handleCopyItem}
         onPasteItem={handlePasteItem}
         renderItem={(item) => {
+          if (featureIds.has(item.id)) {
+            return renderFeatureItem(item, featureById.get(item.id)!);
+          }
           const placement = placementById.get(item.id);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
           const rx = item.widthFt / 2;
@@ -295,13 +425,29 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           );
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
-        onMove={(placementId, x, y) => movePlacement({ placementId, x, y })}
-        onResize={(placementId, widthFt, heightFt) => resizePlacement({ placementId, widthFt, heightFt })}
+        onMove={(itemId, x, y) => {
+          if (featureIds.has(itemId)) {
+            moveFeature({ featureId: itemId, x, y });
+          } else {
+            movePlacement({ placementId: itemId, x, y });
+          }
+        }}
+        onResize={(itemId, widthFt, heightFt) => {
+          if (featureIds.has(itemId)) {
+            resizeFeature({ featureId: itemId, width: widthFt, height: heightFt });
+          } else {
+            resizePlacement({ placementId: itemId, widthFt, heightFt });
+          }
+        }}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-bed-${bedId}`}
         defaultZoom={smartDefaultZoom}
-        getItemLabel={(placementId) => {
-          const placement = placementById.get(placementId);
+        getItemLabel={(itemId) => {
+          if (featureIds.has(itemId)) {
+            const f = featureById.get(itemId);
+            return f ? (f.label || featureLabel(f.objectType)) : '';
+          }
+          const placement = placementById.get(itemId);
           const plant = placement ? userPlantById.get(placement.userPlant) : undefined;
           if (!plant) return '';
           return plant.variety ? `${plant.plantName} — ${plant.variety}` : plant.plantName;
@@ -343,10 +489,16 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
               <p className="text-sm text-muted-foreground mt-0.5">Click the bed layout to place</p>
             )}
           </div>
-          <Button size="sm" onClick={() => setAddPlantOpen(true)}>
-            <PlusIcon className="size-4" />
-            Create Plant
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setAddFeatureOpen(true)}>
+              <LandmarkIcon className="size-4" />
+              Add Feature
+            </Button>
+            <Button size="sm" onClick={() => setAddPlantOpen(true)}>
+              <PlusIcon className="size-4" />
+              Add Plant
+            </Button>
+          </div>
         </div>
         {unplacedPlants.length === 0 ? (
           <p className="text-sm text-muted-foreground">All plants are placed in the bed.</p>
@@ -373,7 +525,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         )}
       </div>
 
-      <PlacePlantDialog
+      <PlaceOnBedCanvasDialog
         open={!!placingAt}
         onOpenChange={(open) => {
           if (!open) {
@@ -382,6 +534,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           }
         }}
         cell={placingAt}
+        gardenId={gardenId}
+        bedId={bedId}
         unplacedPlants={unplacedPlants}
         onPlace={(userPlantId) => {
           const plant = userPlantById.get(userPlantId);
@@ -393,8 +547,12 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         }}
         isPlacing={isCreating}
         placeError={createFailed ? getErrorMessage(createError) : null}
-        gardenId={gardenId}
-        bedId={bedId}
+        onPlaceFeature={(objectType, label) =>
+          createFeature(
+            { objectType, label, x: placingAt!.x, y: placingAt!.y, width: 1, height: 1 },
+            () => setPlacingAt(null),
+          )
+        }
       />
 
       <UserPlantDialog
@@ -402,6 +560,18 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
         bedId={bedId}
         open={addPlantOpen}
         onOpenChange={(open) => { if (!open) setAddPlantOpen(false); }}
+      />
+
+      <PlaceFeatureDialog
+        open={addFeatureOpen}
+        onOpenChange={setAddFeatureOpen}
+        scope="bed"
+        onPlace={(objectType, label) => {
+          createFeature(
+            { objectType, label, x: 0.5, y: 0.5, width: 1, height: 1 },
+            () => setAddFeatureOpen(false),
+          );
+        }}
       />
 
       {editingPlant && (

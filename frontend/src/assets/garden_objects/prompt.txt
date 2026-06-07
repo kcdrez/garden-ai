@@ -1,0 +1,17 @@
+Object	Shape	Canvas
+Shed	rect	Garden
+Bench	rect	Garden
+Arbor / Arch	rect	Garden
+Trellis	rect	Garden + Bed
+Fence Section	rect	Garden
+Compost Bin	rect	Garden
+Rain Barrel	rect	Garden
+Cold Frame	rect	Garden + Bed
+Fountain	circle	Garden
+Bird Bath	circle	Garden
+Pot / Container	circle	Garden + Bed
+Tomato Cage	circle	Bed
+Row Cover / Cloche	circle	Bed
+
+
+"Glossy cartoon vector icon of a garden fountain, Apple emoji style, slightly elevated three-quarter front view, smooth gradient shading with specular highlights, vibrant saturated colors, transparent background, no text, no shadows, isolated on white"

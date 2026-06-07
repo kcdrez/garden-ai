@@ -45,6 +45,26 @@ export type BedPlacement = {
   updatedAt: string;
 };
 
+export type FeatureObjectType =
+  | 'shed' | 'bench' | 'arbor' | 'trellis' | 'fence' | 'compost'
+  | 'rain_barrel' | 'cold_frame' | 'fountain' | 'bird_bath' | 'pot'
+  | 'tomato_cage' | 'row_cover' | 'custom_rect' | 'custom_circle';
+
+export type FeatureShape = 'rect' | 'circle';
+
+export type GardenFeaturePlacement = {
+  id: string;
+  objectType: FeatureObjectType;
+  shape: FeatureShape;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type GardenBed = {
   id: string;
   garden: string;
