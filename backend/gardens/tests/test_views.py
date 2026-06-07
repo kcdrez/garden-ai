@@ -330,13 +330,19 @@ class GardenFeaturePlacementAPITests(APITestCase):
         return reverse("garden-features-list", kwargs={"garden_id": self.garden.id})
 
     def _garden_detail_url(self, feature_id):
-        return reverse("garden-features-detail", kwargs={"garden_id": self.garden.id, "feature_placement_id": feature_id})
+        return reverse(
+            "garden-features-detail",
+            kwargs={"garden_id": self.garden.id, "feature_placement_id": feature_id},
+        )
 
     def _bed_list_url(self):
         return reverse("bed-features-list", kwargs={"garden_id": self.garden.id, "bed_id": self.bed.id})
 
     def _bed_detail_url(self, feature_id):
-        return reverse("bed-features-detail", kwargs={"garden_id": self.garden.id, "bed_id": self.bed.id, "feature_placement_id": feature_id})
+        return reverse(
+            "bed-features-detail",
+            kwargs={"garden_id": self.garden.id, "bed_id": self.bed.id, "feature_placement_id": feature_id},
+        )
 
     def _make_garden_feature(self, **kwargs):
         return GardenFeaturePlacement.objects.create(
