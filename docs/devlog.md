@@ -2,6 +2,19 @@
 
 ---
 
+## 2026-06-07 — ~2 hours
+
+**Completed:**
+
+- Canvas garden features — full end-to-end feature; `GardenFeaturePlacement` model with 15 object types (shed, bench, arbor, trellis, fence, compost, rain barrel, cold frame, fountain, bird bath, pot, tomato cage, row cover, custom rect, custom circle); rect/circle shapes with amber solid stroke rendering; image assets via `src/assets/garden_objects/`; drag/resize with optimistic updates and snap-back on error
+- Place on Canvas wizards — `PlaceOnCanvasDialog` (garden) and `PlaceOnBedCanvasDialog` (bed) replace the old `PlaceBedDialog`/`PlacePlantDialog` with a choose step offering bed/plant or feature placement; "Add Feature" buttons also available standalone on both canvases
+- Feature UX polish — Delete with confirmation (not just remove); single confirm dialog for mixed bed+feature multi-select; keyboard shortcut `Del` consistent with other delete actions; custom types (rect/circle) require a label, render label-only with no icon; "Add to Canvas" jargon removed throughout
+- 18 new backend tests + 26 new frontend tests; all 694 FE + 58 garden BE tests passing
+
+**Next up:** Undo/redo for canvas placement actions (Ctrl+Z/Y)
+
+---
+
 ## 2026-06-05 — ~0.5 hours
 
 **Completed:**
