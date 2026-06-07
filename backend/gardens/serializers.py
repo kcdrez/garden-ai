@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from core.utils import to_feet
 
-from .models import BedPlacement, Garden, GardenBed
+from .models import BedPlacement, Garden, GardenBed, GardenFeaturePlacement
 
 
 class GardenBedSerializer(serializers.ModelSerializer):
@@ -172,4 +172,31 @@ class BedPlacementSerializer(serializers.ModelSerializer):
         if y is not None:
             data["y"] = max(0.0, min(y, garden_height_ft - bed_height_ft))
 
+        return data
+
+
+class GardenFeaturePlacementSerializer(serializers.ModelSerializer):
+    shape = serializers.SerializerMethodField()
+
+    def get_shape(self, obj):
+        return GardenFeaturePlacement.OBJECT_SHAPE.get(obj.object_type, GardenFeaturePlacement.Shape.RECT)
+
+    class Meta:
+        model = GardenFeaturePlacement
+        fields = [
+            "id", "object_type", "shape", "label",
+            "x", "y", "width", "height",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "shape", "created_at", "updated_at"]
+
+    def validate(self, data):
+        object_type = data.get("object_type", getattr(self.instance, "object_type", None))
+        custom_types = {
+            GardenFeaturePlacement.ObjectType.CUSTOM_RECT,
+            GardenFeaturePlacement.ObjectType.CUSTOM_CIRCLE,
+        }
+        label = data.get("label", getattr(self.instance, "label", ""))
+        if object_type in custom_types and not label:
+            raise serializers.ValidationError({"label": "A label is required for custom objects."})
         return data

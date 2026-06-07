@@ -2,8 +2,8 @@ from django.db.models import Count
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.exceptions import NotFound
 
-from .models import BedPlacement, Garden, GardenBed
-from .serializers import BedPlacementSerializer, GardenBedSerializer, GardenSerializer
+from .models import BedPlacement, Garden, GardenBed, GardenFeaturePlacement
+from .serializers import BedPlacementSerializer, GardenBedSerializer, GardenFeaturePlacementSerializer, GardenSerializer
 
 
 class GardenScopedMixin:
@@ -77,3 +77,41 @@ class BedPlacementViewSet(
     def perform_create(self, serializer):
         garden = self._get_garden()
         serializer.save(garden=garden)
+
+
+class GardenFeaturePlacementViewSet(
+    GardenScopedMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = GardenFeaturePlacementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "feature_placement_id"
+
+    def _get_scope(self):
+        garden = self._get_garden()
+        bed_id = self.kwargs.get("bed_id")
+        if bed_id:
+            try:
+                bed = GardenBed.objects.get(pk=bed_id, garden=garden)
+            except GardenBed.DoesNotExist as err:
+                from rest_framework.exceptions import NotFound
+                raise NotFound("Bed not found.") from err
+            return garden, bed
+        return garden, None
+
+    def get_queryset(self):
+        garden, bed = self._get_scope()
+        if bed:
+            return GardenFeaturePlacement.objects.filter(bed=bed, user=self.request.user)
+        return GardenFeaturePlacement.objects.filter(garden=garden, user=self.request.user)
+
+    def perform_create(self, serializer):
+        garden, bed = self._get_scope()
+        if bed:
+            serializer.save(user=self.request.user, bed=bed)
+        else:
+            serializer.save(user=self.request.user, garden=garden)

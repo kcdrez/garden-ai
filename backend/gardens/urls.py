@@ -1,7 +1,13 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import AllGardenBedsViewSet, BedPlacementViewSet, GardenBedViewSet, GardenViewSet
+from .views import (
+    AllGardenBedsViewSet,
+    BedPlacementViewSet,
+    GardenBedViewSet,
+    GardenFeaturePlacementViewSet,
+    GardenViewSet,
+)
 
 router = DefaultRouter()
 router.register(r"gardens", GardenViewSet, basename="garden")
@@ -13,6 +19,10 @@ bed_detail = GardenBedViewSet.as_view(
 all_beds = AllGardenBedsViewSet.as_view({"get": "list"})
 bed_placement_list = BedPlacementViewSet.as_view({"get": "list", "post": "create"})
 bed_placement_detail = BedPlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
+garden_feature_list = GardenFeaturePlacementViewSet.as_view({"get": "list", "post": "create"})
+garden_feature_detail = GardenFeaturePlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
+bed_feature_list = GardenFeaturePlacementViewSet.as_view({"get": "list", "post": "create"})
+bed_feature_detail = GardenFeaturePlacementViewSet.as_view({"patch": "partial_update", "delete": "destroy"})
 
 urlpatterns = [*router.urls,
     path("beds/", all_beds, name="all-beds"),
@@ -23,5 +33,17 @@ urlpatterns = [*router.urls,
         "gardens/<uuid:garden_id>/bed-placements/<uuid:bed_placement_id>/",
         bed_placement_detail,
         name="bed-placements-detail",
+    ),
+    path("gardens/<uuid:garden_id>/features/", garden_feature_list, name="garden-features-list"),
+    path(
+        "gardens/<uuid:garden_id>/features/<uuid:feature_placement_id>/",
+        garden_feature_detail,
+        name="garden-features-detail",
+    ),
+    path("gardens/<uuid:garden_id>/beds/<uuid:bed_id>/features/", bed_feature_list, name="bed-features-list"),
+    path(
+        "gardens/<uuid:garden_id>/beds/<uuid:bed_id>/features/<uuid:feature_placement_id>/",
+        bed_feature_detail,
+        name="bed-features-detail",
     ),
 ]

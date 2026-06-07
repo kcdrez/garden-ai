@@ -45,10 +45,10 @@ vi.mock('@/components/shared/PlacementCanvas', () => ({
   ),
 }));
 
-vi.mock('@/components/plants/PlacePlantDialog', () => ({
+vi.mock('@/components/beds/PlaceOnBedCanvasDialog', () => ({
   default: ({ open, onPlace }: { open: boolean; onPlace: (id: string) => void }) =>
     open ? (
-      <div role="dialog" aria-label="Place Plant Dialog">
+      <div role="dialog" aria-label="Place On Bed Canvas Dialog">
         <button onClick={() => onPlace('plant-1')}>Place plant-1</button>
       </div>
     ) : null,
@@ -144,12 +144,12 @@ describe('BedGrid', () => {
     expect(screen.getByText(/all plants are placed in the bed/i)).toBeInTheDocument();
   });
 
-  it('opens PlacePlantDialog when the canvas is clicked', async () => {
+  it('opens PlaceOnBedCanvasDialog when the canvas is clicked', async () => {
     const user = userEvent.setup();
     renderBedGrid();
     await screen.findByTestId('placement-canvas');
     await user.click(screen.getByRole('button', { name: /click canvas/i }));
-    expect(screen.getByRole('dialog', { name: /place plant dialog/i })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /place on bed canvas dialog/i })).toBeInTheDocument();
   });
 
   it('calls createPlacement with plant spacing when a plant is placed', async () => {
@@ -275,11 +275,11 @@ describe('BedGrid', () => {
     });
   });
 
-  it('opens UserPlantDialog when Create Plant button is clicked', async () => {
+  it('opens UserPlantDialog when Add Plant button is clicked', async () => {
     const user = userEvent.setup();
     renderBedGrid();
     await screen.findByTestId('placement-canvas');
-    await user.click(screen.getByRole('button', { name: /create plant/i }));
+    await user.click(screen.getByRole('button', { name: /add plant/i }));
     expect(screen.getByRole('dialog', { name: /create plant form/i })).toBeInTheDocument();
   });
 
