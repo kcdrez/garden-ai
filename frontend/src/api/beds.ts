@@ -14,32 +14,32 @@ type BedPayload = {
 };
 
 export async function fetchAllBeds(): Promise<GardenBed[]> {
-  const res = await api.get('/beds/');
-  return res.data ?? [];
+  const { data } = await api.get<GardenBed[]>('/beds/');
+  return data ?? [];
 }
 
 export async function fetchBeds(gardenId: string): Promise<GardenBed[]> {
-  const res = await api.get(`/gardens/${gardenId}/beds/`);
-  return res.data ?? [];
+  const { data } = await api.get<GardenBed[]>(`/gardens/${gardenId}/beds/`);
+  return data ?? [];
 }
 
 export async function fetchBed(gardenId: string, bedId: string): Promise<GardenBed> {
-  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/`);
-  return res.data;
+  const { data } = await api.get<GardenBed>(`/gardens/${gardenId}/beds/${bedId}/`);
+  return data;
 }
 
-export async function createBed(gardenId: string, data: BedPayload): Promise<GardenBed> {
-  const res = await api.post(`/gardens/${gardenId}/beds/`, data);
-  return res.data;
+export async function createBed(gardenId: string, payload: BedPayload): Promise<GardenBed> {
+  const { data } = await api.post<GardenBed>(`/gardens/${gardenId}/beds/`, payload);
+  return data;
 }
 
 export async function updateBed(
   gardenId: string,
   bedId: string,
-  data: Partial<BedPayload>,
+  payload: Partial<BedPayload>,
 ): Promise<GardenBed> {
-  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/`, data);
-  return res.data;
+  const { data } = await api.patch<GardenBed>(`/gardens/${gardenId}/beds/${bedId}/`, payload);
+  return data;
 }
 
 export async function deleteBed(gardenId: string, bedId: string): Promise<void> {
@@ -47,18 +47,29 @@ export async function deleteBed(gardenId: string, bedId: string): Promise<void> 
 }
 
 export async function fetchBedPlacements(gardenId: string): Promise<BedPlacement[]> {
-  const res = await api.get(`/gardens/${gardenId}/bed-placements/`);
-  return res.data ?? [];
+  const { data } = await api.get<BedPlacement[]>(`/gardens/${gardenId}/bed-placements/`);
+  return data ?? [];
 }
 
-export async function createBedPlacement(gardenId: string, data: { bed: string; x: number; y: number; width?: number; height?: number }): Promise<BedPlacement> {
-  const res = await api.post(`/gardens/${gardenId}/bed-placements/`, data);
-  return res.data;
+export async function createBedPlacement(
+  gardenId: string,
+  payload: { bed: string; x: number; y: number; width?: number; height?: number },
+): Promise<BedPlacement> {
+  const { data } = await api.post<BedPlacement>(`/gardens/${gardenId}/bed-placements/`, payload);
+  return data;
 }
 
-export async function moveBedPlacement(gardenId: string, placementId: string, x: number, y: number): Promise<BedPlacement> {
-  const res = await api.patch(`/gardens/${gardenId}/bed-placements/${placementId}/`, { x, y });
-  return res.data;
+export async function moveBedPlacement(
+  gardenId: string,
+  placementId: string,
+  x: number,
+  y: number,
+): Promise<BedPlacement> {
+  const { data } = await api.patch<BedPlacement>(
+    `/gardens/${gardenId}/bed-placements/${placementId}/`,
+    { x, y },
+  );
+  return data;
 }
 
 export async function deleteBedPlacement(gardenId: string, placementId: string): Promise<void> {

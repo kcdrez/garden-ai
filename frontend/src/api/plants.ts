@@ -5,47 +5,50 @@ import type { ObservationFormValues } from '@/schemas/plants';
 export async function fetchCalendarPlants(year: number, gardenId?: string): Promise<CalendarPlant[]> {
   const params: Record<string, string> = { year: String(year) };
   if (gardenId) params.garden_id = gardenId;
-  const res = await api.get('/calendar/', { params });
-  return res.data ?? [];
+  const { data } = await api.get<CalendarPlant[]>('/calendar/', { params });
+  return data ?? [];
 }
 
 export async function fetchPlants(): Promise<Plant[]> {
-  const res = await api.get('/plants/');
-  return res.data;
+  const { data } = await api.get<Plant[]>('/plants/');
+  return data;
 }
 
 export async function fetchAllUserPlants(): Promise<UserPlant[]> {
-  const res = await api.get('/userplants/');
-  return res.data ?? [];
+  const { data } = await api.get<UserPlant[]>('/userplants/');
+  return data ?? [];
 }
 
 export async function fetchUserPlant(plantId: string): Promise<UserPlant> {
-  const res = await api.get(`/userplants/${plantId}/`);
-  return res.data;
+  const { data } = await api.get<UserPlant>(`/userplants/${plantId}/`);
+  return data;
 }
 
 export async function fetchUserPlants(gardenId: string, bedId: string): Promise<UserPlant[]> {
-  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/plants/`);
-  return res.data;
+  const { data } = await api.get<UserPlant[]>(`/gardens/${gardenId}/beds/${bedId}/plants/`);
+  return data;
 }
 
 export async function createUserPlant(
   gardenId: string,
   bedId: string,
-  data: UserPlantPayload,
+  payload: UserPlantPayload,
 ): Promise<UserPlant[]> {
-  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/`, data);
-  return res.data;
+  const { data } = await api.post<UserPlant[]>(`/gardens/${gardenId}/beds/${bedId}/plants/`, payload);
+  return data;
 }
 
 export async function updateUserPlant(
   gardenId: string,
   bedId: string,
   plantId: string,
-  data: Partial<UserPlantPayload>,
+  payload: Partial<UserPlantPayload>,
 ): Promise<UserPlant> {
-  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`, data);
-  return res.data;
+  const { data } = await api.patch<UserPlant>(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`,
+    payload,
+  );
+  return data;
 }
 
 export async function moveUserPlant(
@@ -54,8 +57,11 @@ export async function moveUserPlant(
   plantId: string,
   targetBedId: string,
 ): Promise<UserPlant> {
-  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`, { bed: targetBedId });
-  return res.data;
+  const { data } = await api.patch<UserPlant>(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/`,
+    { bed: targetBedId },
+  );
+  return data;
 }
 
 export async function cloneUserPlant(
@@ -64,8 +70,11 @@ export async function cloneUserPlant(
   plantId: string,
   placement?: { x: number; y: number; width: number; height: number },
 ): Promise<UserPlant> {
-  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/clone/`, placement ?? {});
-  return res.data;
+  const { data } = await api.post<UserPlant>(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/clone/`,
+    placement ?? {},
+  );
+  return data;
 }
 
 export async function deleteUserPlant(
@@ -77,17 +86,20 @@ export async function deleteUserPlant(
 }
 
 export async function fetchPlacements(gardenId: string, bedId: string): Promise<PlantPlacement[]> {
-  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/placements/`);
-  return res.data;
+  const { data } = await api.get<PlantPlacement[]>(`/gardens/${gardenId}/beds/${bedId}/placements/`);
+  return data;
 }
 
 export async function createPlacement(
   gardenId: string,
   bedId: string,
-  data: { userPlant: string; x: number; y: number; width?: number; height?: number },
+  payload: { userPlant: string; x: number; y: number; width?: number; height?: number },
 ): Promise<PlantPlacement> {
-  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/placements/`, data);
-  return res.data;
+  const { data } = await api.post<PlantPlacement>(
+    `/gardens/${gardenId}/beds/${bedId}/placements/`,
+    payload,
+  );
+  return data;
 }
 
 export async function movePlacement(
@@ -97,8 +109,11 @@ export async function movePlacement(
   x: number,
   y: number,
 ): Promise<PlantPlacement> {
-  const res = await api.patch(`/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`, { x, y });
-  return res.data;
+  const { data } = await api.patch<PlantPlacement>(
+    `/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`,
+    { x, y },
+  );
+  return data;
 }
 
 export async function resizePlacement(
@@ -108,11 +123,11 @@ export async function resizePlacement(
   widthFt: number,
   heightFt: number,
 ): Promise<PlantPlacement> {
-  const res = await api.patch(
+  const { data } = await api.patch<PlantPlacement>(
     `/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`,
     { width: widthFt, height: heightFt },
   );
-  return res.data;
+  return data;
 }
 
 export async function deletePlacement(
@@ -124,8 +139,10 @@ export async function deletePlacement(
 }
 
 export async function fetchCompanionHints(gardenId: string, bedId: string): Promise<CompanionHint[]> {
-  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/companion-hints/`);
-  return res.data;
+  const { data } = await api.get<CompanionHint[]>(
+    `/gardens/${gardenId}/beds/${bedId}/companion-hints/`,
+  );
+  return data;
 }
 
 export async function fetchObservations(
@@ -133,18 +150,23 @@ export async function fetchObservations(
   bedId: string,
   plantId: string,
 ): Promise<Observation[]> {
-  const res = await api.get(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/`);
-  return res.data;
+  const { data } = await api.get<Observation[]>(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/`,
+  );
+  return data;
 }
 
 export async function createObservation(
   gardenId: string,
   bedId: string,
   plantId: string,
-  data: ObservationFormValues,
+  payload: ObservationFormValues,
 ): Promise<Observation> {
-  const res = await api.post(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/`, data);
-  return res.data;
+  const { data } = await api.post<Observation>(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/`,
+    payload,
+  );
+  return data;
 }
 
 export async function updateObservation(
@@ -152,13 +174,13 @@ export async function updateObservation(
   bedId: string,
   plantId: string,
   observationId: string,
-  data: { observedDate: string; note?: string },
+  payload: { observedDate: string; note?: string },
 ): Promise<Observation> {
-  const res = await api.patch(
+  const { data } = await api.patch<Observation>(
     `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/${observationId}/`,
-    data,
+    payload,
   );
-  return res.data;
+  return data;
 }
 
 export async function deleteObservation(
@@ -167,5 +189,7 @@ export async function deleteObservation(
   plantId: string,
   observationId: string,
 ): Promise<void> {
-  await api.delete(`/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/${observationId}/`);
+  await api.delete(
+    `/gardens/${gardenId}/beds/${bedId}/plants/${plantId}/observations/${observationId}/`,
+  );
 }

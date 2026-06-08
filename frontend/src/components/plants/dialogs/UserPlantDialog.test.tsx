@@ -17,7 +17,7 @@ vi.mock('@/api/gardens', () => ({
 }));
 vi.mock('@/api/beds', () => ({ fetchBeds: vi.fn().mockResolvedValue([]) }));
 
-vi.mock('@/components/plants/UserPlantEditForm', () => ({
+vi.mock('@/components/plants/dialogs/UserPlantEditForm', () => ({
   default: ({ onSuccess }: { onSuccess: () => void }) => (
     <div role="form" aria-label="Edit Plant Form">
       <button type="button" onClick={onSuccess}>Save</button>
@@ -25,7 +25,7 @@ vi.mock('@/components/plants/UserPlantEditForm', () => ({
   ),
 }));
 
-vi.mock('@/components/plants/PlantPicker', async () => {
+vi.mock('@/components/plants/shared/PlantPicker', async () => {
   const { useController } =
     await vi.importActual<typeof RHF>('react-hook-form');
 

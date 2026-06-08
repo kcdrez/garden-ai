@@ -6,7 +6,7 @@ import { createUserPlant } from '@/api/plants';
 import PlaceOnBedCanvasDialog from './PlaceOnBedCanvasDialog';
 
 vi.mock('@/api/plants', () => ({ createUserPlant: vi.fn(), fetchPlants: vi.fn().mockResolvedValue([]) }));
-vi.mock('@/components/plants/UserPlantForm', () => ({
+vi.mock('@/components/plants/dialogs/UserPlantForm', () => ({
   default: ({ onSubmit, children }: { onSubmit: (v: never) => void; children: React.ReactNode }) => (
     <div>
       {children}

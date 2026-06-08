@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import UserPlantForm from '@/components/plants/UserPlantForm';
+import UserPlantForm from '@/components/plants/dialogs/UserPlantForm';
 
 type Step = 'choose' | 'plant-pick' | 'plant-create' | 'feature';
 

@@ -6,17 +6,17 @@ import PlantTimeline from './PlantTimeline';
 
 vi.mock('@/api/plants', () => ({ fetchObservations: vi.fn() }));
 
-vi.mock('@/components/plants/StatusChips', () => ({
+vi.mock('@/components/plants/shared/StatusChips', () => ({
   default: () => <div data-testid="status-chips" />,
 }));
 
-vi.mock('@/components/plants/ObservationList', () => ({
+vi.mock('@/components/plants/timeline/ObservationList', () => ({
   default: ({ isLoading }: { isLoading: boolean }) => (
     <div data-testid="observation-list">{isLoading ? 'Loading observations' : 'Observations loaded'}</div>
   ),
 }));
 
-vi.mock('@/components/plants/ObservationForm', () => ({
+vi.mock('@/components/plants/timeline/ObservationForm', () => ({
   default: ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) => (
     <div data-testid="observation-form">
       <button onClick={onSuccess}>Submit</button>

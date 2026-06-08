@@ -6,7 +6,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { QueryState } from '@/components/ui/query-state';
 import PlantItem from '@/components/plants/PlantItem';
-import UserPlantDialog from '@/components/plants/UserPlantDialog';
+import UserPlantDialog from '@/components/plants/dialogs/UserPlantDialog';
 
 export default function AllPlants() {
   const [addOpen, setAddOpen] = useState(false);

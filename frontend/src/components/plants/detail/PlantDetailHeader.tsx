@@ -5,9 +5,9 @@ import type { UserPlant } from '@/types/plants';
 import { PLANT_CATEGORIES } from '@/types/plants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import StatusBadge from '@/components/plants/StatusBadge';
-import PlantEditForm from '@/components/plants/PlantEditForm';
-import MovePlantDialog from '@/components/plants/MovePlantDialog';
+import StatusBadge from '@/components/plants/shared/StatusBadge';
+import PlantEditForm from '@/components/plants/detail/PlantEditForm';
+import MovePlantDialog from '@/components/plants/dialogs/MovePlantDialog';
 import { usePlantActions } from '@/hooks/usePlantActions';
 
 type Props = {

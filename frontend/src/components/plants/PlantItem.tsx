@@ -4,10 +4,10 @@ import { SproutIcon } from 'lucide-react';
 import type { UserPlant } from '@/types/plants';
 import { routes } from '@/lib/routes';
 import CardActionsMenu from '@/components/ui/card-actions-menu';
-import StatusBadge from '@/components/plants/StatusBadge';
-import UserPlantDialog from '@/components/plants/UserPlantDialog';
-import MovePlantDialog from '@/components/plants/MovePlantDialog';
-import PlantObservationsSheet from '@/components/plants/PlantObservationsSheet';
+import StatusBadge from '@/components/plants/shared/StatusBadge';
+import UserPlantDialog from '@/components/plants/dialogs/UserPlantDialog';
+import MovePlantDialog from '@/components/plants/dialogs/MovePlantDialog';
+import PlantObservationsSheet from '@/components/plants/timeline/PlantObservationsSheet';
 import { usePlantActions } from '@/hooks/usePlantActions';
 
 type Props = {

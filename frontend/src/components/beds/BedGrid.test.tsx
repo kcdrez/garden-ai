@@ -54,22 +54,22 @@ vi.mock('@/components/beds/PlaceOnBedCanvasDialog', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/plants/UserPlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/UserPlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Create Plant Form" /> : null,
 }));
 
-vi.mock('@/components/plants/PlantEditForm', () => ({
+vi.mock('@/components/plants/detail/PlantEditForm', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Edit Plant Form" /> : null,
 }));
 
-vi.mock('@/components/plants/MovePlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/MovePlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Move Plant Dialog" /> : null,
 }));
 
-vi.mock('@/components/plants/PlantObservationsSheet', () => ({
+vi.mock('@/components/plants/timeline/PlantObservationsSheet', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Observations Sheet" /> : null,
 }));

@@ -8,15 +8,15 @@ import PlantDetailHeader from './PlantDetailHeader';
 
 vi.mock('@/api/plants', () => ({ deleteUserPlant: vi.fn() }));
 
-vi.mock('@/components/plants/PlantEditForm', () => ({
+vi.mock('@/components/plants/detail/PlantEditForm', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Edit Plant Form" /> : null,
 }));
-vi.mock('@/components/plants/MovePlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/MovePlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Move Plant Dialog" /> : null,
 }));
-vi.mock('@/components/plants/StatusBadge', () => ({
+vi.mock('@/components/plants/shared/StatusBadge', () => ({
   default: ({ status }: { status: UserPlant['status'] }) => <span>{status}</span>,
 }));
 

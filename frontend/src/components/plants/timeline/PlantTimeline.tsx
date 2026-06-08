@@ -5,9 +5,9 @@ import { fetchObservations } from '@/api/plants';
 import { queryKeys } from '@/lib/queryKeys';
 import type { UserPlant } from '@/types/plants';
 import { Button } from '@/components/ui/button';
-import StatusChips from '@/components/plants/StatusChips';
-import ObservationList from '@/components/plants/ObservationList';
-import ObservationForm from '@/components/plants/ObservationForm';
+import StatusChips from '@/components/plants/shared/StatusChips';
+import ObservationList from '@/components/plants/timeline/ObservationList';
+import ObservationForm from '@/components/plants/timeline/ObservationForm';
 
 type Props = {
   gardenId: string;

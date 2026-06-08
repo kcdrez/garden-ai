@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { usePlantDetail } from '@/hooks/usePlantDetail';
-import PlantDetailHeader from '@/components/plants/PlantDetailHeader';
-import PlantTimeline from '@/components/plants/PlantTimeline';
+import PlantDetailHeader from '@/components/plants/detail/PlantDetailHeader';
+import PlantTimeline from '@/components/plants/timeline/PlantTimeline';
 import { LoadingSpinner } from '@/components/ui/query-state';
 import { getErrorMessage } from '@/lib/errors';
 

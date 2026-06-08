@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { selectClass } from '@/components/ui/form-fields';
-import UserPlantEditForm from '@/components/plants/UserPlantEditForm';
-import UserPlantForm from '@/components/plants/UserPlantForm';
+import UserPlantEditForm from '@/components/plants/dialogs/UserPlantEditForm';
+import UserPlantForm from '@/components/plants/dialogs/UserPlantForm';
 
 type Props = {
   gardenId?: string;

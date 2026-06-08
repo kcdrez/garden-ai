@@ -2,8 +2,8 @@ import type { Control } from 'react-hook-form';
 import type { UserPlantFormValues } from '@/schemas/plants';
 import type { Plant } from '@/types/plants';
 import { TextField, TextAreaField } from '@/components/ui/form-fields';
-import PlantPicker from '@/components/plants/PlantPicker';
-import StatusPicker from '@/components/plants/StatusPicker';
+import PlantPicker from '@/components/plants/shared/PlantPicker';
+import StatusPicker from '@/components/plants/shared/StatusPicker';
 
 type Props = {
   control: Control<UserPlantFormValues>;

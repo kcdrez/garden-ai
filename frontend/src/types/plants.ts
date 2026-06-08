@@ -1,3 +1,5 @@
+import type { BasePlacement } from '@/types/gardens';
+
 export type PlantCategory = "vegetable" | "herb" | "fruit" | "flower" | "other";
 
 export type UserPlantStatus = "planned" | "planted" | "growing" | "fruiting" | "dormant" | "removed";
@@ -64,17 +66,12 @@ export interface CompanionHint {
   notes: string;
 }
 
-export interface PlantPlacement {
-  id: string;
+export type PlantPlacement = BasePlacement & {
   userPlant: string;
   bed: string;
-  x: number;
-  y: number;
   width: number;
   height: number;
-  createdAt: string;
-  updatedAt: string;
-}
+};
 
 export interface CalendarObservation {
   id: string;

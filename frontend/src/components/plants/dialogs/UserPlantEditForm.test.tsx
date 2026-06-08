@@ -11,7 +11,7 @@ vi.mock('@/api/plants', () => ({
   updateUserPlant: vi.fn(),
 }));
 
-vi.mock('@/components/plants/PlantPicker', async () => {
+vi.mock('@/components/plants/shared/PlantPicker', async () => {
   const { useController } = await vi.importActual<typeof RHF>('react-hook-form');
 
   function MockPlantPicker({ plants, control, name }: { plants: Plant[]; control: RHF.Control; name: string }) {

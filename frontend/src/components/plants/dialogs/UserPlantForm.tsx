@@ -12,8 +12,8 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
 import { TextField, NumberField, TextAreaField } from '@/components/ui/form-fields';
-import PlantPicker from '@/components/plants/PlantPicker';
-import StatusPicker from '@/components/plants/StatusPicker';
+import PlantPicker from '@/components/plants/shared/PlantPicker';
+import StatusPicker from '@/components/plants/shared/StatusPicker';
 
 type Props = {
   open: boolean;

@@ -43,11 +43,11 @@ export async function resetPassword(uid: string, token: string, newPassword: str
 }
 
 export async function getProfile(): Promise<UserProfile> {
-  const res = await api.get("/auth/profile/");
-  return res.data;
+  const { data } = await api.get<UserProfile>("/auth/profile/");
+  return data;
 }
 
-export async function updateProfile(data: Partial<Omit<UserProfile, "id" | "username">>): Promise<UserProfile> {
-  const res = await api.patch("/auth/profile/", data);
-  return res.data;
+export async function updateProfile(payload: Partial<Omit<UserProfile, "id" | "username">>): Promise<UserProfile> {
+  const { data } = await api.patch<UserProfile>("/auth/profile/", payload);
+  return data;
 }

@@ -10,7 +10,7 @@ vi.mock('@/components/ui/sheet', () => ({
   SheetTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
 }));
 
-vi.mock('@/components/plants/PlantTimeline', () => ({
+vi.mock('@/components/plants/timeline/PlantTimeline', () => ({
   default: () => <div data-testid="plant-timeline" />,
 }));
 

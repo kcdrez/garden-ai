@@ -11,7 +11,7 @@ vi.mock('@/components/plants/PlantItem', () => ({
   default: ({ plant }: { plant: UserPlant }) => <li data-testid="plant-item">{plant.plantName}</li>,
 }));
 
-vi.mock('@/components/plants/UserPlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/UserPlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Add Plant Dialog" /> : null,
 }));

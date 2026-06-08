@@ -37,21 +37,21 @@ vi.mock('@/components/ui/card-actions-menu', () => ({
   ),
 }));
 
-vi.mock('@/components/plants/StatusBadge', () => ({
+vi.mock('@/components/plants/shared/StatusBadge', () => ({
   default: ({ status }: { status: string }) => <span data-testid="status-badge">{status}</span>,
 }));
 
-vi.mock('@/components/plants/UserPlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/UserPlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Edit Plant" /> : null,
 }));
 
-vi.mock('@/components/plants/MovePlantDialog', () => ({
+vi.mock('@/components/plants/dialogs/MovePlantDialog', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Move Plant" /> : null,
 }));
 
-vi.mock('@/components/plants/PlantObservationsSheet', () => ({
+vi.mock('@/components/plants/timeline/PlantObservationsSheet', () => ({
   default: ({ open }: { open: boolean }) =>
     open ? <div role="dialog" aria-label="Plant Observations" /> : null,
 }));

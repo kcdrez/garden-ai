@@ -26,10 +26,10 @@ function renderWithCache(entries: Array<[unknown[], unknown]>) {
 
 vi.mock('@/api/plants', () => ({ fetchUserPlant: vi.fn() }));
 
-vi.mock('@/components/plants/PlantDetailHeader', () => ({
+vi.mock('@/components/plants/detail/PlantDetailHeader', () => ({
   default: ({ plant }: { plant: UserPlant }) => <div>Header: {plant.plantName}</div>,
 }));
-vi.mock('@/components/plants/PlantTimeline', () => ({
+vi.mock('@/components/plants/timeline/PlantTimeline', () => ({
   default: () => <div>Plant Timeline</div>,
 }));
 

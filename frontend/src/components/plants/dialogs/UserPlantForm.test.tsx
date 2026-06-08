@@ -7,7 +7,7 @@ import UserPlantForm from './UserPlantForm';
 
 vi.mock('@/api/plants', () => ({ fetchPlants: vi.fn() }));
 
-vi.mock('@/components/plants/PlantPicker', async () => {
+vi.mock('@/components/plants/shared/PlantPicker', async () => {
   const { useController } =
     await vi.importActual<typeof RHF>('react-hook-form');
 

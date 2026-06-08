@@ -1,5 +1,5 @@
 import type { UserPlant } from '@/types/plants';
-import PlantTimeline from '@/components/plants/PlantTimeline';
+import PlantTimeline from '@/components/plants/timeline/PlantTimeline';
 import {
   Sheet,
   SheetContent,

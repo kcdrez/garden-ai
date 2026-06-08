@@ -16,7 +16,7 @@ vi.mock('@/components/ui/sheet', () => ({
   SheetFooter: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock('@/components/plants/PlantPicker', () => ({
+vi.mock('@/components/plants/shared/PlantPicker', () => ({
   default: ({ name }: { name: keyof UserPlantFormValues }) => (
     <input aria-label="Plant" name={String(name)} defaultValue="catalog-1" />
   ),

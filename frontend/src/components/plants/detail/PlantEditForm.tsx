@@ -10,7 +10,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import UserPlantFormFields from '@/components/plants/UserPlantFormFields';
+import UserPlantFormFields from '@/components/plants/shared/UserPlantFormFields';
 import {
   Sheet,
   SheetContent,

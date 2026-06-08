@@ -33,16 +33,19 @@ export const BED_FACINGS = [
 
 export type BedFacing = typeof BED_FACINGS[number]['value'];
 
-export type BedPlacement = {
+export type BasePlacement = {
   id: string;
-  bed: string;
-  garden: string;
   x: number;
   y: number;
-  bedWidthFt: number;
-  bedHeightFt: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type BedPlacement = BasePlacement & {
+  bed: string;
+  garden: string;
+  bedWidthFt: number;
+  bedHeightFt: number;
 };
 
 export type FeatureObjectType =
@@ -52,17 +55,12 @@ export type FeatureObjectType =
 
 export type FeatureShape = 'rect' | 'circle';
 
-export type GardenFeaturePlacement = {
-  id: string;
+export type GardenFeaturePlacement = BasePlacement & {
   objectType: FeatureObjectType;
   shape: FeatureShape;
   label: string;
-  x: number;
-  y: number;
   width: number;
   height: number;
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type GardenBed = {

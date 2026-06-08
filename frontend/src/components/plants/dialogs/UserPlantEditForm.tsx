@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import UserPlantFormFields from '@/components/plants/UserPlantFormFields';
+import UserPlantFormFields from '@/components/plants/shared/UserPlantFormFields';
 
 type Props = {
   open: boolean;
