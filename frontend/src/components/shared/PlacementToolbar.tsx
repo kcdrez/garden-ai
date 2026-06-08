@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { CanvasMenuItem } from '@/types/canvas';
-import type { FloatingToolbarPosition } from '@/components/shared/placementCanvas.utils';
+import type { FloatingToolbarPosition } from '@/lib/placementCanvas';
 
 type Props = {
   anchor: FloatingToolbarPosition;

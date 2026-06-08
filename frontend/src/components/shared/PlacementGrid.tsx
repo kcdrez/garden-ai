@@ -1,4 +1,4 @@
-import { PAD } from '@/components/shared/placementCanvas.utils';
+import { PAD } from '@/lib/placementCanvas';
 
 type Props = {
   widthFt: number;

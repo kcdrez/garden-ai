@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import type { CanvasItem } from '@/types/canvas';
-import { DRAG_THRESHOLD_PX, MIN_PLACEMENT_SIZE, toSVGPoint } from '@/components/shared/placementCanvas.utils';
+import { DRAG_THRESHOLD_PX, MIN_PLACEMENT_SIZE, toSVGPoint } from '@/lib/placementCanvas';
 
 export function DraggableItem({
   item,

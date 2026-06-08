@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { RefObject } from 'react';
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
-import type { FloatingToolbarPosition } from '@/components/shared/placementCanvas.utils';
+import type { FloatingToolbarPosition } from '@/lib/placementCanvas';
 
 type Options = {
   selectedIds: Set<string>;
