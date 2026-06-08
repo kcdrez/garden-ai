@@ -15,7 +15,7 @@ import {
   toFloatingToolbarPosition,
   type ZoomLevel,
   type FloatingToolbarPosition,
-} from '@/components/shared/placementCanvas.utils';
+} from '@/lib/placementCanvas';
 import type { CanvasItem, CanvasMenuItem } from '@/types/canvas';
 
 interface PlacementCanvasProps {

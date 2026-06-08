@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ZOOM_LEVELS, type ZoomLevel } from '@/components/shared/placementCanvas.utils';
+import { ZOOM_LEVELS, type ZoomLevel } from '@/lib/placementCanvas';
 
 export function usePlacementZoom(storageKey?: string, defaultZoom: ZoomLevel = 1): {
   zoom: ZoomLevel;
