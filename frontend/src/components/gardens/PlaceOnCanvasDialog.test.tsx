@@ -168,5 +168,53 @@ describe('PlaceOnCanvasDialog', () => {
       await user.click(screen.getByRole('button', { name: /^add$/i }));
       expect(onPlaceFeature).toHaveBeenCalledWith('shed', '');
     });
+
+    it('shows a label input when a custom type is selected', async () => {
+      const user = await openFeatureStep();
+      await user.click(screen.getByRole('button', { name: /custom area \(circle\)/i }));
+      expect(screen.getByLabelText(/label/i)).toBeInTheDocument();
+    });
+
+    it('calls onPlaceFeature with the entered label for a custom type', async () => {
+      const user = await openFeatureStep();
+      await user.click(screen.getByRole('button', { name: /custom area \(circle\)/i }));
+      await user.type(screen.getByLabelText(/label/i), 'Pond');
+      await user.click(screen.getByRole('button', { name: /^add$/i }));
+      expect(onPlaceFeature).toHaveBeenCalledWith('custom_circle', 'Pond');
+    });
+  });
+
+  it('resets to the choose step when the dialog is closed and reopened', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderDialog();
+
+    await user.click(screen.getByRole('button', { name: /place a bed/i }));
+    expect(screen.getByRole('heading', { name: /^place a bed$/i })).toBeInTheDocument();
+
+    rerender(
+      <PlaceOnCanvasDialog
+        open={false}
+        onOpenChange={onOpenChange}
+        cell={null}
+        gardenId="garden-1"
+        unplacedBeds={[mockBed]}
+        onPlace={onPlace}
+        isPlacing={false}
+        onPlaceFeature={onPlaceFeature}
+      />,
+    );
+    rerender(
+      <PlaceOnCanvasDialog
+        open
+        onOpenChange={onOpenChange}
+        cell={null}
+        gardenId="garden-1"
+        unplacedBeds={[mockBed]}
+        onPlace={onPlace}
+        isPlacing={false}
+        onPlaceFeature={onPlaceFeature}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: /add to garden/i })).toBeInTheDocument();
   });
 });

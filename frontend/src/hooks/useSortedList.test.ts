@@ -1,5 +1,5 @@
-import { renderHook, act } from '@/test/test-utils';
-import { sortItems, applyCustomOrder, useSortedList } from './useSortedList';
+import { renderHook, act, waitFor } from '@/test/test-utils';
+import { sortItems, applyCustomOrder, useSortedList, readStorage } from './useSortedList';
 
 const items = [
   { id: '1', name: 'Banana', createdAt: '2024-01-03T00:00:00Z' },
@@ -9,6 +9,17 @@ const items = [
 
 beforeEach(() => {
   localStorage.clear();
+});
+
+describe('readStorage', () => {
+  it('returns the fallback when localStorage has invalid JSON', () => {
+    localStorage.setItem('bad-key', 'not-json{{{');
+    expect(readStorage('bad-key', 'default')).toBe('default');
+  });
+
+  it('returns the fallback when the key is absent', () => {
+    expect(readStorage('missing-key', 42)).toBe(42);
+  });
 });
 
 describe('sortItems', () => {
@@ -144,5 +155,18 @@ describe('useSortedList', () => {
     const { result } = renderHook(() => useSortedList([...items, extra], 'test'));
 
     expect(result.current.sorted.map((i) => i.id)).toEqual(['2', '1', '3', '4']);
+  });
+
+  it('re-seeds custom order when stored IDs do not overlap with current items', async () => {
+    // Stored order has IDs that don't match any current item (stale from a prior set)
+    localStorage.setItem('test-sort', JSON.stringify('custom'));
+    localStorage.setItem('test-order', JSON.stringify(['old-1', 'old-2']));
+
+    const { result } = renderHook(() => useSortedList(items, 'test'));
+
+    // The useEffect detects no overlap and re-seeds with name-asc order
+    await waitFor(() =>
+      expect(result.current.sorted.map((i) => i.id)).toEqual(['2', '1', '3']), // Apple, Banana, Cherry
+    );
   });
 });

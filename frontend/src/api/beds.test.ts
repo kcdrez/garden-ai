@@ -1,6 +1,6 @@
 import {
   fetchAllBeds, fetchBeds, fetchBed, createBed, updateBed, deleteBed,
-  fetchBedPlacements, createBedPlacement, deleteBedPlacement,
+  fetchBedPlacements, createBedPlacement, moveBedPlacement, deleteBedPlacement,
 } from './beds';
 import { api } from './client';
 
@@ -81,6 +81,14 @@ describe('createBedPlacement', () => {
     vi.mocked(api.post).mockResolvedValueOnce({ data: { id: 'p1' } });
     await createBedPlacement('g1', { bed: 'b1', x: 0, y: 0, width: 2, height: 2 });
     expect(api.post).toHaveBeenCalledWith('/gardens/g1/bed-placements/', { bed: 'b1', x: 0, y: 0, width: 2, height: 2 });
+  });
+});
+
+describe('moveBedPlacement', () => {
+  it('calls PATCH /gardens/:gardenId/bed-placements/:placementId/ with x and y', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: { id: 'p1', x: 3, y: 4 } });
+    await moveBedPlacement('g1', 'p1', 3, 4);
+    expect(api.patch).toHaveBeenCalledWith('/gardens/g1/bed-placements/p1/', { x: 3, y: 4 });
   });
 });
 

@@ -6,11 +6,14 @@ async function goToBedDetail(page: Page) {
 }
 
 async function createPlantInBed(page: Page, plantName: string) {
-  await page.getByRole("button", { name: "Create Plant" }).click();
+  // Scroll to the "Unplaced Plants" section and click "Add Plant"
+  const addPlantBtn = page.getByRole("button", { name: "Add Plant" }).first();
+  await addPlantBtn.scrollIntoViewIfNeeded();
+  await addPlantBtn.click();
   await expect(page.getByRole("heading", { name: "Add Plant" })).toBeVisible();
   await page.getByLabel("Search plants").fill(plantName);
   await page.getByRole("button", { name: new RegExp(plantName) }).first().click();
-  await page.getByRole("button", { name: "Add Plant" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Add Plant" }).click();
   await expect(page.getByRole("heading", { name: "Add Plant" })).not.toBeVisible();
 }
 
@@ -31,11 +34,12 @@ test.describe("Plants", () => {
     await createPlantInBed(page, "Kale");
     await expect(page.getByText("Kale").first()).toBeVisible();
 
-    // Click the canvas background to open the place dialog
+    // Click the canvas background to open the "Add to Bed" wizard
     await page.locator('rect[style*="crosshair"]').click();
+    await expect(page.getByRole("heading", { name: "Add to Bed" })).toBeVisible();
 
-    // PlacePlantDialog opens — click the plant's button to place it
-    await expect(page.getByRole("dialog")).toBeVisible();
+    // Navigate through the wizard: choose "Place a Plant", then pick Kale
+    await page.getByRole("button", { name: /Place a Plant/ }).click();
     await page.getByRole("button", { name: /Kale/ }).click();
 
     // Kale is now placed — its chip no longer appears in the unplaced section
