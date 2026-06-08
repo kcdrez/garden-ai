@@ -3,9 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { gardenSchema, type GardenFormValues } from '@/schemas/gardens';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
-import { BED_UNITS, type Garden } from '@/types/gardens';
+import type { Garden } from '@/types/gardens';
 import { createGarden, updateGarden } from '@/api/gardens';
 import { applyServerErrors } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,8 +16,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { FormRootError } from '@/components/ui/form-root-error';
+import GardenFormFields from '@/components/gardens/GardenFormFields';
 
 type Props = {
   garden?: Garden;
@@ -56,7 +57,7 @@ export default function GardenDialog({ garden, open, onOpenChange }: Props) {
       return isEditing ? updateGarden(garden.id, payload) : createGarden(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gardens'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gardens.list() });
       onOpenChange(false);
     },
     onError: (err) => {
@@ -72,18 +73,7 @@ export default function GardenDialog({ garden, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          <TextField control={form.control} name="name" label="Name" placeholder="My Garden" />
-          <TextAreaField control={form.control} name="description" label="Description" rows={3} />
-          <div className="flex gap-3">
-            <NumberField control={form.control} name="length" label="Length" placeholder="e.g. 20" />
-            <NumberField control={form.control} name="width" label="Width" placeholder="e.g. 15" />
-            <NativeSelectField control={form.control} name="unit" label="Unit">
-              {BED_UNITS.map((u) => (
-                <option key={u.value} value={u.value}>{u.label}</option>
-              ))}
-            </NativeSelectField>
-          </div>
-
+          <GardenFormFields control={form.control} />
           <FormRootError message={form.formState.errors.root?.message} />
 
           <DialogFooter>

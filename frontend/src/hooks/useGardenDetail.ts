@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchGarden } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import type { Garden, GardenBed } from '@/types/gardens';
 
 export function useGardenDetail(id: string | undefined) {
@@ -11,13 +12,13 @@ export function useGardenDetail(id: string | undefined) {
     isLoading: gardenLoading,
     error: gardenError,
   } = useQuery({
-    queryKey: ['gardens', id],
+    queryKey: queryKeys.gardens.detail(id!),
     queryFn: () => fetchGarden(id!),
     enabled: !!id,
     initialData: () =>
-      queryClient.getQueryData<Garden[]>(['gardens'])?.find((g) => g.id === id),
+      queryClient.getQueryData<Garden[]>(queryKeys.gardens.list())?.find((g) => g.id === id),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState(['gardens'])?.dataUpdatedAt ?? Date.now(),
+      queryClient.getQueryState(queryKeys.gardens.list())?.dataUpdatedAt ?? Date.now(),
   });
 
   const {
@@ -25,13 +26,13 @@ export function useGardenDetail(id: string | undefined) {
     isLoading: bedsLoading,
     error: bedsError,
   } = useQuery({
-    queryKey: ['beds', 'garden', id],
+    queryKey: queryKeys.beds.byGarden(id!),
     queryFn: () => fetchBeds(id!),
     enabled: !!id,
     initialData: () =>
-      queryClient.getQueryData<GardenBed[]>(['beds', 'all'])?.filter((b) => b.garden === id),
+      queryClient.getQueryData<GardenBed[]>(queryKeys.beds.byAll())?.filter((b) => b.garden === id),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState(['beds', 'all'])?.dataUpdatedAt ?? Date.now(),
+      queryClient.getQueryState(queryKeys.beds.byAll())?.dataUpdatedAt ?? Date.now(),
   });
 
   return { garden, beds, gardenLoading, gardenError, bedsLoading, bedsError };

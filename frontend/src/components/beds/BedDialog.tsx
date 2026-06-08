@@ -2,12 +2,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GardenBed } from '@/types/gardens';
-import { BED_UNITS, BED_FACINGS } from '@/types/gardens';
 import { fetchGardens } from '@/api/gardens';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { createBed, updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,8 +17,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { FormRootError } from '@/components/ui/form-root-error';
+import BedFormFields from '@/components/beds/BedFormFields';
 
 type Props = {
   gardenId?: string;
@@ -33,7 +33,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
   const needsGardenPicker = !gardenId;
 
   const { data: gardens = [] } = useQuery({
-    queryKey: ['gardens'],
+    queryKey: queryKeys.gardens.list(),
     queryFn: fetchGardens,
     enabled: open && needsGardenPicker,
   });
@@ -78,9 +78,9 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
         : createBed(values.gardenId, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
       const gId = gardenId ?? bed?.garden;
-      if (gId) queryClient.invalidateQueries({ queryKey: ['bed-placements', gId] });
+      if (gId) queryClient.invalidateQueries({ queryKey: queryKeys.placements.garden(gId) });
       onOpenChange(false);
     },
     onError: (err) => {
@@ -96,54 +96,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          {needsGardenPicker && (
-            <NativeSelectField control={form.control} name="gardenId" label="Garden">
-              <option value="">— Select a garden —</option>
-              {gardens.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </NativeSelectField>
-          )}
-
-          <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
-
-          <div className="grid grid-cols-3 gap-3">
-            <NumberField control={form.control} name="length" label="Length" />
-            <NumberField control={form.control} name="width" label="Width" />
-            <NumberField control={form.control} name="depth" label="Depth" placeholder="–" />
-          </div>
-
-          <NativeSelectField control={form.control} name="unit" label="Unit">
-            {BED_UNITS.map((u) => (
-              <option key={u.value} value={u.value}>{u.label}</option>
-            ))}
-          </NativeSelectField>
-
-          <div className="grid grid-cols-2 gap-3">
-            <NativeSelectField control={form.control} name="facing" label="Facing" optional>
-              <option value="">— None —</option>
-              {BED_FACINGS.map((f) => (
-                <option key={f.value} value={f.value}>{f.label}</option>
-              ))}
-            </NativeSelectField>
-
-            <NumberField
-              control={form.control}
-              name="avgSunlightHours"
-              label="Avg. Sunlight (hrs/day)"
-              placeholder="–"
-            />
-          </div>
-
-          <TextField
-            control={form.control}
-            name="soilType"
-            label="Soil Type"
-            placeholder="e.g. loamy clay with amendments"
-          />
-
-          <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
-
+          <BedFormFields control={form.control} gardens={needsGardenPicker ? gardens : undefined} />
           <FormRootError message={form.formState.errors.root?.message} />
 
           <DialogFooter>

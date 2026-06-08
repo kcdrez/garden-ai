@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchBackendVersion } from '@/api/version'
+import { queryKeys } from '@/lib/queryKeys'
 
 export default function Footer() {
   const feVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
 
   const { data: beVersion } = useQuery({
-    queryKey: ['version'],
+    queryKey: queryKeys.version(),
     queryFn: fetchBackendVersion,
     staleTime: Infinity,
     retry: false,

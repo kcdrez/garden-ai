@@ -5,6 +5,7 @@ import type { UserPlantCreateFormValues } from '@/schemas/plants';
 import type { UserPlant } from '@/types/plants';
 import type { FeatureObjectType } from '@/types/gardens';
 import { createUserPlant } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { FEATURE_OBJECT_TYPES, featureImage, featureEmoji, isCustomFeature } from '@/lib/features';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -70,7 +71,7 @@ export default function PlaceOnBedCanvasDialog({
         notes: values.notes || undefined,
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
       onPlace(data[0].id);
     },
   });

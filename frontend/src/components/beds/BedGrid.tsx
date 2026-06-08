@@ -6,6 +6,7 @@ import { usePlantPlacementActions } from '@/hooks/usePlantPlacementActions';
 import { useBedFeaturePlacementActions } from '@/hooks/useBedFeaturePlacementActions';
 import { useUndoHistory } from '@/hooks/useUndoHistory';
 import { fetchCompanionHints } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { routes } from '@/lib/routes';
 import { toFeet } from '@/lib/beds';
 import { plantEmoji, plantImage } from '@/lib/plants';
@@ -72,7 +73,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   } = useBedFeaturePlacementActions(gardenId, bedId);
 
   const { data: companionHints = [] } = useQuery({
-    queryKey: ['companion-hints', bedId],
+    queryKey: queryKeys.companionHints(bedId),
     queryFn: () => fetchCompanionHints(gardenId, bedId),
   });
 

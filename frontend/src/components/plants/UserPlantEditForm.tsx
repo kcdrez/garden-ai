@@ -6,13 +6,12 @@ import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import type { UserPlant } from '@/types/plants';
 import { fetchPlants, updateUserPlant } from '@/api/plants';
 import { applyServerErrors } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { FormRootError } from '@/components/ui/form-root-error';
-import { TextField, TextAreaField } from '@/components/ui/form-fields';
-import PlantPicker from '@/components/plants/PlantPicker';
-import StatusPicker from '@/components/plants/StatusPicker';
+import UserPlantFormFields from '@/components/plants/UserPlantFormFields';
 
 type Props = {
   open: boolean;
@@ -42,7 +41,7 @@ export default function UserPlantEditForm({ open, userPlant, onSuccess }: Props)
   useDialogFormReset(form, open, getDefaultValues);
 
   const { data: plants = [] } = useQuery({
-    queryKey: ['plants', 'catalog'],
+    queryKey: queryKeys.plants.catalog(),
     queryFn: fetchPlants,
     enabled: open,
   });
@@ -57,8 +56,8 @@ export default function UserPlantEditForm({ open, userPlant, onSuccess }: Props)
         notes: values.notes || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['observations', userPlant.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(userPlant.id) });
       onSuccess();
     },
     onError: (err) => {
@@ -68,11 +67,7 @@ export default function UserPlantEditForm({ open, userPlant, onSuccess }: Props)
 
   return (
     <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-      <PlantPicker control={form.control} name="plant" plants={plants} />
-      <TextField control={form.control} name="variety" label="Variety (optional)" placeholder="e.g. Cherry Tomato" />
-      <TextField control={form.control} name="startDate" label="Start Date" type="date" />
-      <StatusPicker control={form.control} name="status" />
-      <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
+      <UserPlantFormFields control={form.control} plants={plants} />
       <FormRootError message={form.formState.errors.root?.message} />
       <DialogFooter>
         <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>

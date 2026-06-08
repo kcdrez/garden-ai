@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { userPlantCreateSchema, type UserPlantCreateFormValues } from '@/schemas/plants';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
 import { fetchPlants } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { applyServerErrors } from '@/lib/errors';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -51,7 +52,7 @@ export default function UserPlantForm({
   useDialogFormReset(form, open, getDefaultValues);
 
   const { data: plants = [] } = useQuery({
-    queryKey: ['plants', 'catalog'],
+    queryKey: queryKeys.plants.catalog(),
     queryFn: fetchPlants,
     enabled: open,
   });

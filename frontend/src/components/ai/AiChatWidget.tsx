@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/dates';
 import { fetchConversations, fetchConversation, createConversation, sendMessage } from '@/api/ai';
+import { queryKeys } from '@/lib/queryKeys';
 import { useAiContext } from '@/hooks/useAiContext';
 import type { ActionResult, SendMessageResponse } from '@/types/ai';
 
@@ -43,7 +44,7 @@ export default function AiChatWidget() {
   }, [contextKey]);
 
   const { data: conversations = [] } = useQuery({
-    queryKey: ['ai-conversations', context?.scope, context?.entityId],
+    queryKey: queryKeys.ai.conversations(context?.scope, context?.entityId),
     queryFn: () => fetchConversations(context!.scope, context!.entityId),
     enabled: !!context && open,
   });
@@ -56,7 +57,7 @@ export default function AiChatWidget() {
   }, [conversations, activeConversationId]);
 
   const { data: activeConversation } = useQuery({
-    queryKey: ['ai-conversation', activeConversationId],
+    queryKey: queryKeys.ai.conversation(activeConversationId!),
     queryFn: () => fetchConversation(activeConversationId!),
     enabled: !!activeConversationId,
   });
@@ -76,15 +77,15 @@ export default function AiChatWidget() {
     },
     onSuccess: (response: SendMessageResponse) => {
       const { action, ...conversation } = response;
-      queryClient.setQueryData(['ai-conversation', conversation.id], conversation);
+      queryClient.setQueryData(queryKeys.ai.conversation(conversation.id), conversation);
       setActiveConversationId(conversation.id);
-      queryClient.invalidateQueries({ queryKey: ['ai-conversations', context?.scope, context?.entityId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.ai.conversations(context?.scope, context?.entityId) });
 
       if (action) {
         setLastAction(action);
-        queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
         if (action.type === 'change_plant_status') {
-          queryClient.invalidateQueries({ queryKey: ['observations', action.plantId] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(action.plantId) });
         }
       }
     },

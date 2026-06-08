@@ -3,13 +3,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { bedSchema, type BedFormValues } from '@/schemas/beds';
 import { useDialogFormReset } from '@/hooks/useDialogFormReset';
-import { BED_UNITS, BED_FACINGS, type GardenBed } from '@/types/gardens';
+import type { GardenBed } from '@/types/gardens';
 import { updateBed } from '@/api/beds';
 import { applyServerErrors } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 import { FormRootError } from '@/components/ui/form-root-error';
+import BedFormFields from '@/components/beds/BedFormFields';
 import {
   Sheet,
   SheetContent,
@@ -62,8 +63,8 @@ export default function BedEditForm({ bed, open, onOpenChange }: Props) {
         notes: values.notes || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
-      queryClient.invalidateQueries({ queryKey: ['bed-placements', bed.garden] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.placements.garden(bed.garden) });
       onOpenChange(false);
     },
     onError: (err) => {
@@ -79,38 +80,7 @@ export default function BedEditForm({ bed, open, onOpenChange }: Props) {
         </SheetHeader>
         <div className="px-4 flex-1 overflow-y-auto">
           <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-            <TextField control={form.control} name="name" label="Name" placeholder="Raised Bed 1" />
-            <div className="grid grid-cols-3 gap-3">
-              <NumberField control={form.control} name="length" label="Length" />
-              <NumberField control={form.control} name="width" label="Width" />
-              <NumberField control={form.control} name="depth" label="Depth" placeholder="–" />
-            </div>
-            <NativeSelectField control={form.control} name="unit" label="Unit">
-              {BED_UNITS.map((u) => (
-                <option key={u.value} value={u.value}>{u.label}</option>
-              ))}
-            </NativeSelectField>
-            <div className="grid grid-cols-2 gap-3">
-              <NativeSelectField control={form.control} name="facing" label="Facing" optional>
-                <option value="">— None —</option>
-                {BED_FACINGS.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
-                ))}
-              </NativeSelectField>
-              <NumberField
-                control={form.control}
-                name="avgSunlightHours"
-                label="Avg. Sunlight (hrs/day)"
-                placeholder="–"
-              />
-            </div>
-            <TextField
-              control={form.control}
-              name="soilType"
-              label="Soil Type"
-              placeholder="e.g. loamy clay with amendments"
-            />
-            <TextAreaField control={form.control} name="notes" label="Notes" rows={3} placeholder="Any additional details…" />
+            <BedFormFields control={form.control} />
             <FormRootError message={form.formState.errors.root?.message} />
             <SheetFooter className="px-0">
               <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>

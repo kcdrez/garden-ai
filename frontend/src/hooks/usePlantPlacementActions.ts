@@ -6,11 +6,12 @@ import {
 } from '@/api/plants';
 import { makeOptimisticMutation } from '@/lib/mutations';
 import { getErrorMessage } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import type { PlantPlacement } from '@/types/plants';
 
 export function usePlantPlacementActions(gardenId: string, bedId: string) {
   const queryClient = useQueryClient();
-  const queryKey = ['placements', bedId] as const;
+  const queryKey = queryKeys.placements.bed(bedId);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const { data: placements = [], isLoading } = useQuery({
@@ -29,6 +30,7 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
       movePlacement(gardenId, bedId, placementId, x, y),
     ...makeOptimisticMutation<PlantPlacement, { placementId: string; x: number; y: number }>(
       queryClient, queryKey,
+      (vars) => vars.placementId,
       (item, { x, y }) => ({ ...item, x, y }),
       (err) => setMutationError(getErrorMessage(err)),
     ),
@@ -39,6 +41,7 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
       resizePlacement(gardenId, bedId, placementId, widthFt, heightFt),
     ...makeOptimisticMutation<PlantPlacement, { placementId: string; widthFt: number; heightFt: number }>(
       queryClient, queryKey,
+      (vars) => vars.placementId,
       (item, { widthFt, heightFt }) => ({ ...item, width: widthFt, height: heightFt }),
       (err) => setMutationError(getErrorMessage(err)),
     ),
@@ -55,10 +58,10 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
     mutationFn: ({ plantId, placement }: { plantId: string; placement?: { x: number; y: number; width: number; height: number } }) =>
       cloneUserPlant(gardenId, bedId, plantId, placement),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user', bedId] });
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.byBed(bedId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
       queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ['companion-hints', bedId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companionHints(bedId) });
     },
     onError: (err) => setMutationError(getErrorMessage(err)),
   });
@@ -68,8 +71,8 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
       deleteUserPlant(gardenId, bedId, plantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['companion-hints', bedId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companionHints(bedId) });
       setMutationError(null);
     },
     onError: (err) => setMutationError(getErrorMessage(err)),

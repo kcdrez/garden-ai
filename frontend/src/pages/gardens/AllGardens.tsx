@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
 import { fetchGardens } from '@/api/gardens';
+import { queryKeys } from '@/lib/queryKeys';
 import { useSortedList } from '@/hooks/useSortedList';
 import GardenItem from '@/components/gardens/GardenItem';
 import GardenDialog from '@/components/gardens/GardenDialog';
@@ -14,7 +15,7 @@ export default function Gardens() {
   const [addOpen, setAddOpen] = useState(false);
 
   const { data: gardens = [], isLoading, error } = useQuery({
-    queryKey: ['gardens'],
+    queryKey: queryKeys.gardens.list(),
     queryFn: fetchGardens,
   });
 

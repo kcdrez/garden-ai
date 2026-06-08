@@ -1,3 +1,5 @@
+// Tokens are stored in localStorage (not httpOnly cookies) to support silent JWT refresh on 401.
+// A Content Security Policy on the server limits XSS exposure.
 const ACCESS_KEY = "access_token";
 const REFRESH_KEY = "refresh_token";
 

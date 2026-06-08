@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cloneUserPlant, deleteUserPlant } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import type { UserPlant } from '@/types/plants';
 import { useConfirm } from '@/hooks/useConfirm';
 
@@ -12,13 +13,13 @@ export function usePlantActions(plant: UserPlant, options?: { onDeleteSuccess?: 
 
   const cloneMutation = useMutation({
     mutationFn: () => cloneUserPlant(plant.gardenId, plant.bed, plant.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['plants', 'user'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteUserPlant(plant.gardenId, plant.bed, plant.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
       options?.onDeleteSuccess?.();
     },
   });

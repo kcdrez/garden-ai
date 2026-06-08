@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LeafIcon, GripVerticalIcon } from 'lucide-react';
 import type { Garden } from '@/types/gardens';
 import { deleteGarden } from '@/api/gardens';
+import { queryKeys } from '@/lib/queryKeys';
 import { routes } from '@/lib/routes';
 import { isCardNavigationSuppressed } from '@/lib/utils';
 import {
@@ -30,7 +31,7 @@ export default function GardenItem({ garden, isDraggable = false }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteGarden(garden.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gardens'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.gardens.list() }),
   });
 
   async function handleDelete() {
