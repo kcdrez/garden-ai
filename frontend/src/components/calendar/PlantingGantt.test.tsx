@@ -1,5 +1,6 @@
 import { render, screen } from '@/test/test-utils';
 import { mockCalendarPlant } from '@/test/fixtures';
+import type { CalendarObservation } from '@/types/plants';
 import PlantingGantt from './PlantingGantt';
 
 const YEAR = 2026;
@@ -60,8 +61,8 @@ describe('PlantingGantt', () => {
       ...mockCalendarPlant,
       observations: [
         ...mockCalendarPlant.observations,
-        { id: 'obs-harvest', observedDate: '2026-05-01', type: 'harvest' as const, note: '', previousStatus: '', newStatus: '' },
-        { id: 'obs-pest',    observedDate: '2026-06-01', type: 'pest'    as const, note: 'aphids', previousStatus: '', newStatus: '' },
+        { id: 'obs-harvest', observedDate: '2026-05-01', type: 'harvest' as const, note: '', previousStatus: '' as const, newStatus: '' as const },
+        { id: 'obs-pest',    observedDate: '2026-06-01', type: 'pest'    as const, note: 'aphids', previousStatus: '' as const, newStatus: '' as const },
       ],
     };
     render(<PlantingGantt plants={[plant]} year={YEAR} />);
@@ -75,7 +76,7 @@ describe('PlantingGantt', () => {
       ...mockCalendarPlant,
       observations: [
         ...mockCalendarPlant.observations,
-        { id: 'obs-removed', observedDate: '2026-07-01', type: 'status_change' as const, note: '', previousStatus: 'growing', newStatus: 'removed' },
+        { id: 'obs-removed', observedDate: '2026-07-01', type: 'status_change' as const, note: '', previousStatus: 'growing', newStatus: 'removed' } as CalendarObservation,
       ],
     };
     render(<PlantingGantt plants={[plant]} year={YEAR} />);
