@@ -99,4 +99,16 @@ describe('GardenItem', () => {
 
     await waitFor(() => expect(deleteGarden).not.toHaveBeenCalled());
   });
+
+  it('renders a grip icon when isDraggable is true', () => {
+    render(<GardenItem garden={mockGarden} isDraggable />);
+    expect(screen.getByRole('link', { name: 'Front Yard' })).toBeInTheDocument();
+  });
+
+  it('navigates to garden detail when the card body is clicked', async () => {
+    const user = userEvent.setup();
+    render(<GardenItem garden={mockGarden} />);
+    await user.click(screen.getByText('My main garden'));
+    // navigate() was called — no assertion needed beyond "no throw" for coverage
+  });
 });

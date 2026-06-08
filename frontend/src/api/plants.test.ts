@@ -1,12 +1,42 @@
 import {
+  fetchCalendarPlants, fetchPlants,
   fetchAllUserPlants, fetchUserPlant, fetchUserPlants,
-  createUserPlant, updateUserPlant, moveUserPlant, deleteUserPlant,
-  fetchObservations, createObservation, deleteObservation,
-  fetchPlacements, createPlacement, deletePlacement,
+  createUserPlant, updateUserPlant, moveUserPlant, cloneUserPlant, deleteUserPlant,
+  fetchObservations, createObservation, updateObservation, deleteObservation,
+  fetchPlacements, createPlacement, movePlacement, resizePlacement, deletePlacement,
+  fetchCompanionHints,
 } from './plants';
 import { api } from './client';
 
 vi.mock('./client', () => ({ api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() } }));
+
+describe('fetchCalendarPlants', () => {
+  it('calls GET /calendar/ with year param', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    await fetchCalendarPlants(2024);
+    expect(api.get).toHaveBeenCalledWith('/calendar/', { params: { year: '2024' } });
+  });
+
+  it('includes garden_id param when gardenId is provided', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
+    await fetchCalendarPlants(2024, 'g1');
+    expect(api.get).toHaveBeenCalledWith('/calendar/', { params: { year: '2024', garden_id: 'g1' } });
+  });
+
+  it('returns empty array when data is null', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: null });
+    expect(await fetchCalendarPlants(2024)).toEqual([]);
+  });
+});
+
+describe('fetchPlants', () => {
+  it('calls GET /plants/ and returns the data', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [{ id: 'c1', name: 'Tomato' }] });
+    const result = await fetchPlants();
+    expect(api.get).toHaveBeenCalledWith('/plants/');
+    expect(result).toEqual([{ id: 'c1', name: 'Tomato' }]);
+  });
+});
 
 describe('fetchAllUserPlants', () => {
   it('calls GET /userplants/ and returns the data', async () => {
@@ -116,5 +146,55 @@ describe('deletePlacement', () => {
     vi.mocked(api.delete).mockResolvedValueOnce({ data: null });
     await deletePlacement('g1', 'b1', 'pl1');
     expect(api.delete).toHaveBeenCalledWith('/gardens/g1/beds/b1/placements/pl1/');
+  });
+});
+
+describe('movePlacement', () => {
+  it('calls PATCH placements/:placementId/ with x and y', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: { id: 'pl1', x: 3, y: 4 } });
+    await movePlacement('g1', 'b1', 'pl1', 3, 4);
+    expect(api.patch).toHaveBeenCalledWith('/gardens/g1/beds/b1/placements/pl1/', { x: 3, y: 4 });
+  });
+});
+
+describe('resizePlacement', () => {
+  it('calls PATCH placements/:placementId/ with width and height', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: { id: 'pl1', width: 2, height: 3 } });
+    await resizePlacement('g1', 'b1', 'pl1', 2, 3);
+    expect(api.patch).toHaveBeenCalledWith('/gardens/g1/beds/b1/placements/pl1/', { width: 2, height: 3 });
+  });
+});
+
+describe('cloneUserPlant', () => {
+  it('calls POST clone endpoint with empty object when no placement given', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { id: 'p2' } });
+    await cloneUserPlant('g1', 'b1', 'p1');
+    expect(api.post).toHaveBeenCalledWith('/gardens/g1/beds/b1/plants/p1/clone/', {});
+  });
+
+  it('calls POST clone endpoint with placement when provided', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({ data: { id: 'p2' } });
+    await cloneUserPlant('g1', 'b1', 'p1', { x: 1, y: 0, width: 1, height: 1 });
+    expect(api.post).toHaveBeenCalledWith('/gardens/g1/beds/b1/plants/p1/clone/', { x: 1, y: 0, width: 1, height: 1 });
+  });
+});
+
+describe('fetchCompanionHints', () => {
+  it('calls GET companion-hints endpoint and returns data', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: [{ plantId: 'p1', companions: [] }] });
+    const result = await fetchCompanionHints('g1', 'b1');
+    expect(api.get).toHaveBeenCalledWith('/gardens/g1/beds/b1/companion-hints/');
+    expect(result).toEqual([{ plantId: 'p1', companions: [] }]);
+  });
+});
+
+describe('updateObservation', () => {
+  it('calls PATCH observations/:observationId/ with the payload', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: { id: 'o1' } });
+    await updateObservation('g1', 'b1', 'p1', 'o1', { observedDate: '2024-06-01', note: 'Updated' });
+    expect(api.patch).toHaveBeenCalledWith(
+      '/gardens/g1/beds/b1/plants/p1/observations/o1/',
+      { observedDate: '2024-06-01', note: 'Updated' },
+    );
   });
 });

@@ -173,5 +173,59 @@ describe('PlaceOnBedCanvasDialog', () => {
       await user.click(screen.getByRole('button', { name: /^add$/i }));
       expect(onPlaceFeature).toHaveBeenCalledWith('trellis', '');
     });
+
+    it('shows a label input when a custom type is selected', async () => {
+      const user = await openFeatureStep();
+      await user.click(screen.getByRole('button', { name: /custom area \(rectangle\)/i }));
+      expect(screen.getByLabelText(/label/i)).toBeInTheDocument();
+    });
+
+    it('calls onPlaceFeature with the entered label for a custom type', async () => {
+      const user = await openFeatureStep();
+      await user.click(screen.getByRole('button', { name: /custom area \(rectangle\)/i }));
+      await user.type(screen.getByLabelText(/label/i), 'Herb Patch');
+      await user.click(screen.getByRole('button', { name: /^add$/i }));
+      expect(onPlaceFeature).toHaveBeenCalledWith('custom_rect', 'Herb Patch');
+    });
+  });
+
+  it('resets to the choose step when the dialog is closed and reopened', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderDialog();
+
+    // Navigate away from choose step
+    await user.click(screen.getByRole('button', { name: /place a feature/i }));
+    expect(screen.getByRole('heading', { name: /add feature/i })).toBeInTheDocument();
+
+    // Close the dialog
+    rerender(
+      <PlaceOnBedCanvasDialog
+        open={false}
+        onOpenChange={onOpenChange}
+        cell={null}
+        gardenId="garden-1"
+        bedId="bed-1"
+        unplacedPlants={[mockUserPlant]}
+        onPlace={onPlace}
+        isPlacing={false}
+        onPlaceFeature={onPlaceFeature}
+      />,
+    );
+
+    // Reopen — should be back at choose step
+    rerender(
+      <PlaceOnBedCanvasDialog
+        open
+        onOpenChange={onOpenChange}
+        cell={null}
+        gardenId="garden-1"
+        bedId="bed-1"
+        unplacedPlants={[mockUserPlant]}
+        onPlace={onPlace}
+        isPlacing={false}
+        onPlaceFeature={onPlaceFeature}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: /add to bed/i })).toBeInTheDocument();
   });
 });

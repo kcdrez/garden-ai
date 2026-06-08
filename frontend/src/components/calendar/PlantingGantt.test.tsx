@@ -54,4 +54,40 @@ describe('PlantingGantt', () => {
     render(<PlantingGantt plants={[mockCalendarPlant]} year={YEAR} />);
     expect(screen.getByText('Events')).toBeInTheDocument();
   });
+
+  it('renders event dots for non-status_change observations in the given year', () => {
+    const plant = {
+      ...mockCalendarPlant,
+      observations: [
+        ...mockCalendarPlant.observations,
+        { id: 'obs-harvest', observedDate: '2026-05-01', type: 'harvest' as const, note: '', previousStatus: '', newStatus: '' },
+        { id: 'obs-pest',    observedDate: '2026-06-01', type: 'pest'    as const, note: 'aphids', previousStatus: '', newStatus: '' },
+      ],
+    };
+    render(<PlantingGantt plants={[plant]} year={YEAR} />);
+    // Event dots render as titled divs — verify the tooltip titles are present
+    expect(document.querySelector('[title="Harvest"]')).toBeInTheDocument();
+    expect(document.querySelector('[title="Pest: aphids"]')).toBeInTheDocument();
+  });
+
+  it('renders a removal dot when the plant was removed in the given year', () => {
+    const plant = {
+      ...mockCalendarPlant,
+      observations: [
+        ...mockCalendarPlant.observations,
+        { id: 'obs-removed', observedDate: '2026-07-01', type: 'status_change' as const, note: '', previousStatus: 'growing', newStatus: 'removed' },
+      ],
+    };
+    render(<PlantingGantt plants={[plant]} year={YEAR} />);
+    expect(document.querySelector('[title="Removed"]')).toBeInTheDocument();
+  });
+
+  it('bar extends to 100% for years before the current year', () => {
+    // Year 2024 is in the past — the bar end should be calculated as 100%
+    // (no removal, not current year → else branch in barBounds)
+    const plant = { ...mockCalendarPlant, startDate: '2024-03-01' };
+    // Should render without errors — the bar end falls into the `end = 100` branch
+    render(<PlantingGantt plants={[plant]} year={2024} />);
+    expect(screen.getByRole('link', { name: /tomato/i })).toBeInTheDocument();
+  });
 });

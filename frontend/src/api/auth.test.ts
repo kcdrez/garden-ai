@@ -1,8 +1,8 @@
-import { login, register, forgotPassword, resetPassword } from './auth';
+import { login, register, forgotPassword, resetPassword, getProfile, updateProfile } from './auth';
 import { api } from './client';
 import { auth } from '@/auth/auth';
 
-vi.mock('./client', () => ({ api: { post: vi.fn() } }));
+vi.mock('./client', () => ({ api: { get: vi.fn(), post: vi.fn(), patch: vi.fn() } }));
 vi.mock('@/auth/auth', () => ({ auth: { setTokens: vi.fn() } }));
 
 describe('login', () => {
@@ -102,5 +102,23 @@ describe('resetPassword', () => {
       token: 'tok456',
       newPassword: 'newpassword',
     });
+  });
+});
+
+describe('getProfile', () => {
+  it('calls GET /auth/profile/ and returns the data', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { id: 1, username: 'alice' } });
+    const result = await getProfile();
+    expect(api.get).toHaveBeenCalledWith('/auth/profile/');
+    expect(result).toEqual({ id: 1, username: 'alice' });
+  });
+});
+
+describe('updateProfile', () => {
+  it('calls PATCH /auth/profile/ with the payload and returns the data', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({ data: { id: 1, username: 'alice', firstName: 'Alice' } });
+    const result = await updateProfile({ firstName: 'Alice' });
+    expect(api.patch).toHaveBeenCalledWith('/auth/profile/', { firstName: 'Alice' });
+    expect(result).toEqual({ id: 1, username: 'alice', firstName: 'Alice' });
   });
 });
