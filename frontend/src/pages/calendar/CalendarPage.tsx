@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { fetchCalendarPlants } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { QueryState } from '@/components/ui/query-state';
 import PlantingGantt from '@/components/calendar/PlantingGantt';
@@ -10,7 +11,7 @@ export default function CalendarPage() {
   const [year, setYear] = useState(() => new Date().getFullYear());
 
   const { data: plants = [], isLoading, error } = useQuery({
-    queryKey: ['calendar', year],
+    queryKey: queryKeys.calendar.byYear(year),
     queryFn: () => fetchCalendarPlants(year),
   });
 

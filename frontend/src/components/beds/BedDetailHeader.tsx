@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { deleteBed } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import { formatDimensions, bedHasDetails } from '@/lib/beds';
 import { routes } from '@/lib/routes';
 import type { GardenBed } from '@/types/gardens';
@@ -25,7 +26,7 @@ export default function BedDetailHeader({ bed }: Props) {
   const deleteMutation = useMutation({
     mutationFn: () => deleteBed(bed.garden, bed.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
       navigate(routes.gardenDetail(bed.garden));
     },
   });

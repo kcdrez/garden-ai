@@ -16,6 +16,7 @@ function makeHandlers(qc: QueryClient, onExtraError?: (err: unknown, vars: Vars)
   return makeOptimisticMutation<Item, Vars>(
     qc,
     queryKey,
+    (vars) => vars.placementId,
     (item, vars) => ({ ...item, value: vars.value }),
     onExtraError,
   );

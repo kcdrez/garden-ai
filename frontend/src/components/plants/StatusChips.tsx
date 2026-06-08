@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { USER_PLANT_STATUSES, type UserPlant, type UserPlantStatus } from '@/types/plants';
 import { updateUserPlant } from '@/api/plants';
 import { STATUS_CLASSES } from '@/lib/plants';
@@ -23,9 +24,9 @@ export default function StatusChips({ gardenId, bedId, plant }: Props) {
       queryClient.setQueryData<UserPlant[]>(['plants', 'user', bedId], (old) =>
         old?.map((p) => (p.id === plant.id ? updatedPlant : p)) ?? old,
       );
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['observations', plant.id] });
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(plant.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all() });
     },
   });
 

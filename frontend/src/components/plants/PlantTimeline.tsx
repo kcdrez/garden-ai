@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
 import { fetchObservations } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import type { UserPlant } from '@/types/plants';
 import { Button } from '@/components/ui/button';
 import StatusChips from '@/components/plants/StatusChips';
@@ -18,7 +19,7 @@ export default function PlantTimeline({ gardenId, bedId, plant }: Props) {
   const [showForm, setShowForm] = useState(false);
 
   const { data: observations = [], isLoading, error } = useQuery({
-    queryKey: ['observations', plant.id, gardenId, bedId],
+    queryKey: queryKeys.observations.detail(plant.id, gardenId, bedId),
     queryFn: () => fetchObservations(gardenId, bedId, plant.id),
   });
 

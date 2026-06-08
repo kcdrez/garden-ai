@@ -6,6 +6,7 @@ import { profileSchema, type ProfileFormValues } from '@/schemas/profile';
 import type { UserProfile } from '@/types/auth';
 import { updateProfile } from '@/api/auth';
 import { applyServerErrors } from '@/lib/errors';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TextField, NativeSelectField } from '@/components/ui/form-fields';
@@ -39,10 +40,9 @@ export default function ProfileForm({ profile }: Props) {
     mode: 'onChange',
   });
 
-  // Keep form in sync if the profile prop changes externally (e.g. page revisit)
   useEffect(() => {
     form.reset(toFormValues(profile));
-  }, [profile.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form, profile]);
 
   const mutation = useMutation({
     mutationFn: (values: ProfileFormValues) =>
@@ -53,7 +53,7 @@ export default function ProfileForm({ profile }: Props) {
         timezone: values.timezone,
       }),
     onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile() });
       form.reset(toFormValues(updated));
     },
     onError: (err) => {

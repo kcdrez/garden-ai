@@ -8,6 +8,7 @@ import { isCardNavigationSuppressed } from '@/lib/utils';
 import { routes } from '@/lib/routes';
 import BedDetails from '@/components/beds/BedDetails';
 import { deleteBed } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import {
   Card,
   CardHeader,
@@ -35,7 +36,7 @@ export default function BedItem({ gardenId, bed, isDraggable = false }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteBed(gardenId, bed.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['beds'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() }),
   });
 
   async function handleDelete() {

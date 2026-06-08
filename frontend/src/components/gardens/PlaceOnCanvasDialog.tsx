@@ -7,6 +7,7 @@ import type { GardenBed } from '@/types/gardens';
 import type { FeatureObjectType } from '@/types/gardens';
 import { BED_UNITS } from '@/types/gardens';
 import { createBed } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import { formatDimensions } from '@/lib/beds';
 import { applyServerErrors } from '@/lib/errors';
 import { FEATURE_OBJECT_TYPES, featureImage, featureEmoji, isCustomFeature } from '@/lib/features';
@@ -97,7 +98,7 @@ export default function PlaceOnCanvasDialog({
         unit: values.unit,
       }),
     onSuccess: (bed) => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
       onPlace(bed.id);
     },
     onError: (err) => {

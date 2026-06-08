@@ -13,6 +13,7 @@ import { deleteBed, updateBed } from '@/api/beds';
 import { useConfirm } from '@/hooks/useConfirm';
 import type { BedPlacement, Garden, GardenBed, GardenFeaturePlacement } from '@/types/gardens';
 import { makeOptimisticMutation } from '@/lib/mutations';
+import { queryKeys } from '@/lib/queryKeys';
 import BedDialog from '@/components/beds/BedDialog';
 import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
 import PlaceOnCanvasDialog from '@/components/gardens/PlaceOnCanvasDialog';
@@ -46,8 +47,8 @@ export default function GardenGrid({
   const deleteBedMutation = useMutation({
     mutationFn: (bedId: string) => deleteBed(gardenId, bedId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
-      queryClient.invalidateQueries({ queryKey: ['bed-placements', gardenId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.placements.garden(gardenId) });
     },
   });
 
@@ -71,7 +72,7 @@ export default function GardenGrid({
     removeFeature,
   } = useGardenFeaturePlacementActions(gardenId);
 
-  const bedPlacementsKey = ['bed-placements', gardenId] as const;
+  const bedPlacementsKey = queryKeys.placements.garden(gardenId);
 
   const resizeBedMutation = useMutation({
     mutationFn: ({ bedId, unit, widthFt, heightFt }: {
@@ -84,12 +85,13 @@ export default function GardenGrid({
     ...makeOptimisticMutation<BedPlacement, { placementId: string; bedId: string; unit: string; widthFt: number; heightFt: number }>(
       queryClient,
       bedPlacementsKey,
+      (vars) => vars.placementId,
       (item, { widthFt, heightFt }) => ({ ...item, bedWidthFt: widthFt, bedHeightFt: heightFt }),
       (err) => setResizeError(getErrorMessage(err)),
     ),
     onSuccess: () => {
       setResizeError(null);
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
     },
   });
 

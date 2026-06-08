@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon } from 'lucide-react';
 import { fetchAllBeds, createBed } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import { fetchGardens } from '@/api/gardens';
 import { moveUserPlant } from '@/api/plants';
 import type { UserPlant } from '@/types/plants';
@@ -38,7 +39,7 @@ function PickBedStep({ userPlant, autoSelectBedId, onMoved, onCreateNew }: PickB
   const [selectedBedId, setSelectedBedId] = useState('');
 
   const { data: beds = [], isLoading } = useQuery({
-    queryKey: ['beds', 'all'],
+    queryKey: queryKeys.beds.byAll(),
     queryFn: fetchAllBeds,
   });
 
@@ -53,8 +54,8 @@ function PickBedStep({ userPlant, autoSelectBedId, onMoved, onCreateNew }: PickB
   const moveMutation = useMutation({
     mutationFn: () => moveUserPlant(userPlant.gardenId, userPlant.bed, userPlant.id, selectedBedId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['placements', userPlant.bed] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.placements.bed(userPlant.bed) });
       onMoved();
     },
   });
@@ -124,7 +125,7 @@ function CreateBedStep({ defaultGardenId, onSuccess, onBack }: CreateBedStepProp
   const queryClient = useQueryClient();
 
   const { data: gardens = [] } = useQuery({
-    queryKey: ['gardens'],
+    queryKey: queryKeys.gardens.list(),
     queryFn: fetchGardens,
   });
 
@@ -143,7 +144,7 @@ function CreateBedStep({ defaultGardenId, onSuccess, onBack }: CreateBedStepProp
         unit: values.unit,
       }),
     onSuccess: (newBed) => {
-      queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.beds.list() });
       onSuccess(newBed.id);
     },
     onError: (err) => {

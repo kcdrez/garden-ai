@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { deleteObservation, updateObservation } from '@/api/plants';
 import { observationEditSchema, type ObservationEditFormValues } from '@/schemas/plants';
 import {
@@ -67,8 +68,8 @@ function ObservationEditRow({ obs, gardenId, bedId, plantId, onDone }: EditRowPr
     mutationFn: (values: ObservationEditFormValues) =>
       updateObservation(gardenId, bedId, plantId, obs.id, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(plantId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all() });
       onDone();
     },
   });
@@ -128,8 +129,8 @@ export default function ObservationList({
   const removeObservation = useMutation({
     mutationFn: (obsId: string) => deleteObservation(gardenId, bedId, plantId, obsId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(plantId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all() });
     },
   });
 

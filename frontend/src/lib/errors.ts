@@ -8,6 +8,7 @@ export function getErrorMessage(err: unknown): string {
     const data = err.response?.data;
     if (data) {
       if (typeof data.detail === 'string') return data.detail;
+      // djangorestframework-camel-case converts DRF's non_field_errors → nonFieldErrors
       if (Array.isArray(data.nonFieldErrors)) return data.nonFieldErrors.join(' ');
       if (typeof data === 'object') {
         const messages = Object.values(data as DRFErrors)

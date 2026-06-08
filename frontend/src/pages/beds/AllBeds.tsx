@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
 import { fetchAllBeds } from '@/api/beds';
+import { queryKeys } from '@/lib/queryKeys';
 import { groupByGarden } from '@/lib/beds';
 import { useGroupedBedSort } from '@/hooks/useGroupedBedSort';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ export default function AllBeds() {
   const [addOpen, setAddOpen] = useState(false);
 
   const { data: beds = [], isLoading, error } = useQuery({
-    queryKey: ['beds', 'all'],
+    queryKey: queryKeys.beds.byAll(),
     queryFn: fetchAllBeds,
   });
 

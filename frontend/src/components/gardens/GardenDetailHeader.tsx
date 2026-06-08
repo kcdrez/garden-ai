@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { deleteGarden } from '@/api/gardens';
+import { queryKeys } from '@/lib/queryKeys';
 import type { Garden } from '@/types/gardens';
 import { routes } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ export default function GardenDetailHeader({ garden }: Props) {
   const deleteMutation = useMutation({
     mutationFn: () => deleteGarden(garden.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gardens'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gardens.list() });
       navigate(routes.gardens());
     },
   });

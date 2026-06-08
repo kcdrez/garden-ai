@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createObservation } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { observationSchema, type ObservationFormValues } from '@/schemas/plants';
 import { OBSERVATION_TYPES, USER_PLANT_STATUSES } from '@/types/plants';
 import { getTodayISO } from '@/lib/dates';
@@ -36,8 +37,8 @@ export default function ObservationForm({ gardenId, bedId, plantId, onSuccess, o
     mutationFn: (values: ObservationFormValues) =>
       createObservation(gardenId, bedId, plantId, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['observations', plantId] });
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(plantId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all() });
       form.reset(defaultValues());
       onSuccess();
     },

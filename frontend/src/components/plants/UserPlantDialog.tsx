@@ -3,6 +3,7 @@ import { ChevronDownIcon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UserPlant } from '@/types/plants';
 import { createUserPlant } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { fetchGardens } from '@/api/gardens';
 import { fetchBeds } from '@/api/beds';
 import { cn } from '@/lib/utils';
@@ -42,13 +43,13 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
   }, [open, gardenId, bedId, isEditing]);
 
   const { data: gardens = [] } = useQuery({
-    queryKey: ['gardens'],
+    queryKey: queryKeys.gardens.list(),
     queryFn: fetchGardens,
     enabled: open && needsGardenPicker,
   });
 
   const { data: beds = [] } = useQuery({
-    queryKey: ['beds', selectedGardenId],
+    queryKey: queryKeys.beds.byGarden(selectedGardenId),
     queryFn: () => fetchBeds(selectedGardenId),
     enabled: open && needsBedPicker && !!selectedGardenId,
   });
@@ -60,8 +61,8 @@ export default function UserPlantDialog({ gardenId, bedId, userPlant, open, onOp
     mutationFn: (values: Parameters<typeof createUserPlant>[2]) =>
       createUserPlant(effectiveGardenId, effectiveBedId, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plants', 'user'] });
-      queryClient.invalidateQueries({ queryKey: ['companion-hints', effectiveBedId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companionHints(effectiveBedId) });
       onOpenChange(false);
     },
   });

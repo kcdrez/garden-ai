@@ -49,12 +49,12 @@ function toSVGPoint(
   return { x: svgPt.x, y: svgPt.y };
 }
 
-type ToolbarAnchor = { top: number; left: number; width: number };
+type FloatingToolbarPosition = { top: number; left: number; width: number };
 
-function toToolbarAnchor(
+function toFloatingToolbarPosition(
   item: { x: number; y: number; widthFt: number },
   svg: SVGSVGElement,
-): ToolbarAnchor {
+): FloatingToolbarPosition {
   const ctm = svg.getScreenCTM()!;
   const tl = svg.createSVGPoint();
   tl.x = item.x; tl.y = item.y;
@@ -317,18 +317,18 @@ export default function PlacementCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const bgClickStart = useRef<{ x: number; y: number } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [toolbarAnchor, setToolbarAnchor] = useState<ToolbarAnchor | null>(null);
+  const [toolbarAnchor, setFloatingToolbarPosition] = useState<FloatingToolbarPosition | null>(null);
   const [dragGroupDelta, setDragGroupDelta] = useState<{ dx: number; dy: number } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
-  function computeGroupAnchor(ids: Set<string>, posItems: CanvasItem[]): ToolbarAnchor | null {
+  function computeGroupAnchor(ids: Set<string>, posItems: CanvasItem[]): FloatingToolbarPosition | null {
     if (!svgRef.current || ids.size === 0) return null;
     const selected = posItems.filter(i => ids.has(i.id));
     if (selected.length === 0) return null;
     const minX = Math.min(...selected.map(i => i.x));
     const maxX = Math.max(...selected.map(i => i.x + i.widthFt));
     const minY = Math.min(...selected.map(i => i.y));
-    return toToolbarAnchor({ x: minX, y: minY, widthFt: maxX - minX }, svgRef.current);
+    return toFloatingToolbarPosition({ x: minX, y: minY, widthFt: maxX - minX }, svgRef.current);
   }
 
   function handleSelect(id: string, shiftKey: boolean) {
@@ -339,7 +339,7 @@ export default function PlacementCanvas({
       newIds.add(id);
     }
     setSelectedIds(newIds);
-    setToolbarAnchor(newIds.size > 0 ? computeGroupAnchor(newIds, items) : null);
+    setFloatingToolbarPosition(newIds.size > 0 ? computeGroupAnchor(newIds, items) : null);
   }
 
   function handleGroupDragEnd(dx: number, dy: number) {
@@ -359,7 +359,7 @@ export default function PlacementCanvas({
     } else {
       for (const { id, x, y } of moves) onMove(id, x, y);
     }
-    setToolbarAnchor(computeGroupAnchor(selectedIds, newPositions));
+    setFloatingToolbarPosition(computeGroupAnchor(selectedIds, newPositions));
   }
 
   useEffect(() => {
@@ -371,7 +371,7 @@ export default function PlacementCanvas({
         !target.closest?.('[data-radix-popper-content-wrapper], [role="menu"], [role="dialog"], [role="alertdialog"]')
       ) {
         setSelectedIds(new Set());
-        setToolbarAnchor(null);
+        setFloatingToolbarPosition(null);
       }
     }
     document.addEventListener('pointerdown', handlePointerDown);
@@ -389,7 +389,7 @@ export default function PlacementCanvas({
 
       if (e.key === 'Escape') {
         setSelectedIds(new Set());
-        setToolbarAnchor(null);
+        setFloatingToolbarPosition(null);
         return;
       }
 
@@ -410,7 +410,7 @@ export default function PlacementCanvas({
           onDeleteItems?.(Array.from(selectedIds));
         }
         setSelectedIds(new Set());
-        setToolbarAnchor(null);
+        setFloatingToolbarPosition(null);
         return;
       }
 
@@ -421,7 +421,7 @@ export default function PlacementCanvas({
           e.preventDefault();
           match.onClick();
           setSelectedIds(new Set());
-          setToolbarAnchor(null);
+          setFloatingToolbarPosition(null);
           return;
         }
       }
@@ -438,7 +438,7 @@ export default function PlacementCanvas({
         const next = sorted[nextIndex];
         const newIds = new Set([next.id]);
         setSelectedIds(newIds);
-        setToolbarAnchor(computeGroupAnchor(newIds, items));
+        setFloatingToolbarPosition(computeGroupAnchor(newIds, items));
         return;
       }
 
@@ -458,7 +458,7 @@ export default function PlacementCanvas({
         onMove(id, newX, newY);
         newPositions.push({ ...item, x: newX, y: newY });
       }
-      setToolbarAnchor(computeGroupAnchor(selectedIds, newPositions));
+      setFloatingToolbarPosition(computeGroupAnchor(selectedIds, newPositions));
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -545,7 +545,7 @@ export default function PlacementCanvas({
     if (dist < CLICK_THRESHOLD_FT) {
       if (selectedIds.size > 0) {
         setSelectedIds(new Set());
-        setToolbarAnchor(null);
+        setFloatingToolbarPosition(null);
       } else {
         onEmptyClick(
           Math.max(0, Math.min(coords.x, widthFt)),
@@ -598,7 +598,7 @@ export default function PlacementCanvas({
         onPointerDown={(e) => {
           if (e.target === e.currentTarget) {
             setSelectedIds(new Set());
-            setToolbarAnchor(null);
+            setFloatingToolbarPosition(null);
           }
         }}
       >
@@ -711,7 +711,7 @@ export default function PlacementCanvas({
                   key={mi.label}
                   type="button"
                   aria-label={mi.label}
-                  onClick={() => { mi.onClick(); setSelectedIds(new Set()); setToolbarAnchor(null); }}
+                  onClick={() => { mi.onClick(); setSelectedIds(new Set()); setFloatingToolbarPosition(null); }}
                   className={cn(
                     'flex items-center gap-1.5 px-2 py-1 rounded text-xs hover:bg-muted',
                     mi.variant === 'destructive' ? 'text-destructive' : '',
@@ -739,7 +739,7 @@ export default function PlacementCanvas({
                         <DropdownMenuItem
                           key={mi.label}
                           variant={mi.variant}
-                          onClick={() => { mi.onClick(); setSelectedIds(new Set()); setToolbarAnchor(null); }}
+                          onClick={() => { mi.onClick(); setSelectedIds(new Set()); setFloatingToolbarPosition(null); }}
                         >
                           {mi.icon}
                           {mi.label}
@@ -768,7 +768,7 @@ export default function PlacementCanvas({
               onClick={() => {
                 onDeleteItems?.(Array.from(selectedIds));
                 setSelectedIds(new Set());
-                setToolbarAnchor(null);
+                setFloatingToolbarPosition(null);
               }}
               className="flex items-center gap-1.5 px-2 py-1 rounded text-xs hover:bg-muted text-destructive"
             >

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PlusIcon } from 'lucide-react';
 import { fetchAllUserPlants } from '@/api/plants';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { QueryState } from '@/components/ui/query-state';
 import PlantItem from '@/components/plants/PlantItem';
@@ -11,7 +12,7 @@ export default function AllPlants() {
   const [addOpen, setAddOpen] = useState(false);
 
   const { data: userPlants = [], isLoading, error } = useQuery({
-    queryKey: ['plants', 'user', 'all'],
+    queryKey: queryKeys.plants.userAll(),
     queryFn: fetchAllUserPlants,
   });
 

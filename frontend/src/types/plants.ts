@@ -100,24 +100,24 @@ export interface CalendarPlant {
   observations: CalendarObservation[];
 }
 
-export const PLANT_CATEGORIES: { value: PlantCategory; label: string }[] = [
+export const PLANT_CATEGORIES = [
   { value: "vegetable", label: "Vegetable" },
   { value: "herb", label: "Herb" },
   { value: "fruit", label: "Fruit" },
   { value: "flower", label: "Flower" },
   { value: "other", label: "Other" },
-];
+] as const;
 
-export const USER_PLANT_STATUSES: { value: UserPlantStatus; label: string }[] = [
+export const USER_PLANT_STATUSES = [
   { value: "planned", label: "Planned" },
   { value: "planted", label: "Planted" },
   { value: "growing", label: "Growing" },
   { value: "fruiting", label: "Fruiting" },
   { value: "dormant", label: "Dormant" },
   { value: "removed", label: "Removed" },
-];
+] as const;
 
-export const OBSERVATION_TYPES: { value: ObservationType; label: string }[] = [
+export const OBSERVATION_TYPES = [
   { value: "harvest", label: "Harvest" },
   { value: "pest", label: "Pest" },
   { value: "weather", label: "Weather" },
@@ -125,4 +125,4 @@ export const OBSERVATION_TYPES: { value: ObservationType; label: string }[] = [
   { value: "general", label: "General" },
   { value: "status_change", label: "Status Change" },
   { value: "transplant", label: "Transplant" },
-];
+] as const;

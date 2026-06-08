@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getProfile } from '@/api/auth';
+import { queryKeys } from '@/lib/queryKeys';
 import { getErrorMessage } from '@/lib/errors';
 import { LoadingSpinner } from '@/components/ui/query-state';
 import ProfileForm from '@/components/profile/ProfileForm';
@@ -10,7 +11,7 @@ export default function ProfilePage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['profile'],
+    queryKey: queryKeys.profile(),
     queryFn: getProfile,
   });
 
