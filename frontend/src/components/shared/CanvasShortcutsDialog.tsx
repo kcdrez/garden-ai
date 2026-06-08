@@ -39,6 +39,10 @@ export default function CanvasShortcutsDialog({ open, onOpenChange }: CanvasShor
           <ShortcutSection title="Clipboard">
             <Shortcut keys={['Ctrl/⌘', 'V']} label="Paste copied item" />
           </ShortcutSection>
+          <ShortcutSection title="History">
+            <Shortcut keys={['Ctrl/⌘', 'Z']} label="Undo move / resize" />
+            <Shortcut keys={['Ctrl/⌘', 'Y']} label="Redo" />
+          </ShortcutSection>
         </div>
       </DialogContent>
     </Dialog>
