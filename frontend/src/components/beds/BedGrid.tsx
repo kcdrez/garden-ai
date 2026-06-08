@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { usePlantPlacementActions } from '@/hooks/usePlantPlacementActions';
 import { useBedFeaturePlacementActions } from '@/hooks/useBedFeaturePlacementActions';
+import { useUndoHistory } from '@/hooks/useUndoHistory';
 import { fetchCompanionHints } from '@/api/plants';
 import { routes } from '@/lib/routes';
 import { toFeet } from '@/lib/beds';
@@ -42,6 +43,8 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const [addPlantOpen, setAddPlantOpen] = useState(false);
   const [addFeatureOpen, setAddFeatureOpen] = useState(false);
   const [copiedPlacementId, setCopiedPlacementId] = useState<string | null>(null);
+
+  const history = useUndoHistory();
 
   const {
     placements,
@@ -425,20 +428,67 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           );
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
-        onMove={(itemId, x, y) => {
-          if (featureIds.has(itemId)) {
-            moveFeature({ featureId: itemId, x, y });
-          } else {
-            movePlacement({ placementId: itemId, x, y });
+        onMove={(id, x, y) => {
+          const prev = items.find(i => i.id === id);
+          const isFeature = featureIds.has(id);
+          if (prev) {
+            history.push({
+              undo: () => {
+                if (isFeature) moveFeature({ featureId: id, x: prev.x, y: prev.y });
+                else movePlacement({ placementId: id, x: prev.x, y: prev.y });
+              },
+              redo: () => {
+                if (isFeature) moveFeature({ featureId: id, x, y });
+                else movePlacement({ placementId: id, x, y });
+              },
+            });
           }
+          if (isFeature) moveFeature({ featureId: id, x, y });
+          else movePlacement({ placementId: id, x, y });
         }}
-        onResize={(itemId, widthFt, heightFt) => {
-          if (featureIds.has(itemId)) {
-            resizeFeature({ featureId: itemId, width: widthFt, height: heightFt });
-          } else {
-            resizePlacement({ placementId: itemId, widthFt, heightFt });
+        onGroupMoveEnd={(moves) => {
+          const movesWithMeta = moves.map(({ id, x, y }) => ({
+            id, x, y, isFeature: featureIds.has(id),
+          }));
+          const prevPositions = movesWithMeta.map(({ id, isFeature }) => {
+            const item = items.find(i => i.id === id);
+            return { id, isFeature, x: item?.x ?? 0, y: item?.y ?? 0 };
+          });
+          history.push({
+            undo: () => prevPositions.forEach(({ id, isFeature, x, y }) => {
+              if (isFeature) moveFeature({ featureId: id, x, y });
+              else movePlacement({ placementId: id, x, y });
+            }),
+            redo: () => movesWithMeta.forEach(({ id, isFeature, x, y }) => {
+              if (isFeature) moveFeature({ featureId: id, x, y });
+              else movePlacement({ placementId: id, x, y });
+            }),
+          });
+          movesWithMeta.forEach(({ id, isFeature, x, y }) => {
+            if (isFeature) moveFeature({ featureId: id, x, y });
+            else movePlacement({ placementId: id, x, y });
+          });
+        }}
+        onResize={(id, widthFt, heightFt) => {
+          const prev = items.find(i => i.id === id);
+          const isFeature = featureIds.has(id);
+          if (prev) {
+            history.push({
+              undo: () => {
+                if (isFeature) resizeFeature({ featureId: id, width: prev.widthFt, height: prev.heightFt });
+                else resizePlacement({ placementId: id, widthFt: prev.widthFt, heightFt: prev.heightFt });
+              },
+              redo: () => {
+                if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
+                else resizePlacement({ placementId: id, widthFt, heightFt });
+              },
+            });
           }
+          if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
+          else resizePlacement({ placementId: id, widthFt, heightFt });
         }}
+        onUndo={history.undo}
+        onRedo={history.redo}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-bed-${bedId}`}
         defaultZoom={smartDefaultZoom}

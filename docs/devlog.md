@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-06-08 — ~0.5 hours
+
+**Completed:**
+
+- Canvas undo/redo — `Ctrl+Z/Y` (also Ctrl+Shift+Z) for move and resize actions on both bed and garden canvases; `useUndoHistory` ref-based stack hook; group drags push as a single batch command via new `onGroupMoveEnd` prop on `PlacementCanvas`; create/delete deferred (require re-POST to recover IDs); 10 unit tests; shortcuts added to `CanvasShortcutsDialog`
+
+**Next up:** Code cleanup — fix SRP violations, remove redundant code, fix broken tests
+
+---
+
 ## 2026-06-07 — ~2 hours
 
 **Completed:**

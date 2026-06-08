@@ -24,6 +24,9 @@ interface PlacementCanvasProps {
   onDeleteItems?: (ids: string[]) => void;
   onCopyItem?: (id: string) => void;
   onPasteItem?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  onGroupMoveEnd?: (moves: Array<{ id: string; x: number; y: number }>) => void;
   getMenuItems: (id: string) => CanvasMenuItem[];
   storageKey?: string;
   defaultZoom?: (typeof ZOOM_LEVELS)[number];
@@ -302,6 +305,9 @@ export default function PlacementCanvas({
   onDeleteItems,
   onCopyItem,
   onPasteItem,
+  onUndo,
+  onRedo,
+  onGroupMoveEnd,
   getMenuItems,
   storageKey,
   defaultZoom = 1,
@@ -338,14 +344,20 @@ export default function PlacementCanvas({
 
   function handleGroupDragEnd(dx: number, dy: number) {
     setDragGroupDelta(null);
+    const moves: Array<{ id: string; x: number; y: number }> = [];
     const newPositions: CanvasItem[] = [];
     for (const id of selectedIds) {
       const item = items.find(i => i.id === id);
       if (!item) continue;
       const newX = Math.max(0, Math.min(item.x + dx, widthFt - item.widthFt));
       const newY = Math.max(0, Math.min(item.y + dy, heightFt - item.heightFt));
-      onMove(id, newX, newY);
+      moves.push({ id, x: newX, y: newY });
       newPositions.push({ ...item, x: newX, y: newY });
+    }
+    if (onGroupMoveEnd) {
+      onGroupMoveEnd(moves);
+    } else {
+      for (const { id, x, y } of moves) onMove(id, x, y);
     }
     setToolbarAnchor(computeGroupAnchor(selectedIds, newPositions));
   }
@@ -481,6 +493,18 @@ export default function PlacementCanvas({
         return;
       }
 
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        onUndo?.();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+        e.preventDefault();
+        onRedo?.();
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       const applyZoom = (level: (typeof ZOOM_LEVELS)[number]) => {
@@ -500,7 +524,7 @@ export default function PlacementCanvas({
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoom, storageKey, onPasteItem]);
+  }, [zoom, storageKey, onPasteItem, onUndo, onRedo]);
 
   const viewBox = `${-PAD} ${-PAD} ${widthFt + PAD * 2} ${heightFt + PAD * 2}`;
   const gridCols = Math.ceil(widthFt);

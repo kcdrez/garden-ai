@@ -4,6 +4,7 @@ import { EditIcon, ExternalLinkIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Tr
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useBedPlacementActions } from '@/hooks/useBedPlacementActions';
 import { useGardenFeaturePlacementActions } from '@/hooks/useGardenFeaturePlacementActions';
+import { useUndoHistory } from '@/hooks/useUndoHistory';
 import { toFeet, fromFeet, formatDimensions } from '@/lib/beds';
 import { featureImage, featureEmoji, featureLabel, isCustomFeature } from '@/lib/features';
 import { getErrorMessage } from '@/lib/errors';
@@ -39,6 +40,8 @@ export default function GardenGrid({
   const [addBedOpen, setAddBedOpen] = useState(false);
   const [addFeatureOpen, setAddFeatureOpen] = useState(false);
   const [resizeError, setResizeError] = useState<string | null>(null);
+
+  const history = useUndoHistory();
 
   const deleteBedMutation = useMutation({
     mutationFn: (bedId: string) => deleteBed(gardenId, bedId),
@@ -355,21 +358,68 @@ export default function GardenGrid({
           );
         }}
         onEmptyClick={(x, y) => setPlacingAt({ x, y })}
-        onMove={(itemId, x, y) => {
-          if (featureIds.has(itemId)) {
-            moveFeature({ featureId: itemId, x, y });
-          } else {
-            movePlacement({ placementId: itemId, x, y });
+        onMove={(id, x, y) => {
+          const prev = items.find(i => i.id === id);
+          const isFeature = featureIds.has(id);
+          if (prev) {
+            history.push({
+              undo: () => {
+                if (isFeature) moveFeature({ featureId: id, x: prev.x, y: prev.y });
+                else movePlacement({ placementId: id, x: prev.x, y: prev.y });
+              },
+              redo: () => {
+                if (isFeature) moveFeature({ featureId: id, x, y });
+                else movePlacement({ placementId: id, x, y });
+              },
+            });
           }
+          if (isFeature) moveFeature({ featureId: id, x, y });
+          else movePlacement({ placementId: id, x, y });
         }}
-        onResize={(itemId, widthFt, heightFt) => {
-          if (featureIds.has(itemId)) {
-            resizeFeature({ featureId: itemId, width: widthFt, height: heightFt });
-          } else {
-            const bed = bedById.get(placementById.get(itemId)?.bed ?? '');
-            if (bed) resizeBedMutation.mutate({ placementId: itemId, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
+        onGroupMoveEnd={(moves) => {
+          const movesWithMeta = moves.map(({ id, x, y }) => ({
+            id, x, y, isFeature: featureIds.has(id),
+          }));
+          const prevPositions = movesWithMeta.map(({ id, isFeature }) => {
+            const item = items.find(i => i.id === id);
+            return { id, isFeature, x: item?.x ?? 0, y: item?.y ?? 0 };
+          });
+          history.push({
+            undo: () => prevPositions.forEach(({ id, isFeature, x, y }) => {
+              if (isFeature) moveFeature({ featureId: id, x, y });
+              else movePlacement({ placementId: id, x, y });
+            }),
+            redo: () => movesWithMeta.forEach(({ id, isFeature, x, y }) => {
+              if (isFeature) moveFeature({ featureId: id, x, y });
+              else movePlacement({ placementId: id, x, y });
+            }),
+          });
+          movesWithMeta.forEach(({ id, isFeature, x, y }) => {
+            if (isFeature) moveFeature({ featureId: id, x, y });
+            else movePlacement({ placementId: id, x, y });
+          });
+        }}
+        onResize={(id, widthFt, heightFt) => {
+          const prev = items.find(i => i.id === id);
+          const isFeature = featureIds.has(id);
+          const bed = !isFeature ? bedById.get(placementById.get(id)?.bed ?? '') : undefined;
+          if (prev) {
+            history.push({
+              undo: () => {
+                if (isFeature) resizeFeature({ featureId: id, width: prev.widthFt, height: prev.heightFt });
+                else if (bed) resizeBedMutation.mutate({ placementId: id, bedId: bed.id, unit: bed.unit, widthFt: prev.widthFt, heightFt: prev.heightFt });
+              },
+              redo: () => {
+                if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
+                else if (bed) resizeBedMutation.mutate({ placementId: id, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
+              },
+            });
           }
+          if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
+          else if (bed) resizeBedMutation.mutate({ placementId: id, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
         }}
+        onUndo={history.undo}
+        onRedo={history.redo}
         getMenuItems={getMenuItems}
         storageKey={`canvas-zoom-garden-${gardenId}`}
         getItemLabel={(itemId) => {

@@ -253,6 +253,7 @@ These are explicitly out of scope, at least initially:
 - PlaceBedDialog "Create new bed" wizard — wizard step matching `PlacePlantDialog`; uses `quickBedSchema` (name, length, width, unit); `useBedPlacementActions.createPlacement` accepts optional `onSuccess` callback; dialog auto-closes after placement
 - Canvas selection model — replaced hover-triggered SVG controls (`PlacementItemControls` removed) with click-to-select; floating HTML toolbar shows `primary` items inline (icon + label) and overflow in a `···` dropdown; `primary?: boolean` flag on `CanvasMenuItem`; deselects on background or outside-container click; toolbar snaps to item's new position after drag; 6px drag threshold prevents accidental drags; resize handle is a BR corner circle on the selection ring (sized `Math.min(0.05 / zoom, shortestDimension * 0.125)`)
 - Canvas keyboard shortcuts — Delete/Backspace removes selected item; Arrow nudges 0.25ft, Shift+Arrow nudges 1ft (full grid cell); Escape deselects; Tab/Shift+Tab cycles items in visual order (top-to-bottom then left-to-right); `=`/`+`/`-` zoom in/out; single-key menu shortcuts (e/r/v/o/d/m for plants, e/r/v for beds) with `shortcut?` field on `CanvasMenuItem`; shortcut hints in toolbar and overflow dropdown; overflow menu bug fixed (Radix portal clicks were dismissed before firing)
+- Canvas undo/redo — `Ctrl+Z/Y` (also Ctrl+Shift+Z) undoes and redoes move and resize actions on both bed and garden canvases; `useUndoHistory` ref-based stack with `push`/`undo`/`redo`; group drags pushed as a single batch command via `onGroupMoveEnd` prop on `PlacementCanvas`; create/delete not tracked (require re-POST to recover an ID); 10 unit tests
 
 ## 📋 Planned
 
@@ -263,9 +264,7 @@ These are explicitly out of scope, at least initially:
 ### Canvas Enhancements
 
 - **North orientation + rotation** — gardens and beds have a `facing` field but no concept of which direction is "up" on the canvas; add a north indicator (a compass rose overlay or a user-defined north arrow) so sun/shade reasoning aligns with the layout; separately, add a rotation field to `BedPlacement`/`PlantPlacement` (degrees, 0–359) so beds and plants can be angled on the canvas — `PlacementCanvas` would apply a `rotate()` SVG transform to each item; the backend schema already has `x`, `y`, `width`, `height` — rotation is an additive field requiring a migration and renderer update
-- **Canvas keyboard shortcuts (further)** — keyboard entry into canvas without mouse (tabIndex on container, Tab selects first item when none selected)
 - **Multi-select (remaining)** — rubber-band drag to select a region; group resize; group clone; these were deferred from the initial multi-select implementation
-- **Undo/redo** — `Ctrl+Z/Y` for placement actions (move, resize, place, delete); likely needs a local history stack in `PlacementCanvas` or a parent-level command pattern before API calls are made
 
 ### Authentication & Accounts
 
