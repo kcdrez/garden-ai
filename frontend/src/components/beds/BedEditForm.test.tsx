@@ -98,21 +98,8 @@ describe('BedEditForm', () => {
     );
   });
 
-  it('updates the facing field when a direction is selected', async () => {
-    const user = userEvent.setup();
+  it('does not show the orientation field (set via compass on canvas)', async () => {
     render(<BedEditForm bed={mockBed} open={true} onOpenChange={onOpenChange} />);
-
-    const facingSelect = await screen.findByRole('combobox', { name: /facing/i });
-    await user.selectOptions(facingSelect, 'N');
-
-    await user.click(screen.getByRole('button', { name: /save/i }));
-
-    await waitFor(() =>
-      expect(updateBed).toHaveBeenCalledWith(
-        'garden-1',
-        'bed-1',
-        expect.objectContaining({ facing: 'N' }),
-      ),
-    );
+    expect(screen.queryByRole('combobox', { name: /top of bed faces/i })).not.toBeInTheDocument();
   });
 });

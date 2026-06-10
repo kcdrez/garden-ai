@@ -7,7 +7,7 @@ const validBed = {
   width: '4',
   depth: '',
   unit: 'ft' as const,
-  facing: undefined,
+  orientation: '0',
   avgSunlightHours: '',
   soilType: '',
   notes: '',

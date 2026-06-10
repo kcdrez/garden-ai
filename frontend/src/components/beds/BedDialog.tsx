@@ -45,7 +45,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
     width: bed != null ? String(bed.width) : '',
     depth: bed?.depth != null ? String(bed.depth) : '',
     unit: bed?.unit ?? 'ft',
-    facing: bed?.facing ?? undefined,
+    orientation: String(bed?.orientation ?? 0),
     avgSunlightHours: bed?.avgSunlightHours != null ? String(bed.avgSunlightHours) : '',
     soilType: bed?.soilType ?? '',
     notes: bed?.notes ?? '',
@@ -67,7 +67,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
         width: parseInt(values.width, 10),
         depth: values.depth !== '' ? parseInt(values.depth, 10) : undefined,
         unit: values.unit,
-        facing: values.facing,
+        orientation: parseInt(values.orientation, 10),
         avgSunlightHours:
           values.avgSunlightHours !== '' ? parseInt(values.avgSunlightHours, 10) : undefined,
         soilType: values.soilType || undefined,
@@ -84,7 +84,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
       onOpenChange(false);
     },
     onError: (err) => {
-      applyServerErrors(err, form, ['name', 'length', 'width', 'depth', 'unit', 'facing', 'avgSunlightHours', 'soilType', 'notes']);
+      applyServerErrors(err, form, ['name', 'length', 'width', 'depth', 'unit', 'orientation', 'avgSunlightHours', 'soilType', 'notes']);
     },
   });
 
@@ -96,7 +96,7 @@ export default function BedDialog({ gardenId, bed, open, onOpenChange }: Props) 
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          <BedFormFields control={form.control} gardens={needsGardenPicker ? gardens : undefined} />
+          <BedFormFields control={form.control} gardens={needsGardenPicker ? gardens : undefined} showOrientation={!isEditing} />
           <FormRootError message={form.formState.errors.root?.message} />
 
           <DialogFooter>

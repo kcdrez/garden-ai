@@ -14,7 +14,7 @@ class GardenBedSerializer(serializers.ModelSerializer):
         model = GardenBed
         fields = [
             "id", "garden", "garden_name", "name", "length", "width", "depth", "unit",
-            "facing", "avg_sunlight_hours", "soil_type", "notes", "plant_count",
+            "orientation", "avg_sunlight_hours", "soil_type", "notes", "plant_count",
             "created_at", "updated_at",
         ]
         read_only_fields = ["id", "garden", "garden_name", "plant_count", "created_at", "updated_at"]

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CopyIcon, EditIcon, ArrowRightLeftIcon, ArrowUpRightIcon, ClipboardListIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { usePlantPlacementActions } from '@/hooks/usePlantPlacementActions';
 import { useBedFeaturePlacementActions } from '@/hooks/useBedFeaturePlacementActions';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUndoHistory } from '@/hooks/useUndoHistory';
+import { updateBed } from '@/api/beds';
 import { fetchCompanionHints } from '@/api/plants';
 import { queryKeys } from '@/lib/queryKeys';
 import { routes } from '@/lib/routes';
@@ -14,6 +16,7 @@ import { featureImage, featureEmoji, featureLabel, isCustomFeature } from '@/lib
 import { getErrorMessage } from '@/lib/errors';
 import type { GardenBed, GardenFeaturePlacement } from '@/types/gardens';
 import type { UserPlant } from '@/types/plants';
+import CompassRose from '@/components/shared/CompassRose';
 import PlaceOnBedCanvasDialog from '@/components/beds/PlaceOnBedCanvasDialog';
 import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
 import UserPlantDialog from '@/components/plants/dialogs/UserPlantDialog';
@@ -45,7 +48,27 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
   const [addFeatureOpen, setAddFeatureOpen] = useState(false);
   const [copiedPlacementId, setCopiedPlacementId] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const history = useUndoHistory();
+
+  const [localOrientation, setLocalOrientation] = useState(bed.orientation);
+  const orientationDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    setLocalOrientation(bed.orientation);
+  }, [bed.orientation]);
+
+  const orientationMutation = useMutation({
+    mutationFn: (orientation: number) => updateBed(gardenId, bedId, { orientation }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.beds.byGarden(gardenId) }),
+  });
+
+  function handleOrientationClick() {
+    const next = (localOrientation + 45) % 360;
+    setLocalOrientation(next);
+    clearTimeout(orientationDebounce.current);
+    orientationDebounce.current = setTimeout(() => orientationMutation.mutate(next), 600);
+  }
 
   const {
     placements,
@@ -496,6 +519,9 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           if (featureIds.has(id)) rotateFeature({ featureId: id, rotation });
           else rotatePlacement({ placementId: id, rotation });
         }}
+        toolbarCenter={
+          <CompassRose orientation={localOrientation} onClick={handleOrientationClick} />
+        }
         onUndo={history.undo}
         onRedo={history.redo}
         getMenuItems={getMenuItems}

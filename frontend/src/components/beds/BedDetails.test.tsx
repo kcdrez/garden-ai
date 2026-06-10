@@ -3,14 +3,9 @@ import { mockBed } from '@/test/fixtures';
 import BedDetails from './BedDetails';
 
 describe('BedDetails', () => {
-  it('renders nothing when the bed has no detail fields', () => {
+  it('renders nothing when the bed has no optional fields', () => {
     const { container } = render(<BedDetails bed={mockBed} />);
     expect(container).toBeEmptyDOMElement();
-  });
-
-  it('renders the facing direction', () => {
-    render(<BedDetails bed={{ ...mockBed, facing: 'N' }} />);
-    expect(screen.getByText(/faces north/i)).toBeInTheDocument();
   });
 
   it('renders average sunlight hours', () => {

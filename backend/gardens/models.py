@@ -27,24 +27,13 @@ class Garden(BaseModel):
 
 
 class GardenBed(BaseModel):
-    FACING_CHOICES = [
-        ("N", "North"),
-        ("NE", "Northeast"),
-        ("E", "East"),
-        ("SE", "Southeast"),
-        ("S", "South"),
-        ("SW", "Southwest"),
-        ("W", "West"),
-        ("NW", "Northwest"),
-    ]
-
     garden = models.ForeignKey(Garden, related_name="beds", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     length = models.FloatField()
     width = models.FloatField()
     depth = models.FloatField(null=True, blank=True)
     unit = models.CharField(max_length=2, choices=UNIT_CHOICES, default="ft")
-    facing = models.CharField(max_length=2, choices=FACING_CHOICES, null=True, blank=True)
+    orientation = models.SmallIntegerField(default=0)
     avg_sunlight_hours = models.PositiveSmallIntegerField(null=True, blank=True)
     soil_type = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)

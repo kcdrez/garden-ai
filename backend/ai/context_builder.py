@@ -23,10 +23,15 @@ def build_context(conversation: AIConversation) -> str:
     return _build_plant_context(conversation.plant)
 
 
+_ORIENTATION_LABELS = {
+    0: "North", 45: "Northeast", 90: "East", 135: "Southeast",
+    180: "South", 225: "Southwest", 270: "West", 315: "Northwest",
+}
+
+
 def _bed_meta(bed: GardenBed) -> str:
     parts = [f"{bed.length} {bed.unit} x {bed.width} {bed.unit}"]
-    if bed.facing:
-        parts.append(f"{bed.get_facing_display()}-facing")
+    parts.append(f"{_ORIENTATION_LABELS.get(bed.orientation, f'{bed.orientation}°')}-facing")
     if bed.avg_sunlight_hours:
         parts.append(f"{bed.avg_sunlight_hours} hrs sunlight")
     return " · ".join(parts)

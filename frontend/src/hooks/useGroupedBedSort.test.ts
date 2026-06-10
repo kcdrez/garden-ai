@@ -11,7 +11,7 @@ const makeBed = (id: string, name: string, gardenId = 'g1', createdAt = '2024-01
   width: 4,
   depth: null,
   unit: 'ft',
-  facing: null,
+  orientation: 0,
   avgSunlightHours: null,
   soilType: null,
   notes: null,
