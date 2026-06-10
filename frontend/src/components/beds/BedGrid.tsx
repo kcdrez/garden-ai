@@ -54,6 +54,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     createPlacement,
     movePlacement,
     resizePlacement,
+    rotatePlacement,
     removePlacement,
     clonePlant,
     deletePlant,
@@ -69,6 +70,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     createFeature,
     moveFeature,
     resizeFeature,
+    rotateFeature,
     removeFeature,
   } = useBedFeaturePlacementActions(gardenId, bedId);
 
@@ -114,6 +116,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     y: p.y,
     widthFt: p.width,
     heightFt: p.height,
+    rotation: p.rotation,
   }));
 
   const featureItems: CanvasItem[] = features.map((f) => ({
@@ -122,6 +125,7 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
     y: f.y,
     widthFt: f.width,
     heightFt: f.height,
+    rotation: f.rotation,
   }));
 
   const items: CanvasItem[] = [...plantItems, ...featureItems];
@@ -487,6 +491,10 @@ export default function BedGrid({ gardenId, bedId, bed, userPlants }: BedGridPro
           }
           if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
           else resizePlacement({ placementId: id, widthFt, heightFt });
+        }}
+        onRotate={(id, rotation) => {
+          if (featureIds.has(id)) rotateFeature({ featureId: id, rotation });
+          else rotatePlacement({ placementId: id, rotation });
         }}
         onUndo={history.undo}
         onRedo={history.redo}

@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-06-09 — ~2 hours
+
+**Completed:**
+
+- North orientation — `Garden.orientation` field (integer, 0–315° in 45° steps); compass rose pill above the garden canvas (sticky below navbar, centered, with rotating needle + `↻` icon); click cycles orientation 45° clockwise with 600ms debounce; `[`/`]` keyboard shortcuts rotate selected canvas items 45° steps; `rotation` field on `BedPlacement`, `PlantPlacement`, `GardenFeaturePlacement` with SVG transform; resize handle hidden when item is rotated
+- Canvas toolbar layout — zoom buttons moved to right column, `toolbarCenter` slot for optional centered content (used by garden canvas for compass); entire toolbar row is sticky below navbar
+- Sticky navbar — `sticky top-0 z-50 bg-background`; `--spacing-navbar: 3.5rem` CSS token in `@theme inline` so all sticky-below-navbar components reference one source of truth
+- Garden create form — "Top of layout faces" field (orientation) with clean direction names; hidden in edit form (compass rose on canvas is the right tool there)
+- `Garden.orientation` naming — renamed from `north_facing` (migration 0010); `GardenBed.facing` deprecation plan documented in CLAUDE.md with all callsites that need updating before removal
+
+**Next up:** Demo seed data — management command seeding rich multi-season fixture to showcase calendar, companion planting, and canvas features for portfolio visitors
+
+---
+
 ## 2026-06-08 — ~0.5 hours
 
 **Completed:**

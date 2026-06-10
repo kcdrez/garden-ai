@@ -72,7 +72,7 @@ const mockDeleteBed = vi.mocked(deleteBed);
 const mockUpdateBed = vi.mocked(updateBed);
 
 const garden = { ...mockGarden, length: 20, width: 20, unit: 'ft' as const };
-const placement = { id: 'bp-1', bed: 'bed-1', garden: 'garden-1', x: 0, y: 0, bedWidthFt: 4, bedHeightFt: 4, createdAt: '', updatedAt: '' };
+const placement = { id: 'bp-1', bed: 'bed-1', garden: 'garden-1', x: 0, y: 0, bedWidthFt: 4, bedHeightFt: 4, rotation: 0, createdAt: '', updatedAt: '' };
 
 function renderGardenGrid(beds = [mockBed]) {
   return render(

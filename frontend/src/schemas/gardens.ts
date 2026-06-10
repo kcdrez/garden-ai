@@ -10,6 +10,7 @@ export const gardenSchema = z.object({
   length: optPosInt,
   width: optPosInt,
   unit: z.enum(bedUnitValues),
+  orientation: z.string(),
 });
 
 export type GardenFormValues = z.infer<typeof gardenSchema>;

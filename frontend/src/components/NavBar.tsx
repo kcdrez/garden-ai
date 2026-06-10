@@ -22,7 +22,7 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="flex items-center px-4 py-2 border-b border-border">
+    <nav className="sticky top-0 z-50 flex items-center px-4 py-2 border-b border-border bg-background">
       <div className="flex items-center gap-2 mr-auto">
         <Link to={routes.home()} className="font-bold text-foreground no-underline">
           Garden AI

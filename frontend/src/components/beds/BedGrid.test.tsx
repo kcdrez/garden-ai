@@ -100,7 +100,7 @@ const mockDeleteUserPlant = vi.mocked(deleteUserPlant);
 const mockFetchCompanionHints = vi.mocked(fetchCompanionHints);
 
 const bed = { ...mockBed, length: 8, width: 4, unit: 'ft' as const };
-const placement = { id: 'pl-1', userPlant: 'plant-1', bed: 'bed-1', x: 0, y: 0, width: 1.5, height: 1.5, createdAt: '', updatedAt: '' };
+const placement = { id: 'pl-1', userPlant: 'plant-1', bed: 'bed-1', x: 0, y: 0, width: 1.5, height: 1.5, rotation: 0, createdAt: '', updatedAt: '' };
 
 function renderBedGrid(userPlants = [mockUserPlant]) {
   return render(

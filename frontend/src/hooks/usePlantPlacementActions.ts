@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  fetchPlacements, createPlacement, movePlacement, resizePlacement,
+  fetchPlacements, createPlacement, movePlacement, resizePlacement, rotatePlacement,
   deletePlacement, cloneUserPlant, deleteUserPlant,
 } from '@/api/plants';
 import { makeOptimisticMutation } from '@/lib/mutations';
@@ -47,6 +47,17 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
     ),
   });
 
+  const rotateMutation = useMutation({
+    mutationFn: ({ placementId, rotation }: { placementId: string; rotation: number }) =>
+      rotatePlacement(gardenId, bedId, placementId, rotation),
+    ...makeOptimisticMutation<PlantPlacement, { placementId: string; rotation: number }>(
+      queryClient, queryKey,
+      (vars) => vars.placementId,
+      (item, { rotation }) => ({ ...item, rotation }),
+      (err) => setMutationError(getErrorMessage(err)),
+    ),
+  });
+
   const removePlacementMutation = useMutation({
     mutationFn: ({ placementId }: { placementId: string }) =>
       deletePlacement(gardenId, bedId, placementId),
@@ -88,6 +99,7 @@ export function usePlantPlacementActions(gardenId: string, bedId: string) {
     ) => createMutation.mutate(args, { onSuccess }),
     movePlacement: (args: { placementId: string; x: number; y: number }) => moveMutation.mutate(args),
     resizePlacement: (args: { placementId: string; widthFt: number; heightFt: number }) => resizeMutation.mutate(args),
+    rotatePlacement: (args: { placementId: string; rotation: number }) => rotateMutation.mutate(args),
     removePlacement: (placementId: string) => removePlacementMutation.mutate({ placementId }),
     clonePlant: (args: { plantId: string; placement?: { x: number; y: number; width: number; height: number } }) =>
       cloneUserPlantMutation.mutate(args),

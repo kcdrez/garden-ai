@@ -1,13 +1,14 @@
 import type { Control } from 'react-hook-form';
 import type { GardenFormValues } from '@/schemas/gardens';
-import { BED_UNITS } from '@/types/gardens';
+import { BED_UNITS, NORTH_FACINGS } from '@/types/gardens';
 import { TextField, NumberField, TextAreaField, NativeSelectField } from '@/components/ui/form-fields';
 
 type Props = {
   control: Control<GardenFormValues>;
+  showNorthFacing?: boolean;
 };
 
-export default function GardenFormFields({ control }: Props) {
+export default function GardenFormFields({ control, showNorthFacing = false }: Props) {
   return (
     <>
       <TextField control={control} name="name" label="Name" placeholder="My Garden" />
@@ -21,6 +22,13 @@ export default function GardenFormFields({ control }: Props) {
           ))}
         </NativeSelectField>
       </div>
+      {showNorthFacing && (
+        <NativeSelectField control={control} name="orientation" label="Top of layout faces">
+          {NORTH_FACINGS.map((f) => (
+            <option key={f.value} value={String(f.value)}>{f.label}</option>
+          ))}
+        </NativeSelectField>
+      )}
     </>
   );
 }

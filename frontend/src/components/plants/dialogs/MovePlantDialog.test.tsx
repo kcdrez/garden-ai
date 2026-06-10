@@ -86,7 +86,7 @@ describe('MovePlantDialog', () => {
   it('creates a new bed and returns to the pick step', async () => {
     const user = userEvent.setup();
     vi.mocked(fetchGardens).mockResolvedValue([
-      { id: 'garden-1', name: 'Front Yard', description: null, length: null, width: null, unit: 'ft', bedCount: 1, createdAt: '', updatedAt: '', owner: 1 },
+      { id: 'garden-1', name: 'Front Yard', description: null, length: null, width: null, unit: 'ft', orientation: 0, bedCount: 1, createdAt: '', updatedAt: '', owner: 1 },
     ]);
     render(<MovePlantDialog userPlant={mockUserPlant} open onOpenChange={onOpenChange} />);
 

@@ -190,7 +190,7 @@ export function DraggableItem({
       onLostPointerCapture={handleLostPointerCapture}
     >
       <g
-        transform={`translate(${displayX}, ${displayY})`}
+        transform={`translate(${displayX}, ${displayY}) rotate(${item.rotation ?? 0}, ${size.w / 2}, ${size.h / 2})`}
         opacity={isDragging || isResizing ? 0.65 : 1}
       >
         {label && <title>{label}</title>}
@@ -214,7 +214,7 @@ export function DraggableItem({
                 animation: 'marching-ants 1s linear infinite',
               }}
             />
-            {onResize && !isInGroup && (
+            {onResize && !isInGroup && !item.rotation && (
               <circle
                 data-testid="resize-handle"
                 cx={size.w} cy={size.h} r={handleR}

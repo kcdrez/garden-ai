@@ -4,6 +4,7 @@ export interface CanvasItem {
   y: number;
   widthFt: number;
   heightFt: number;
+  rotation?: number;
 }
 
 export interface CanvasMenuItem {

@@ -118,6 +118,10 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **Garden** `timezone` field _(planned)_ — IANA timezone name (e.g. "America/Denver"); when present, use this instead of the user's timezone for observation dates since the garden's physical location is the correct reference point.
 
+**Garden** `orientation` field — integer (0–315, multiples of 45); the compass direction that "up" on the canvas layout corresponds to in the real world. 0 = north is up (standard), 90 = east is up, etc. Displayed as a compass rose above the garden canvas; editable via the create form ("Top of layout faces") and by clicking the compass rose.
+
+**GardenBed** `facing` field _(planned deprecation)_ — currently a string choice (N/NE/E/SE/S/SW/W/NW) describing the direction the bed faces for sun/shade reasoning. This is conceptually the same information as `Garden.orientation` but tracked separately and in a different format, which means they can conflict. The intended end state is to replace `GardenBed.facing` with a numeric `GardenBed.orientation` field (same degrees format as `Garden.orientation`) and derive sun/shade reasoning from canvas position + garden orientation rather than a manually-declared field. Removing `facing` requires: migration + data conversion, updates to `GardenBedSerializer`, `BedFormFields`, `BedDetails`, and `ai/context_builder.py` (which currently calls `bed.get_facing_display()`). Do not remove until all those callsites are updated.
+
 **Plant catalog** is a global shared catalog (54 plants, seeded via data migration). All users reference the same entries. A hybrid global + user-created catalog is deferred unless needed.
 
 **PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
@@ -254,6 +258,7 @@ These are explicitly out of scope, at least initially:
 - Canvas selection model — replaced hover-triggered SVG controls (`PlacementItemControls` removed) with click-to-select; floating HTML toolbar shows `primary` items inline (icon + label) and overflow in a `···` dropdown; `primary?: boolean` flag on `CanvasMenuItem`; deselects on background or outside-container click; toolbar snaps to item's new position after drag; 6px drag threshold prevents accidental drags; resize handle is a BR corner circle on the selection ring (sized `Math.min(0.05 / zoom, shortestDimension * 0.125)`)
 - Canvas keyboard shortcuts — Delete/Backspace removes selected item; Arrow nudges 0.25ft, Shift+Arrow nudges 1ft (full grid cell); Escape deselects; Tab/Shift+Tab cycles items in visual order (top-to-bottom then left-to-right); `=`/`+`/`-` zoom in/out; single-key menu shortcuts (e/r/v/o/d/m for plants, e/r/v for beds) with `shortcut?` field on `CanvasMenuItem`; shortcut hints in toolbar and overflow dropdown; overflow menu bug fixed (Radix portal clicks were dismissed before firing)
 - Canvas undo/redo — `Ctrl+Z/Y` (also Ctrl+Shift+Z) undoes and redoes move and resize actions on both bed and garden canvases; `useUndoHistory` ref-based stack with `push`/`undo`/`redo`; group drags pushed as a single batch command via `onGroupMoveEnd` prop on `PlacementCanvas`; create/delete not tracked (require re-POST to recover an ID); 10 unit tests
+- North orientation + item rotation — `Garden.orientation` (0–315°, 45° steps); compass rose pill above garden canvas (sticky, centered, debounced click); `rotation` field on all three placement types; SVG rotate transform on canvas items; `[`/`]` shortcuts; sticky navbar; `--spacing-navbar` CSS token; `GardenBed.facing` deprecation documented
 
 ## 📋 Planned
 
@@ -263,8 +268,9 @@ These are explicitly out of scope, at least initially:
 
 ### Canvas Enhancements
 
-- **North orientation + rotation** — gardens and beds have a `facing` field but no concept of which direction is "up" on the canvas; add a north indicator (a compass rose overlay or a user-defined north arrow) so sun/shade reasoning aligns with the layout; separately, add a rotation field to `BedPlacement`/`PlantPlacement` (degrees, 0–359) so beds and plants can be angled on the canvas — `PlacementCanvas` would apply a `rotate()` SVG transform to each item; the backend schema already has `x`, `y`, `width`, `height` — rotation is an additive field requiring a migration and renderer update
+- **Canvas rotation remaining** — `BedPlacement`, `PlantPlacement`, and `GardenFeaturePlacement` have a `rotation` field (0–359°); items rotate visually on the canvas via SVG transform; resize is disabled when an item is rotated (resize + rotation coordinate math is deferred); `[`/`]` keyboard shortcuts rotate 45° steps; undo/redo not yet wired for rotation (only move/resize are tracked)
 - **Multi-select (remaining)** — rubber-band drag to select a region; group resize; group clone; these were deferred from the initial multi-select implementation
+- **`useDebounce` hook + arrow key nudge batching** — extract a generic `useDebounce(fn, delay)` hook into `src/hooks/`; use it for compass orientation clicks (currently uses inline `useRef` + `setTimeout`) and arrow key nudges (`usePlacementKeyboard`); nudge debouncing requires deciding whether rapid keypresses should collapse into one undo step (debounced) or remain one step per press (current) — resolve before wiring
 
 ### Authentication & Accounts
 

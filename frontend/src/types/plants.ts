@@ -71,6 +71,7 @@ export type PlantPlacement = BasePlacement & {
   bed: string;
   width: number;
   height: number;
+  rotation: number;
 };
 
 export interface CalendarObservation {

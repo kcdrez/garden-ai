@@ -15,7 +15,7 @@ vi.mock('./client', () => ({ api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(),
 const gardenId = 'garden-1';
 const bedId = 'bed-1';
 const featureId = 'feat-1';
-const feature = { id: featureId, objectType: 'bench', shape: 'rect', label: 'Bench', x: 0, y: 0, width: 2, height: 1 };
+const feature = { id: featureId, objectType: 'bench', shape: 'rect', label: 'Bench', x: 0, y: 0, width: 2, height: 1, rotation: 0, createdAt: '', updatedAt: '' };
 
 describe('fetchGardenFeatures', () => {
   it('calls GET /gardens/:id/features/ and returns data', async () => {

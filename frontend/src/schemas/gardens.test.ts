@@ -1,6 +1,6 @@
 import { gardenSchema } from './gardens';
 
-const valid = { name: 'Front Yard', description: '', length: '10', width: '8', unit: 'ft' as const };
+const valid = { name: 'Front Yard', description: '', length: '10', width: '8', unit: 'ft' as const, orientation: '0' };
 
 describe('gardenSchema', () => {
   it('accepts valid garden data', () => {

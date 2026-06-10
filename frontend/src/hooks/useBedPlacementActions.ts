@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchBedPlacements, createBedPlacement, moveBedPlacement, deleteBedPlacement } from '@/api/beds';
+import { fetchBedPlacements, createBedPlacement, moveBedPlacement, rotateBedPlacement, deleteBedPlacement } from '@/api/beds';
 import { makeOptimisticMutation } from '@/lib/mutations';
 import { getErrorMessage } from '@/lib/errors';
 import { queryKeys } from '@/lib/queryKeys';
@@ -33,6 +33,17 @@ export function useBedPlacementActions(gardenId: string) {
     ),
   });
 
+  const rotateMutation = useMutation({
+    mutationFn: ({ placementId, rotation }: { placementId: string; rotation: number }) =>
+      rotateBedPlacement(gardenId, placementId, rotation),
+    ...makeOptimisticMutation<BedPlacement, { placementId: string; rotation: number }>(
+      queryClient, queryKey,
+      (vars) => vars.placementId,
+      (item, { rotation }) => ({ ...item, rotation }),
+      (err) => setMutationError(getErrorMessage(err)),
+    ),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (placementId: string) => deleteBedPlacement(gardenId, placementId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
@@ -46,6 +57,7 @@ export function useBedPlacementActions(gardenId: string) {
     createPlacement: (args: { bedId: string; x: number; y: number }, onSuccess?: () => void) =>
       createMutation.mutate(args, { onSuccess }),
     movePlacement: (args: { placementId: string; x: number; y: number }) => moveMutation.mutate(args),
+    rotatePlacement: (args: { placementId: string; rotation: number }) => rotateMutation.mutate(args),
     removePlacement: (placementId: string) => deleteMutation.mutate(placementId),
     isCreating: createMutation.isPending,
     createFailed: createMutation.isError,
