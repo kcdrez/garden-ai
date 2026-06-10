@@ -1,0 +1,51 @@
+# ✅ Completed Features
+
+> High-level deliverables only. Implementation detail lives in the code and git history.
+
+- User authentication — registration, login/logout, JWT tokens, silent refresh, protected routes
+- Dark mode toggle — persisted to localStorage, synced with OS preference
+- Full garden CRUD — list, detail page, create, edit, delete; responsive card grid
+- Full garden bed CRUD — nested under gardens; detail page with metadata, layout grid, and plant list
+- Full plant management — add/edit/delete plants per bed; move between beds; plant detail page (`/plants/:plantId`) with full timeline
+- Plant catalog — global seeded catalog of 41 plants; searchable/filterable picker UI
+- Observation timeline — per-plant event log (status changes, transplants, harvest, pest, weather, disease, general); auto-logged on status change and bed move
+- Visual canvas layouts — `BedGrid` for placing plants in a bed; `GardenGrid` for placing beds in a garden; shared `PlacementCanvas` SVG component; freeform drag-and-drop via pointer capture with items positioned in feet coordinates; click-to-place dialog fallback; migrated from prior grid-based `@dnd-kit/core` system
+- All-entity flat list pages — `/beds` and `/plants` with full CRUD actions
+- Dockerized local dev — frontend, backend, PostgreSQL via `docker compose up -d`
+- Deployed to production — frontend on Vercel, backend + DB on Railway
+- Backend tests — 86 tests at 99% coverage across all apps (gardens, plants, users); CI via GitHub Actions blocks merges on failure and enforces a 90% coverage floor
+- Frontend unit tests — Vitest + React Testing Library; CI enforces 85% statements/functions/lines and 80% branches; tests colocated with components
+- CI lint + type check gates — `ruff` (backend) and `eslint` + `tsc` (frontend) run on every PR via GitHub Actions
+- Inline editing on detail pages — edit forms open in a slide-in Sheet drawer on Garden, Bed, and Plant detail pages; no page layout shift; `MovePlantDialog` retained as a dialog
+- Observation editing — inline edit form in the timeline; edits `observed_date` and `note`; type is locked (delete and re-add for misclicks); note is editable on all types including `status_change` and `transplant`
+- Forgot password — email-based reset flow; Resend SMTP (kcdrez.com domain); login accepts username or email; full test coverage
+- Plant UX improvements — bulk create (quantity spinner, N records per submit), add-new-plant wizard step in placement dialog, observation date bug fixed (auto-logged observation uses `startDate` instead of today)
+- Canvas context menu — `...` hover button on placement items in `BedGrid` and `GardenGrid`; BedGrid: Edit/Move/Delete (deleteUserPlant with confirm); GardenGrid: Go to bed / Remove from layout; SVG button with virtual anchor pattern (menu rendered outside SVG, positioned via `getBoundingClientRect`)
+- User profile page — `/profile` with inline edit form (first name, last name, email, timezone); backend `UserProfileSerializer` combines `User` + `UserProfile` fields in one endpoint; NavBar account dropdown links to it
+- AI integration — OpenAI-powered chat at garden/bed/plant scope; `AIConversation` + `AIMessage` models; context builder serializes garden hierarchy into system prompt; conversation history (last 20 msgs); global floating chat widget with per-entity history and markdown rendering
+- AI agentic actions — chat widget can execute real writes: `add_plant_to_bed` (bed scope) and `change_plant_status` (bed + plant scope); OpenAI tool call loop in `ai_service.py`; all tool execution scoped to `request.user`; context includes entity IDs and full plant catalog; confirmation chip shown in chat after action; queries invalidated automatically on success
+- Clone a plant — duplicate a `UserPlant` (same bed, catalog entry, status, start date, notes); backend `clone` action on `UserPlantViewSet`; available from canvas context menu, bed plant list, all-plants list, and plant detail page; `usePlantActions` hook centralises clone/delete/edit/move logic shared by `PlantItem` and `PlantDetailHeader`
+- Canvas context menu hit area fix — SVG `<g>` wrapper on the `...` button was creating a bounding-box hit area larger than the visible circle; fixed by removing the wrapper and conditionally rendering flat sibling circles with no explicit `pointer-events`
+- Canvas garden features — `GardenFeaturePlacement` model; 15 object types (shed, bench, arbor, trellis, fence, compost, rain barrel, cold frame, fountain, bird bath, pot, tomato cage, row cover, custom rect/circle); image assets in `src/assets/garden_objects/`; amber solid-stroke rect/circle rendering; drag/resize with optimistic snap-back; `PlaceOnCanvasDialog` and `PlaceOnBedCanvasDialog` wizards with choose step; "Add Feature" standalone buttons on both canvases; Delete with confirmation; keyboard shortcut `Del` consistent with beds/plants
+- Bed detail refactor — `PlantListSection` removed; bed detail page is canvas-only; `PlantObservationsSheet` (Sheet wrapping `PlantTimeline`) opens from canvas context menu "Observations" item preserving spatial context; canvas menu extended with View Details, Observations, Remove from Bed, and Clone (auto-places clone adjacent to source at `x + width`, clamped by backend); unplaced plants section promoted with `h2` heading, zero state message, "Create Plant" button, and per-chip actions menu (Edit / Clone / Move to Another Bed / Delete)
+- Resize plant on canvas — drag handle in bottom-right corner of each placed item; dragging resizes the placement live and commits on release; plant visual is an ellipse that fills the bounding box; `lostpointercapture` handles out-of-window release; backend PATCH already supported width/height
+- Observation list on `/plants` — "Observations" action in `CardActionsMenu` opens `PlantObservationsSheet` per plant without navigating away from the list
+- Plant canvas icons — `plantEmoji()` maps 41 catalog plants to emoji with category fallbacks; `plantImage()` supports custom PNG assets (drop in `src/assets/garden_icons/`, add to `PLANT_IMAGES` in `src/lib/plants.ts`); Ideogram prompt and priority list of shared-emoji plants documented in the file; tomato and squash done
+- Sort order for gardens and beds — dropdown on AllGardens, GardenDetail, and AllBeds with Name A–Z/Z–A, Date Created Newest/Oldest, and Custom drag order; `useSortedList` hook with localStorage persistence; `SortableGrid<T>` generic component owns all DnD boilerplate (DndContext + SortableContext + SortableCard); `@dnd-kit/sortable` added
+- E2E tests — Playwright against the full Docker stack (frontend + backend + DB); 18 tests covering auth, gardens, beds, and plants (create/edit/delete/place on canvas/observe); setup project replaces `globalSetup` so VS Code extension triggers seed + auth before individual tests; CI runs on every PR and merge to `main`
+- Semantic versioning — FE and BE version numbers auto-incremented on merge to `main` via `semantic-release` and conventional commits; FE version from `package.json` via Vite env var, BE from `VERSION` file at `/api/version/`; both displayed in the app footer
+- AI rate limiting — 20 messages/user/day enforced via DB count in `AIConversationViewSet.message`; returns 429 with `detail` message; frontend detects 429 and disables input with a specific message; resets on UTC calendar day
+- Companion planting indicators — `CompanionPlanting` model (beneficial/harmful, canonical pair ordering via check constraint); 75-pair curated seed data rated ≥4/5 confidence; `companion-hints` endpoint scoped to plants in the current bed; colored rings on BedGrid (green/red/gradient); compatibility summary panel below canvas; cache invalidation on plant create/clone/delete
+- Planting calendar — `/calendar` Gantt-style timeline; year picker; plants grouped by bed with clickable links; bars segmented by lifecycle phase (status_change observations); event dots (harvest, transplant, pest, disease, weather, note, removed); today line; `GET /api/calendar/` endpoint; `startDate` auto-synced from earliest status_change observation via Django signal + data migration; `STATUS_COLOR_CONFIG` single source of truth for pill and bar colors
+- Canvas multi-select — Shift/Cmd+click to toggle items; group drag moves all selected together; group delete with single confirm; "N selected" toolbar; marching ants animation on selection ring; selection ring and resize handle color fixed (`var(--primary)` instead of broken `hsl(var(--primary))`)
+- Canvas `?` shortcut overlay — `CanvasShortcutsDialog` component; `?` key + help button; canvas UX fixes: companion indicator on container circle stroke, nudge 0.1ft, drag auto-selects
+- Canvas zoom — `PlacementCanvas` has zoom controls; SVG CSS-scales inside an `overflow-x-auto` container; zoom persists to localStorage per canvas via `storageKey` prop
+- Canvas UX polish — "Remove From Layout" label; hover tooltip via `getItemLabel` prop; bed context menu in `GardenGrid` extended with Edit and Delete
+- Garden detail refactor — canvas-only layout; "Add Bed" + "Unplaced Beds" promoted into `GardenGrid`
+- Canvas + form UX polish — variety text label inside plant ellipse; `StatusPicker` pill component; `PlantPicker` shows plant image/emoji; zoom levels updated with smart bed-area default; BedGrid edit split from create; "Clone" renamed "Duplicate" everywhere
+- Resize beds on garden canvas — drag handle updates bed dimensions directly; `GardenBed` dimensions as `FloatField`
+- Canvas selection model — click-to-select; floating HTML toolbar; deselects on background click; 6px drag threshold
+- Canvas keyboard shortcuts — Delete/Backspace, Arrow nudge, Escape, Tab/Shift+Tab, zoom keys, single-key menu shortcuts
+- Canvas undo/redo — `Ctrl+Z/Y` for move and resize on both canvases; 10 unit tests
+- North orientation + item rotation — `Garden.orientation` (0–315°, 45° steps); compass rose on garden canvas; `rotation` field on all three placement types; `[`/`]` shortcuts; sticky navbar; `--spacing-navbar` CSS token
+- Bed orientation — replaced `GardenBed.facing` with `GardenBed.orientation` (numeric 0–315°); compass rose on bed canvas; data migration; AI context builder updated
