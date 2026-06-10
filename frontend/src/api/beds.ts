@@ -7,7 +7,7 @@ type BedPayload = {
   width: number;
   depth?: number;
   unit: string;
-  facing?: string;
+  orientation?: number;
   avgSunlightHours?: number;
   soilType?: string;
   notes?: string;

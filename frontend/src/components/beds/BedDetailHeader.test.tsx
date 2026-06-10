@@ -43,14 +43,12 @@ describe('BedDetailHeader', () => {
 
   it('does not show the details card when bed has no optional fields', () => {
     render(<BedDetailHeader bed={mockBed} />);
-
     expect(screen.queryByText(/bed details/i)).not.toBeInTheDocument();
   });
 
   it('shows the details card when bed has optional fields', () => {
     const bedWithDetails = { ...mockBed, soilType: 'loamy' };
     render(<BedDetailHeader bed={bedWithDetails} />);
-
     expect(screen.getByText('Bed Details: loamy')).toBeInTheDocument();
   });
 

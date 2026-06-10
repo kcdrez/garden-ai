@@ -1,6 +1,5 @@
-import { CompassIcon, SunIcon, ShovelIcon, NotebookPenIcon } from 'lucide-react';
+import { SunIcon, ShovelIcon, NotebookPenIcon } from 'lucide-react';
 import type { GardenBed } from '@/types/gardens';
-import { facingLabel, bedHasDetails } from '@/lib/beds';
 
 type Props = {
   bed: GardenBed;
@@ -8,16 +7,11 @@ type Props = {
 };
 
 export default function BedDetails({ bed, showNotes = true }: Props) {
-  if (!bedHasDetails(bed, showNotes)) return null;
+  const hasContent = bed.avgSunlightHours != null || !!bed.soilType || (showNotes && !!bed.notes);
+  if (!hasContent) return null;
 
   return (
     <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-      {bed.facing && (
-        <span className="flex items-center gap-2">
-          <CompassIcon className="size-3.5 shrink-0" />
-          Faces {facingLabel(bed.facing)}
-        </span>
-      )}
       {bed.avgSunlightHours != null && (
         <span className="flex items-center gap-2">
           <SunIcon className="size-3.5 shrink-0" />

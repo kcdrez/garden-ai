@@ -34,7 +34,7 @@ export const mockBed: GardenBed = {
   width: 4,
   depth: null,
   unit: 'ft',
-  facing: null,
+  orientation: 0,
   avgSunlightHours: null,
   soilType: null,
   notes: null,

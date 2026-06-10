@@ -1,4 +1,4 @@
-import { BED_FACINGS, type Garden, type GardenBed } from '@/types/gardens';
+import { NORTH_FACINGS, type Garden, type GardenBed } from '@/types/gardens';
 
 export type BedsByGarden = { gardenId: string; gardenName: string; beds: GardenBed[] }[];
 
@@ -23,12 +23,12 @@ export function formatDimensions(bed: GardenBed): string {
   return `${parts.join(' × ')} ${bed.unit}`;
 }
 
-export function facingLabel(value: string): string {
-  return BED_FACINGS.find((f) => f.value === value)?.label ?? value;
+export function orientationLabel(degrees: number): string {
+  return NORTH_FACINGS.find((f) => f.value === degrees)?.label ?? `${degrees}°`;
 }
 
 export function bedHasDetails(bed: GardenBed, includeNotes = true): boolean {
-  return !!(bed.facing || bed.avgSunlightHours != null || bed.soilType || (includeNotes && bed.notes));
+  return !!(bed.avgSunlightHours != null || bed.soilType || (includeNotes && bed.notes));
 }
 
 const UNIT_TO_FEET: Record<string, number> = {

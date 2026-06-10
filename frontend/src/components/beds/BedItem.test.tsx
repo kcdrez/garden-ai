@@ -28,7 +28,7 @@ vi.mock('@/components/beds/BedDialog', () => ({
 }));
 
 vi.mock('@/components/beds/BedDetails', () => ({
-  default: ({ bed }: { bed: GardenBed }) => <div data-testid="bed-details">{bed.name}</div>,
+  default: () => <div data-testid="bed-details">details</div>,
 }));
 
 describe('BedItem', () => {
@@ -52,13 +52,12 @@ describe('BedItem', () => {
     expect(screen.getByText('3 plants')).toBeInTheDocument();
   });
 
-  it('renders BedDetails when the bed has details', () => {
-    const bedWithDetails: GardenBed = { ...mockBed, facing: 'N' };
-    render(<BedItem gardenId="garden-1" bed={bedWithDetails} />);
+  it('renders BedDetails when the bed has optional fields', () => {
+    render(<BedItem gardenId="garden-1" bed={{ ...mockBed, avgSunlightHours: 6 }} />);
     expect(screen.getByTestId('bed-details')).toBeInTheDocument();
   });
 
-  it('does not render BedDetails when the bed has no details', () => {
+  it('does not render BedDetails when the bed has no optional fields', () => {
     render(<BedItem gardenId="garden-1" bed={mockBed} />);
     expect(screen.queryByTestId('bed-details')).not.toBeInTheDocument();
   });

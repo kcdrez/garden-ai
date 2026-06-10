@@ -32,18 +32,6 @@ export const BED_UNITS = [
 
 export type BedUnit = typeof BED_UNITS[number]['value'];
 
-export const BED_FACINGS = [
-  { value: 'N', label: 'North' },
-  { value: 'NE', label: 'Northeast' },
-  { value: 'E', label: 'East' },
-  { value: 'SE', label: 'Southeast' },
-  { value: 'S', label: 'South' },
-  { value: 'SW', label: 'Southwest' },
-  { value: 'W', label: 'West' },
-  { value: 'NW', label: 'Northwest' },
-] as const;
-
-export type BedFacing = typeof BED_FACINGS[number]['value'];
 
 export type BasePlacement = {
   id: string;
@@ -86,7 +74,7 @@ export type GardenBed = {
   width: number;
   depth: number | null;
   unit: BedUnit;
-  facing: BedFacing | null;
+  orientation: number;
   avgSunlightHours: number | null;
   soilType: string | null;
   notes: string | null;

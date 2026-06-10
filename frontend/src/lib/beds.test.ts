@@ -1,13 +1,12 @@
 import { mockBed, mockGarden } from '@/test/fixtures';
 import {
   formatDimensions,
-  facingLabel,
+  orientationLabel,
   bedGridDimensions,
   gardenGridDimensions,
   bedPlacementDimensions,
   bedHasDetails,
   groupByGarden,
-
   toFeet,
   fromFeet,
 } from './beds';
@@ -23,13 +22,15 @@ describe('formatDimensions', () => {
   });
 });
 
-describe('facingLabel', () => {
-  it('returns the label for a known facing value', () => {
-    expect(facingLabel('N')).toBe('North');
+describe('orientationLabel', () => {
+  it('returns the label for a known orientation value', () => {
+    expect(orientationLabel(0)).toBe('North');
+    expect(orientationLabel(90)).toBe('East');
+    expect(orientationLabel(180)).toBe('South');
   });
 
-  it('returns the raw value when the facing is not in the list', () => {
-    expect(facingLabel('unknown_direction')).toBe('unknown_direction');
+  it('returns degrees string for an unknown value', () => {
+    expect(orientationLabel(37)).toBe('37°');
   });
 });
 
@@ -81,8 +82,8 @@ describe('bedHasDetails', () => {
     expect(bedHasDetails(mockBed)).toBe(false);
   });
 
-  it('returns true when the bed has a facing', () => {
-    expect(bedHasDetails({ ...mockBed, facing: 'N' })).toBe(true);
+  it('returns true when the bed has sunlight hours', () => {
+    expect(bedHasDetails({ ...mockBed, avgSunlightHours: 6 })).toBe(true);
   });
 
   it('returns true when the bed has notes and includeNotes is true (default)', () => {
