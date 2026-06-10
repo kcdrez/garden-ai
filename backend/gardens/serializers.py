@@ -135,7 +135,10 @@ class BedPlacementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BedPlacement
-        fields = ["id", "bed", "garden", "x", "y", "rotation", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
+        fields = [
+            "id", "bed", "garden", "x", "y", "rotation",
+            "bed_width_ft", "bed_height_ft", "created_at", "updated_at",
+        ]
         read_only_fields = ["id", "garden", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
 
     def validate_bed(self, value):

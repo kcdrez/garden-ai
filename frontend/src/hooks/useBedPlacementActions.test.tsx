@@ -19,6 +19,7 @@ const placement = {
   y: 0,
   bedWidthFt: 4,
   bedHeightFt: 4,
+  rotation: 0,
   createdAt: '',
   updatedAt: '',
 };

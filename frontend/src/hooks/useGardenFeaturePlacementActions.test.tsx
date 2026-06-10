@@ -20,6 +20,7 @@ const feature = {
   y: 0,
   width: 3,
   height: 2,
+  rotation: 0,
   createdAt: '',
   updatedAt: '',
 };

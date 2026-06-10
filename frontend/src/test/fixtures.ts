@@ -18,6 +18,7 @@ export const mockGarden: Garden = {
   length: null,
   width: null,
   unit: 'ft',
+  orientation: 0,
   bedCount: 0,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
