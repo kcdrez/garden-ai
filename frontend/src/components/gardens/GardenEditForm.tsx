@@ -31,6 +31,7 @@ const defaultValues = (garden: Garden): GardenFormValues => ({
   length: garden.length != null ? String(garden.length) : '',
   width: garden.width != null ? String(garden.width) : '',
   unit: garden.unit ?? 'ft',
+  orientation: String(garden.orientation ?? 0),
 });
 
 export default function GardenEditForm({ garden, open, onOpenChange }: Props) {
@@ -52,6 +53,7 @@ export default function GardenEditForm({ garden, open, onOpenChange }: Props) {
         length: values.length ? parseInt(values.length, 10) : null,
         width: values.width ? parseInt(values.width, 10) : null,
         unit: values.unit,
+        orientation: parseInt(values.orientation, 10),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.gardens.list() });

@@ -31,6 +31,7 @@ const defaultValues = (garden?: Garden): GardenFormValues => ({
   length: garden?.length != null ? String(garden.length) : '',
   width: garden?.width != null ? String(garden.width) : '',
   unit: garden?.unit ?? 'ft',
+  orientation: String(garden?.orientation ?? 0),
 });
 
 export default function GardenDialog({ garden, open, onOpenChange }: Props) {
@@ -53,6 +54,7 @@ export default function GardenDialog({ garden, open, onOpenChange }: Props) {
         length: values.length ? parseInt(values.length, 10) : null,
         width: values.width ? parseInt(values.width, 10) : null,
         unit: values.unit,
+        orientation: parseInt(values.orientation, 10),
       };
       return isEditing ? updateGarden(garden.id, payload) : createGarden(payload);
     },
@@ -73,7 +75,7 @@ export default function GardenDialog({ garden, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <Form form={form} onSubmit={(v) => mutation.mutate(v)}>
-          <GardenFormFields control={form.control} />
+          <GardenFormFields control={form.control} showNorthFacing={!isEditing} />
           <FormRootError message={form.formState.errors.root?.message} />
 
           <DialogFooter>

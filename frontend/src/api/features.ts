@@ -16,6 +16,7 @@ type FeatureMovePayload = {
   width?: number;
   height?: number;
   label?: string;
+  rotation?: number;
 };
 
 export async function fetchGardenFeatures(gardenId: string): Promise<GardenFeaturePlacement[]> {

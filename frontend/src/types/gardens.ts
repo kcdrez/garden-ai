@@ -1,3 +1,14 @@
+export const NORTH_FACINGS = [
+  { value: 0, label: 'North' },
+  { value: 45, label: 'Northeast' },
+  { value: 90, label: 'East' },
+  { value: 135, label: 'Southeast' },
+  { value: 180, label: 'South' },
+  { value: 225, label: 'Southwest' },
+  { value: 270, label: 'West' },
+  { value: 315, label: 'Northwest' },
+] as const;
+
 export type Garden = {
   id: string;
   name: string;
@@ -5,6 +16,7 @@ export type Garden = {
   length: number | null;
   width: number | null;
   unit: BedUnit;
+  orientation: number;
   bedCount: number;
   createdAt: string;
   updatedAt: string;
@@ -46,6 +58,7 @@ export type BedPlacement = BasePlacement & {
   garden: string;
   bedWidthFt: number;
   bedHeightFt: number;
+  rotation: number;
 };
 
 export type FeatureObjectType =
@@ -61,6 +74,7 @@ export type GardenFeaturePlacement = BasePlacement & {
   label: string;
   width: number;
   height: number;
+  rotation: number;
 };
 
 export type GardenBed = {

@@ -18,6 +18,7 @@ class Garden(BaseModel):
     length = models.PositiveIntegerField(null=True, blank=True)
     width = models.PositiveIntegerField(null=True, blank=True)
     unit = models.CharField(max_length=2, choices=UNIT_CHOICES, default="ft")
+    orientation = models.SmallIntegerField(default=0)
 
     owner = models.ForeignKey(User, related_name="gardens", on_delete=models.CASCADE)
 
@@ -57,6 +58,7 @@ class BedPlacement(BaseModel):
     garden = models.ForeignKey(Garden, related_name="bed_placements", on_delete=models.CASCADE)
     x = models.FloatField(validators=[MinValueValidator(0)])
     y = models.FloatField(validators=[MinValueValidator(0)])
+    rotation = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return f"{self.bed} @ ({self.x}, {self.y})"
@@ -115,6 +117,7 @@ class GardenFeaturePlacement(BaseModel):
     y = models.FloatField(validators=[MinValueValidator(0)])
     width = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
     height = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
+    rotation = models.SmallIntegerField(default=0)
 
     class Meta:
         constraints = [

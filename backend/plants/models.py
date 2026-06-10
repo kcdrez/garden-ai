@@ -103,6 +103,7 @@ class PlantPlacement(BaseModel):
     y = models.FloatField(validators=[MinValueValidator(0)])
     width = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
     height = models.FloatField(default=1.0, validators=[MinValueValidator(0.01)])
+    rotation = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return f"{self.user_plant} @ ({self.x}, {self.y})"

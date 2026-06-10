@@ -72,6 +72,18 @@ export async function moveBedPlacement(
   return data;
 }
 
+export async function rotateBedPlacement(
+  gardenId: string,
+  placementId: string,
+  rotation: number,
+): Promise<BedPlacement> {
+  const { data } = await api.patch<BedPlacement>(
+    `/gardens/${gardenId}/bed-placements/${placementId}/`,
+    { rotation },
+  );
+  return data;
+}
+
 export async function deleteBedPlacement(gardenId: string, placementId: string): Promise<void> {
   await api.delete(`/gardens/${gardenId}/bed-placements/${placementId}/`);
 }

@@ -44,6 +44,17 @@ export function useBedFeaturePlacementActions(gardenId: string, bedId: string) {
     ),
   });
 
+  const rotateMutation = useMutation({
+    mutationFn: ({ featureId, rotation }: { featureId: string; rotation: number }) =>
+      updateBedFeature(gardenId, bedId, featureId, { rotation }),
+    ...makeOptimisticMutation<GardenFeaturePlacement, { featureId: string; rotation: number }>(
+      queryClient, queryKey,
+      (vars) => vars.featureId,
+      (item, { rotation }) => ({ ...item, rotation }),
+      (err) => setMutationError(getErrorMessage(err)),
+    ),
+  });
+
   const updateLabelMutation = useMutation({
     mutationFn: ({ featureId, label }: { featureId: string; label: string }) =>
       updateBedFeature(gardenId, bedId, featureId, { label }),
@@ -66,6 +77,7 @@ export function useBedFeaturePlacementActions(gardenId: string, bedId: string) {
     ) => createMutation.mutate(args, { onSuccess }),
     moveFeature: (args: { featureId: string; x: number; y: number }) => moveMutation.mutate(args),
     resizeFeature: (args: { featureId: string; width: number; height: number }) => resizeMutation.mutate(args),
+    rotateFeature: (args: { featureId: string; rotation: number }) => rotateMutation.mutate(args),
     updateFeatureLabel: (args: { featureId: string; label: string }) => updateLabelMutation.mutate(args),
     removeFeature: (featureId: string) => deleteMutation.mutate(featureId),
   };

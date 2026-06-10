@@ -32,6 +32,8 @@ export default function CanvasShortcutsDialog({ open, onOpenChange }: CanvasShor
           <ShortcutSection title="When selected">
             <Shortcut keys={['↑ ↓ ← →']} label="Nudge 0.1 ft" />
             <Shortcut keys={['Shift', '↑↓←→']} label="Nudge 1 ft" />
+            <Shortcut keys={['[']} label="Rotate 45° counter-clockwise" />
+            <Shortcut keys={[']']} label="Rotate 45° clockwise" />
             <Shortcut keys={['Del']} label="Remove item" />
             <Shortcut keys={['Ctrl/⌘', 'C']} label="Copy item" />
             <Shortcut keys={['Letter']} label="Menu shortcuts (shown in toolbar)" />

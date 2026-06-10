@@ -111,7 +111,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
 class PlantPlacementSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlantPlacement
-        fields = ["id", "user_plant", "bed", "x", "y", "width", "height", "created_at", "updated_at"]
+        fields = ["id", "user_plant", "bed", "x", "y", "width", "height", "rotation", "created_at", "updated_at"]
         read_only_fields = ["id", "bed", "created_at", "updated_at"]
 
     def validate_user_plant(self, value):

@@ -26,6 +26,7 @@ interface PlacementCanvasProps {
   onEmptyClick: (xFt: number, yFt: number) => void;
   onMove: (id: string, xFt: number, yFt: number) => void;
   onResize?: (id: string, widthFt: number, heightFt: number) => void;
+  onRotate?: (id: string, rotation: number) => void;
   onDeleteItems?: (ids: string[]) => void;
   onCopyItem?: (id: string) => void;
   onPasteItem?: () => void;
@@ -36,6 +37,7 @@ interface PlacementCanvasProps {
   storageKey?: string;
   defaultZoom?: ZoomLevel;
   getItemLabel?: (id: string) => string;
+  toolbarCenter?: React.ReactNode;
 }
 
 export default function PlacementCanvas({
@@ -46,6 +48,7 @@ export default function PlacementCanvas({
   onEmptyClick,
   onMove,
   onResize,
+  onRotate,
   onDeleteItems,
   onCopyItem,
   onPasteItem,
@@ -56,6 +59,7 @@ export default function PlacementCanvas({
   storageKey,
   defaultZoom = 1,
   getItemLabel,
+  toolbarCenter,
 }: PlacementCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -137,6 +141,7 @@ export default function PlacementCanvas({
     svgRef,
     getMenuItems,
     onMove,
+    onRotate,
     onDeleteItems,
     onCopyItem,
     onPasteItem,
@@ -185,31 +190,35 @@ export default function PlacementCanvas({
 
   return (
     <div ref={containerRef} className="space-y-2">
-      <div className="flex justify-end gap-1">
-        {ZOOM_LEVELS.map((level) => (
+      <div className="sticky top-navbar z-10 grid grid-cols-3 items-center bg-background pb-1">
+        <div />
+        <div className="flex justify-center">{toolbarCenter}</div>
+        <div className="flex justify-end gap-1 items-center">
+          {ZOOM_LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setZoom(level)}
+              className={cn(
+                'px-2 py-0.5 text-xs rounded border transition-colors',
+                zoom === level
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/50',
+              )}
+            >
+              {level}×
+            </button>
+          ))}
+          <div className="w-px h-4 bg-foreground/20 mx-1" />
           <button
-            key={level}
             type="button"
-            onClick={() => setZoom(level)}
-            className={cn(
-              'px-2 py-0.5 text-xs rounded border transition-colors',
-              zoom === level
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/50',
-            )}
+            aria-label="Keyboard shortcuts"
+            onClick={() => setShowHelp(true)}
+            className="px-2 py-0.5 text-xs rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
           >
-            {level}×
+            <HelpCircleIcon className="size-3" />
           </button>
-        ))}
-        <div className="w-px h-4 bg-foreground/20 mx-1 self-center" />
-        <button
-          type="button"
-          aria-label="Keyboard shortcuts"
-          onClick={() => setShowHelp(true)}
-          className="px-2 py-0.5 text-xs rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
-        >
-          <HelpCircleIcon className="size-3" />
-        </button>
+        </div>
       </div>
 
       <div
@@ -262,6 +271,7 @@ export default function PlacementCanvas({
               onGroupDragEnd={handleGroupDragEnd}
             />
           ))}
+
         </svg>
 
         {toolbarAnchor && selectedIds.size > 0 && (

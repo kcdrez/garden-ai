@@ -130,6 +130,19 @@ export async function resizePlacement(
   return data;
 }
 
+export async function rotatePlacement(
+  gardenId: string,
+  bedId: string,
+  placementId: string,
+  rotation: number,
+): Promise<PlantPlacement> {
+  const { data } = await api.patch<PlantPlacement>(
+    `/gardens/${gardenId}/beds/${bedId}/placements/${placementId}/`,
+    { rotation },
+  );
+  return data;
+}
+
 export async function deletePlacement(
   gardenId: string,
   bedId: string,

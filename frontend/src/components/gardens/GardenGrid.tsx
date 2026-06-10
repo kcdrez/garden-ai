@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EditIcon, ExternalLinkIcon, LandmarkIcon, MinusCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,10 +10,12 @@ import { featureImage, featureEmoji, featureLabel, isCustomFeature } from '@/lib
 import { getErrorMessage } from '@/lib/errors';
 import { routes } from '@/lib/routes';
 import { deleteBed, updateBed } from '@/api/beds';
+import { updateGarden } from '@/api/gardens';
 import { useConfirm } from '@/hooks/useConfirm';
 import type { BedPlacement, Garden, GardenBed, GardenFeaturePlacement } from '@/types/gardens';
 import { makeOptimisticMutation } from '@/lib/mutations';
 import { queryKeys } from '@/lib/queryKeys';
+import CompassRose from '@/components/shared/CompassRose';
 import BedDialog from '@/components/beds/BedDialog';
 import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
 import PlaceOnCanvasDialog from '@/components/gardens/PlaceOnCanvasDialog';
@@ -44,6 +46,25 @@ export default function GardenGrid({
 
   const history = useUndoHistory();
 
+  const [localOrientation, setLocalOrientation] = useState(garden.orientation);
+  const orientationDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    setLocalOrientation(garden.orientation);
+  }, [garden.orientation]);
+
+  const orientationMutation = useMutation({
+    mutationFn: (orientation: number) => updateGarden(gardenId, { orientation }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.gardens.detail(gardenId) }),
+  });
+
+  function handleOrientationClick() {
+    const next = (localOrientation + 45) % 360;
+    setLocalOrientation(next);
+    clearTimeout(orientationDebounce.current);
+    orientationDebounce.current = setTimeout(() => orientationMutation.mutate(next), 600);
+  }
+
   const deleteBedMutation = useMutation({
     mutationFn: (bedId: string) => deleteBed(gardenId, bedId),
     onSuccess: () => {
@@ -57,6 +78,7 @@ export default function GardenGrid({
     isLoading,
     createPlacement,
     movePlacement,
+    rotatePlacement,
     removePlacement,
     isCreating,
     createFailed,
@@ -69,6 +91,7 @@ export default function GardenGrid({
     createFeature,
     moveFeature,
     resizeFeature,
+    rotateFeature,
     removeFeature,
   } = useGardenFeaturePlacementActions(gardenId);
 
@@ -115,6 +138,7 @@ export default function GardenGrid({
     y: p.y,
     widthFt: p.bedWidthFt,
     heightFt: p.bedHeightFt,
+    rotation: p.rotation,
   }));
 
   const featureItems = features.map((f) => ({
@@ -123,6 +147,7 @@ export default function GardenGrid({
     y: f.y,
     widthFt: f.width,
     heightFt: f.height,
+    rotation: f.rotation,
   }));
 
   const items = [...bedItems, ...featureItems];
@@ -420,6 +445,16 @@ export default function GardenGrid({
           if (isFeature) resizeFeature({ featureId: id, width: widthFt, height: heightFt });
           else if (bed) resizeBedMutation.mutate({ placementId: id, bedId: bed.id, unit: bed.unit, widthFt, heightFt });
         }}
+        onRotate={(id, rotation) => {
+          if (featureIds.has(id)) rotateFeature({ featureId: id, rotation });
+          else rotatePlacement({ placementId: id, rotation });
+        }}
+        toolbarCenter={
+          <CompassRose
+            orientation={localOrientation}
+            onClick={handleOrientationClick}
+          />
+        }
         onUndo={history.undo}
         onRedo={history.redo}
         getMenuItems={getMenuItems}

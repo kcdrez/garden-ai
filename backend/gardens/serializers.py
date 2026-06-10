@@ -69,6 +69,7 @@ class GardenSerializer(serializers.ModelSerializer):
             "length",
             "width",
             "unit",
+            "orientation",
             "bed_count",
             "created_at",
             "updated_at",
@@ -134,7 +135,7 @@ class BedPlacementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BedPlacement
-        fields = ["id", "bed", "garden", "x", "y", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
+        fields = ["id", "bed", "garden", "x", "y", "rotation", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
         read_only_fields = ["id", "garden", "bed_width_ft", "bed_height_ft", "created_at", "updated_at"]
 
     def validate_bed(self, value):
@@ -185,7 +186,7 @@ class GardenFeaturePlacementSerializer(serializers.ModelSerializer):
         model = GardenFeaturePlacement
         fields = [
             "id", "object_type", "shape", "label",
-            "x", "y", "width", "height",
+            "x", "y", "width", "height", "rotation",
             "created_at", "updated_at",
         ]
         read_only_fields = ["id", "shape", "created_at", "updated_at"]

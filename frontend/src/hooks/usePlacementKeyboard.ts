@@ -14,6 +14,7 @@ type Options = {
   svgRef: RefObject<SVGSVGElement | null>;
   getMenuItems: (id: string) => CanvasMenuItem[];
   onMove: (id: string, x: number, y: number) => void;
+  onRotate?: (id: string, rotation: number) => void;
   onDeleteItems?: (ids: string[]) => void;
   onCopyItem?: (id: string) => void;
   onPasteItem?: () => void;
@@ -35,6 +36,7 @@ export function usePlacementKeyboard({
   svgRef,
   getMenuItems,
   onMove,
+  onRotate,
   onDeleteItems,
   onCopyItem,
   onPasteItem,
@@ -78,6 +80,19 @@ export function usePlacementKeyboard({
         }
         setSelectedIds(new Set());
         setToolbarAnchor(null);
+        return;
+      }
+
+      if (onRotate && (e.key === '[' || e.key === ']') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        const delta = e.key === ']' ? 45 : -45;
+        for (const id of selectedIds) {
+          const item = items.find(i => i.id === id);
+          if (item) {
+            const newRotation = ((item.rotation ?? 0) + delta + 360) % 360;
+            onRotate(id, newRotation);
+          }
+        }
         return;
       }
 
@@ -130,7 +145,7 @@ export function usePlacementKeyboard({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, items, getMenuItems, onMove, onDeleteItems, onCopyItem, widthFt, heightFt,
+  }, [selectedIds, items, getMenuItems, onMove, onRotate, onDeleteItems, onCopyItem, widthFt, heightFt,
       setSelectedIds, setToolbarAnchor, computeGroupAnchor, svgRef]);
 
   // Global canvas keys: Ctrl+V, Ctrl+Z/Y, zoom +/-, ?
