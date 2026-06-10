@@ -2,7 +2,6 @@ import { render, screen, waitFor } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
 import { deleteBed } from '@/api/beds';
 import { mockBed } from '@/test/fixtures';
-import type { GardenBed } from '@/types/gardens';
 import BedItem from './BedItem';
 
 vi.mock('@/api/beds', () => ({ deleteBed: vi.fn() }));
