@@ -18,8 +18,8 @@ const defaultProps = {
   groupDelta: null,
 };
 
-function renderInSvg(props: Partial<typeof defaultProps> = {}) {
-  const merged = { ...defaultProps, ...props };
+function renderInSvg(extra: Partial<Parameters<typeof DraggableItem>[0]> = {}) {
+  const merged = { ...defaultProps, ...extra };
   const result = render(
     <svg>
       <DraggableItem {...merged} />
