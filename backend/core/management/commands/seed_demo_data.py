@@ -120,30 +120,30 @@ class Command(BaseCommand):
                 "Our main growing space — raised beds for vegetables, "
                 "a dedicated herb bed, and a flower border for pollinators."
             ),
-            length=20, width=16, unit="ft", orientation=0,
+            length=16, width=20, unit="ft", orientation=0,
         )
 
         bed_a = GardenBed.objects.create(
             garden=garden, name="Raised Bed A",
-            length=8, width=4, unit="ft", avg_sunlight_hours=8,
+            length=4, width=8, unit="ft", avg_sunlight_hours=8,
             soil_type="Loam / compost mix",
             notes="Main vegetable bed. Tomatoes tied to trellis on the north end.",
         )
         bed_b = GardenBed.objects.create(
             garden=garden, name="Raised Bed B",
-            length=8, width=4, unit="ft", avg_sunlight_hours=7,
+            length=4, width=8, unit="ft", avg_sunlight_hours=7,
             soil_type="Sandy loam",
             notes="Root vegetables and cool-season greens.",
         )
         herb_bed = GardenBed.objects.create(
             garden=garden, name="Herb Bed",
-            length=6, width=3, unit="ft", avg_sunlight_hours=6,
+            length=3, width=6, unit="ft", avg_sunlight_hours=6,
             soil_type="Well-draining sandy mix",
             notes="Perennial herbs plus annuals. Mint is in a submerged pot to limit spreading.",
         )
         flower_border = GardenBed.objects.create(
             garden=garden, name="Flower Border",
-            length=10, width=2, unit="ft", avg_sunlight_hours=7,
+            length=2, width=10, unit="ft", avg_sunlight_hours=7,
             soil_type="Mixed garden soil",
             notes="Pollinators and trap crops bordering the vegetable beds.",
         )
@@ -717,12 +717,12 @@ class Command(BaseCommand):
                 "A smaller east-facing garden focused on perennial herbs and soft fruits. "
                 "Lower maintenance than the backyard but productive all season."
             ),
-            length=12, width=10, unit="ft", orientation=90,
+            length=10, width=12, unit="ft", orientation=90,
         )
 
         fruit_bed = GardenBed.objects.create(
             garden=garden, name="Fruit Bed",
-            length=6, width=4, unit="ft", avg_sunlight_hours=6,
+            length=4, width=6, unit="ft", avg_sunlight_hours=6,
             soil_type="Acidic loam with extra compost",
             notes="Strawberry runners trimmed back each spring. Raspberries tied to wire along the fence.",
         )

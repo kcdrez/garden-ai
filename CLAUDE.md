@@ -84,6 +84,8 @@ Field definitions live in `models.py` and serializers — read the code directly
 
 **PlantPlacement / BedPlacement — grid convention:** the grid always uses square feet as the cell unit regardless of the bed/garden's display unit. Dimensions are converted to feet at render time (`in ÷ 12`, `cm ÷ 30.48`, `m × 3.28084`) and rounded up. Grid resolution is fixed at 1 ft × 1 ft per cell but the schema doesn't encode this — `x`, `y`, `width`, `height` are plain integers whose meaning is set by the rendering layer, so future sub-foot resolution requires only a data migration and renderer update.
 
+**Width/length axis convention (critical for seed data and tests):** `width` is always the **horizontal** axis (columns, x) and `length` is always the **vertical** axis (rows, y) — for both `Garden` and `GardenBed`. This is enforced by `bedGridDimensions` and `gardenGridDimensions` in `frontend/src/lib/beds.ts` (`cols = width`, `rows = length`). When writing seed data or tests, always set `width` = how wide the bed/garden is left-to-right, and `length` = how deep it is top-to-bottom. Getting these backwards causes beds to overlap on the canvas and plants to overflow their beds.
+
 **PlantPlacement** is decoupled from `UserPlant` so a plant can exist without a placement. Moving a `UserPlant` to a new bed (PATCH `bed`) automatically deletes its existing `PlantPlacement` — the plant arrives in the new bed unplaced.
 
 **Resize protection:** resizing a garden is blocked if any `BedPlacement` would go out of bounds; resizing a bed is blocked if any `PlantPlacement` would go out of bounds. Errors surface as `non_field_errors`.
