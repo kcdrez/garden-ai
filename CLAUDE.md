@@ -236,7 +236,7 @@ These are explicitly out of scope, at least initially:
 
 ### Planning & Reminders
 
-- **Season / year view** — group plantings by growing year via the `Season` model (already planned); lets users see what was in each bed in prior years; foundation for crop rotation warnings
+- **Season / year view** — group plantings by growing year via the `Season` model (already planned); lets users see what was in each bed in prior years; foundation for crop rotation warnings. **Bed canvas year picker** — extend this to the bed canvas: a year picker renders the bed as it looked in that year (plants that were active — started before end of year, not removed before start of year); past years are read-only (no drag/resize); source of truth is either `start_date` + status change observations (buildable now) or the `Season` model (cleaner, decide before building); the placement query at `PlantPlacementViewSet` would need to accept an optional `year` param and filter accordingly
 - Task management and reminders
 - Notification system for gardening tasks
 - Frost date awareness and seasonal guidance

@@ -101,7 +101,8 @@ class Command(BaseCommand):
             bed=bed, plant=plant, variety=variety,
             start_date=start_date, status=status, notes=notes,
         )
-        PlantPlacement.objects.create(user_plant=up, bed=bed, x=x, y=y, width=width, height=height)
+        if status != UserPlant.Status.REMOVED:
+            PlantPlacement.objects.create(user_plant=up, bed=bed, x=x, y=y, width=width, height=height)
         for obs in (observations or []):
             Observation.objects.create(user_plant=up, **obs)
         return up
