@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-06-11 — ~0.5 hours
+
+**Completed:**
+
+- AI agentic tools expanded — added `log_observation` (general/harvest/pest/disease/weather/transplant; status_change blocked), `delete_plant` (requires `confirm: true` to prevent accidental deletion), and `move_plant` (changes bed, deletes placement, creates transplant observation) to bed + plant scope; 13 new backend tests; frontend action types, `actionLabel`, and query invalidation updated; `move_plant` invalidates placement cache for both old and new beds
+- AI context builder audit — added `Garden.orientation` to all three scopes; `GardenBed.depth` to `_bed_meta`; `GardenFeaturePlacement` (type, label, position, size) to garden + bed contexts; updated persona to explain that canvas orientation means the top edge of the layout faces that compass direction; fixed bed meta label from ambiguous `"North-facing"` to `"top of bed faces North"` to avoid confusion with sun-exposure terminology
+
+**Next up:** Extend AI tools to garden scope — allow `add_plant` from a garden conversation by specifying a target bed by name
+
+---
+
 ## 2026-06-11 — ~0.75 hours
 
 **Completed:**

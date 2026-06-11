@@ -20,6 +20,15 @@ function actionLabel(action: ActionResult): string {
   if (action.type === 'change_plant_status') {
     return `${action.plantName} is now ${action.newStatus}`;
   }
+  if (action.type === 'log_observation') {
+    return `Logged ${action.observationType} for ${action.plantName}`;
+  }
+  if (action.type === 'delete_plant') {
+    return `Deleted ${action.plantName}${action.bedName ? ` from ${action.bedName}` : ''}`;
+  }
+  if (action.type === 'move_plant') {
+    return `Moved ${action.plantName} to ${action.newBedName ?? 'new bed'}`;
+  }
   return 'Action completed';
 }
 
@@ -84,8 +93,14 @@ export default function AiChatWidget() {
       if (action) {
         setLastAction(action);
         queryClient.invalidateQueries({ queryKey: queryKeys.plants.user() });
-        if (action.type === 'change_plant_status') {
+        if (action.type === 'change_plant_status' || action.type === 'log_observation') {
           queryClient.invalidateQueries({ queryKey: queryKeys.observations.byPlant(action.plantId) });
+        }
+        if (action.type === 'move_plant') {
+          if (action.oldBedId) {
+            queryClient.invalidateQueries({ queryKey: queryKeys.placements.bed(action.oldBedId) });
+          }
+          queryClient.invalidateQueries({ queryKey: queryKeys.placements.bed(action.bedId) });
         }
       }
     },
