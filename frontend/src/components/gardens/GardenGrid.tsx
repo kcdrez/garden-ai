@@ -17,6 +17,7 @@ import { makeOptimisticMutation } from '@/lib/mutations';
 import { queryKeys } from '@/lib/queryKeys';
 import CompassRose from '@/components/shared/CompassRose';
 import BedDialog from '@/components/beds/BedDialog';
+import BedEditForm from '@/components/beds/BedEditForm';
 import PlaceFeatureDialog from '@/components/shared/PlaceFeatureDialog';
 import PlaceOnCanvasDialog from '@/components/gardens/PlaceOnCanvasDialog';
 import PlacementCanvas from '@/components/shared/PlacementCanvas';
@@ -553,8 +554,7 @@ export default function GardenGrid({
       />
 
       {editingBed && (
-        <BedDialog
-          gardenId={gardenId}
+        <BedEditForm
           bed={editingBed}
           open
           onOpenChange={(open) => { if (!open) setEditingBed(null); }}
