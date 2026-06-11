@@ -65,12 +65,13 @@ def _build_garden_context(garden: Garden) -> str:
     beds = GardenBed.objects.filter(garden=garden).prefetch_related("user_plants__plant").order_by("name")
     features = list(GardenFeaturePlacement.objects.filter(garden=garden).order_by("object_type", "label"))
 
+    orientation = _ORIENTATION_LABELS.get(garden.orientation, f"{garden.orientation}°")
     lines = [_PERSONA, "", f"## Garden: {garden.name}"]
     if garden.description:
         lines.append(garden.description)
     if garden.length and garden.width:
         lines.append(f"Dimensions: {garden.length} {garden.unit} x {garden.width} {garden.unit}")
-    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(garden.orientation, f'{garden.orientation}°')} is up on the layout")
+    lines.append(f"Orientation: {orientation} is up on the layout")
 
     if features:
         lines += ["", f"### Garden Features ({len(features)}):"]
@@ -110,10 +111,11 @@ def _build_bed_context(bed: GardenBed) -> str:
     other_beds = GardenBed.objects.filter(garden=bed.garden).exclude(pk=bed.pk).order_by("name")
     bed_features = list(GardenFeaturePlacement.objects.filter(bed=bed).order_by("object_type", "label"))
 
+    orientation = _ORIENTATION_LABELS.get(bed.garden.orientation, f"{bed.garden.orientation}°")
     lines = [_PERSONA, "", f"## Garden: {bed.garden.name}"]
     if bed.garden.length and bed.garden.width:
         lines.append(f"Dimensions: {bed.garden.length} {bed.garden.unit} x {bed.garden.width} {bed.garden.unit}")
-    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(bed.garden.orientation, f'{bed.garden.orientation}°')} is up on the layout")
+    lines.append(f"Orientation: {orientation} is up on the layout")
     other_bed_list = list(other_beds)
     if other_bed_list:
         other_labels = [f"{b.name} [bed_id: {b.pk}]" for b in other_bed_list]
@@ -190,10 +192,11 @@ def _build_plant_context(user_plant: UserPlant) -> str:
 
     other_garden_beds = list(GardenBed.objects.filter(garden=garden).exclude(pk=bed.pk).order_by("name"))
 
+    orientation = _ORIENTATION_LABELS.get(garden.orientation, f"{garden.orientation}°")
     lines = [_PERSONA, "", f"## Garden: {garden.name}"]
     if garden.length and garden.width:
         lines.append(f"Dimensions: {garden.length} {garden.unit} x {garden.width} {garden.unit}")
-    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(garden.orientation, f'{garden.orientation}°')} is up on the layout")
+    lines.append(f"Orientation: {orientation} is up on the layout")
     if other_garden_beds:
         other_bed_labels = [f"{b.name} [bed_id: {b.pk}]" for b in other_garden_beds]
         lines.append(f"Other beds in this garden: {', '.join(other_bed_labels)}")

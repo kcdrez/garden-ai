@@ -7,9 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from gardens.models import Garden, GardenBed
-from plants.models import Observation, Plant, UserPlant
-
-from plants.models import PlantPlacement
+from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
 from .models import AIConversation, AIMessage
 from .views import _exec_add_plant, _exec_change_status, _exec_delete_plant, _exec_log_observation, _exec_move_plant
