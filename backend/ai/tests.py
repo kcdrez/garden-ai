@@ -9,8 +9,10 @@ from rest_framework.test import APITestCase
 from gardens.models import Garden, GardenBed
 from plants.models import Observation, Plant, UserPlant
 
+from plants.models import PlantPlacement
+
 from .models import AIConversation, AIMessage
-from .views import _exec_add_plant, _exec_change_status
+from .views import _exec_add_plant, _exec_change_status, _exec_delete_plant, _exec_log_observation, _exec_move_plant
 
 
 class AIRateLimitTests(APITestCase):
@@ -163,6 +165,102 @@ class ToolExecutorTests(APITestCase):
     def test_change_status_invalid_status_returns_error(self):
         result = _exec_change_status(self.user, {"plant_id": str(self.user_plant.pk), "new_status": "exploded"})
         self.assertTrue(result.get("error"))
+
+    # --- log_observation ---
+
+    def test_log_observation_creates_observation(self):
+        result = _exec_log_observation(
+            self.user, {"plant_id": str(self.user_plant.pk), "type": "general", "note": "Looks healthy"}
+        )
+        self.assertNotIn("error", result)
+        self.assertTrue(
+            Observation.objects.filter(user_plant=self.user_plant, type="general", note="Looks healthy").exists()
+        )
+
+    def test_log_observation_uses_today_when_date_omitted(self):
+        _exec_log_observation(self.user, {"plant_id": str(self.user_plant.pk), "type": "harvest", "note": "Big crop"})
+        obs = Observation.objects.filter(user_plant=self.user_plant, type="harvest").first()
+        self.assertIsNotNone(obs)
+        from datetime import date
+        self.assertEqual(obs.observed_date, date.today())
+
+    def test_log_observation_respects_observed_date(self):
+        _exec_log_observation(
+            self.user,
+            {"plant_id": str(self.user_plant.pk), "type": "pest", "note": "Aphids", "observed_date": "2025-06-01"},
+        )
+        obs = Observation.objects.filter(user_plant=self.user_plant, type="pest").first()
+        from datetime import date
+        self.assertEqual(obs.observed_date, date(2025, 6, 1))
+
+    def test_log_observation_status_change_type_rejected(self):
+        result = _exec_log_observation(
+            self.user, {"plant_id": str(self.user_plant.pk), "type": "status_change", "note": "x"}
+        )
+        self.assertTrue(result.get("error"))
+
+    def test_log_observation_wrong_plant_returns_error(self):
+        other_plant = UserPlant.objects.create(bed=self.other_bed, plant=self.plant, status="planted")
+        result = _exec_log_observation(
+            self.user, {"plant_id": str(other_plant.pk), "type": "general", "note": "x"}
+        )
+        self.assertTrue(result.get("error"))
+
+    # --- delete_plant ---
+
+    def test_delete_plant_removes_user_plant(self):
+        plant_id = str(self.user_plant.pk)
+        result = _exec_delete_plant(self.user, {"plant_id": plant_id, "confirm": True})
+        self.assertNotIn("error", result)
+        self.assertFalse(UserPlant.objects.filter(pk=plant_id).exists())
+
+    def test_delete_plant_without_confirm_returns_error(self):
+        result = _exec_delete_plant(self.user, {"plant_id": str(self.user_plant.pk), "confirm": False})
+        self.assertTrue(result.get("error"))
+        self.assertTrue(UserPlant.objects.filter(pk=self.user_plant.pk).exists())
+
+    def test_delete_plant_wrong_owner_returns_error(self):
+        other_plant = UserPlant.objects.create(bed=self.other_bed, plant=self.plant, status="planted")
+        result = _exec_delete_plant(self.user, {"plant_id": str(other_plant.pk), "confirm": True})
+        self.assertTrue(result.get("error"))
+        self.assertTrue(UserPlant.objects.filter(pk=other_plant.pk).exists())
+
+    # --- move_plant ---
+
+    def test_move_plant_changes_bed(self):
+        extra_bed = GardenBed.objects.create(name="Bed 2", garden=self.garden, length=4, width=8)
+        result = _exec_move_plant(
+            self.user, {"plant_id": str(self.user_plant.pk), "target_bed_id": str(extra_bed.pk)}
+        )
+        self.assertNotIn("error", result)
+        self.user_plant.refresh_from_db()
+        self.assertEqual(self.user_plant.bed, extra_bed)
+
+    def test_move_plant_deletes_placement(self):
+        extra_bed = GardenBed.objects.create(name="Bed 2", garden=self.garden, length=4, width=8)
+        PlantPlacement.objects.create(user_plant=self.user_plant, bed=self.bed, x=0, y=0, width=1, height=1)
+        _exec_move_plant(self.user, {"plant_id": str(self.user_plant.pk), "target_bed_id": str(extra_bed.pk)})
+        self.assertFalse(PlantPlacement.objects.filter(user_plant=self.user_plant).exists())
+
+    def test_move_plant_creates_transplant_observation(self):
+        extra_bed = GardenBed.objects.create(name="Bed 2", garden=self.garden, length=4, width=8)
+        _exec_move_plant(self.user, {"plant_id": str(self.user_plant.pk), "target_bed_id": str(extra_bed.pk)})
+        obs = Observation.objects.filter(user_plant=self.user_plant, type=Observation.Type.TRANSPLANT)
+        self.assertEqual(obs.count(), 1)
+
+    def test_move_plant_same_bed_returns_error(self):
+        result = _exec_move_plant(
+            self.user, {"plant_id": str(self.user_plant.pk), "target_bed_id": str(self.bed.pk)}
+        )
+        self.assertTrue(result.get("error"))
+
+    def test_move_plant_wrong_owner_bed_returns_error(self):
+        result = _exec_move_plant(
+            self.user, {"plant_id": str(self.user_plant.pk), "target_bed_id": str(self.other_bed.pk)}
+        )
+        self.assertTrue(result.get("error"))
+        self.user_plant.refresh_from_db()
+        self.assertEqual(self.user_plant.bed, self.bed)
 
 
 class AIToolViewTests(APITestCase):

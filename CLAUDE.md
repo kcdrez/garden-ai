@@ -262,7 +262,7 @@ These are explicitly out of scope, at least initially:
 
 ### AI Integration
 
-- **Expand agentic tools** — add more safe write actions: log an observation, delete a plant (with confirmation), move a plant to another bed; extend to garden scope (add plant to a named bed)
+- **Expand agentic tools to garden scope** — allow `add_plant` from a garden conversation by naming a target bed; garden scope currently has no write tools
 - AI-powered garden recommendations
 - AI-powered plant compatibility analysis
 - AI-powered troubleshooting and diagnostics

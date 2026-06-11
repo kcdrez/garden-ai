@@ -1,6 +1,6 @@
 from django.db.models import Prefetch
 
-from gardens.models import Garden, GardenBed
+from gardens.models import Garden, GardenBed, GardenFeaturePlacement
 from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
 from .models import AIConversation
@@ -11,7 +11,11 @@ _PERSONA = (
     "If you don't know something, say so. "
     "Plants are placed on a freeform square-foot canvas: coordinates are measured in feet from the "
     "top-left corner of the bed, and each plant's footprint (width x height) is user-defined and "
-    "not snapped to a grid — a plant placed at 1.5 x 2.0 ft occupies that exact area."
+    "not snapped to a grid — a plant placed at 1.5 x 2.0 ft occupies that exact area. "
+    "Gardens and beds have a compass orientation that says which direction the top of the canvas faces in "
+    "the real world — for example, 'top of bed faces North' means plants placed near the top of the canvas "
+    "are physically on the north side of the bed, and plants near the bottom are on the south side. "
+    "Use this together with sunlight data to reason about sun exposure and shade."
 )
 
 
@@ -31,10 +35,17 @@ _ORIENTATION_LABELS = {
 
 def _bed_meta(bed: GardenBed) -> str:
     parts = [f"{bed.length} {bed.unit} x {bed.width} {bed.unit}"]
-    parts.append(f"{_ORIENTATION_LABELS.get(bed.orientation, f'{bed.orientation}°')}-facing")
+    if bed.depth:
+        parts[0] += f" x {bed.depth} {bed.unit} deep"
+    parts.append(f"top of bed faces {_ORIENTATION_LABELS.get(bed.orientation, f'{bed.orientation}°')}")
     if bed.avg_sunlight_hours:
         parts.append(f"{bed.avg_sunlight_hours} hrs sunlight")
     return " · ".join(parts)
+
+
+def _format_feature(f: GardenFeaturePlacement) -> str:
+    label = f.label or f.get_object_type_display()
+    return f"- {label} ({f.object_type}) at ({f.x:.1f}, {f.y:.1f}) ft, {f.width:.1f} x {f.height:.1f} ft"
 
 
 def _format_obs(o: Observation) -> str:
@@ -52,12 +63,18 @@ def _plant_label(up: UserPlant) -> str:
 
 def _build_garden_context(garden: Garden) -> str:
     beds = GardenBed.objects.filter(garden=garden).prefetch_related("user_plants__plant").order_by("name")
+    features = list(GardenFeaturePlacement.objects.filter(garden=garden).order_by("object_type", "label"))
 
     lines = [_PERSONA, "", f"## Garden: {garden.name}"]
     if garden.description:
         lines.append(garden.description)
     if garden.length and garden.width:
         lines.append(f"Dimensions: {garden.length} {garden.unit} x {garden.width} {garden.unit}")
+    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(garden.orientation, f'{garden.orientation}°')} is up on the layout")
+
+    if features:
+        lines += ["", f"### Garden Features ({len(features)}):"]
+        lines.extend(_format_feature(f) for f in features)
 
     bed_list = list(beds)
     lines += ["", f"### Beds ({len(bed_list)}):"]
@@ -91,19 +108,25 @@ def _build_bed_context(bed: GardenBed) -> str:
     )
 
     other_beds = GardenBed.objects.filter(garden=bed.garden).exclude(pk=bed.pk).order_by("name")
+    bed_features = list(GardenFeaturePlacement.objects.filter(bed=bed).order_by("object_type", "label"))
 
     lines = [_PERSONA, "", f"## Garden: {bed.garden.name}"]
     if bed.garden.length and bed.garden.width:
         lines.append(f"Dimensions: {bed.garden.length} {bed.garden.unit} x {bed.garden.width} {bed.garden.unit}")
-    other_names = [b.name for b in other_beds]
-    if other_names:
-        lines.append(f"Other beds: {', '.join(other_names)}")
+    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(bed.garden.orientation, f'{bed.garden.orientation}°')} is up on the layout")
+    other_bed_list = list(other_beds)
+    if other_bed_list:
+        other_labels = [f"{b.name} [bed_id: {b.pk}]" for b in other_bed_list]
+        lines.append(f"Other beds: {', '.join(other_labels)}")
 
     lines += ["", f"## Bed: {bed.name} [bed_id: {bed.pk}]", _bed_meta(bed)]
     if bed.soil_type:
         lines.append(f"Soil: {bed.soil_type}")
     if bed.notes:
         lines.append(f"Notes: {bed.notes}")
+    if bed_features:
+        lines += [f"Features ({len(bed_features)}):"]
+        lines.extend(_format_feature(f) for f in bed_features)
 
     plant_list = list(plants)
     lines += ["", f"### Plants ({len(plant_list)}):"]
@@ -165,11 +188,17 @@ def _build_plant_context(user_plant: UserPlant) -> str:
     except PlantPlacement.DoesNotExist:
         placement = None
 
+    other_garden_beds = list(GardenBed.objects.filter(garden=garden).exclude(pk=bed.pk).order_by("name"))
+
     lines = [_PERSONA, "", f"## Garden: {garden.name}"]
     if garden.length and garden.width:
         lines.append(f"Dimensions: {garden.length} {garden.unit} x {garden.width} {garden.unit}")
+    lines.append(f"Orientation: {_ORIENTATION_LABELS.get(garden.orientation, f'{garden.orientation}°')} is up on the layout")
+    if other_garden_beds:
+        other_bed_labels = [f"{b.name} [bed_id: {b.pk}]" for b in other_garden_beds]
+        lines.append(f"Other beds in this garden: {', '.join(other_bed_labels)}")
 
-    lines += ["", f"## Bed: {bed.name}", _bed_meta(bed)]
+    lines += ["", f"## Bed: {bed.name} [bed_id: {bed.pk}]", _bed_meta(bed)]
     if bed.soil_type:
         lines.append(f"Soil: {bed.soil_type}")
 

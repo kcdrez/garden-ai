@@ -10,7 +10,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from gardens.models import GardenBed
-from plants.models import Observation, Plant, UserPlant
+from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
 from .ai_service import send_message, send_message_with_tools
 from .context_builder import build_context
@@ -82,8 +82,86 @@ _TOOL_CHANGE_STATUS = {
     },
 }
 
-_BED_TOOLS = [_TOOL_ADD_PLANT, _TOOL_CHANGE_STATUS]
-_PLANT_TOOLS = [_TOOL_CHANGE_STATUS]
+_TOOL_LOG_OBSERVATION = {
+    "name": "log_observation",
+    "description": (
+        "Log an observation on a plant — harvest, pest, disease, weather, or a general note. "
+        "Use this when the user reports something happened to or was noticed about a specific plant."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "plant_id": {
+                "type": "string",
+                "description": "The UserPlant ID from the context.",
+            },
+            "type": {
+                "type": "string",
+                "enum": ["general", "harvest", "pest", "disease", "weather", "transplant"],
+                "description": "The type of observation.",
+            },
+            "note": {
+                "type": "string",
+                "description": "The observation note text.",
+            },
+            "observed_date": {
+                "type": "string",
+                "description": "Optional observation date in YYYY-MM-DD format. Defaults to today.",
+            },
+        },
+        "required": ["plant_id", "type", "note"],
+    },
+}
+
+_TOOL_DELETE_PLANT = {
+    "name": "delete_plant",
+    "description": (
+        "Permanently delete a plant from the garden. "
+        "Only call this after the user has explicitly confirmed the deletion — it cannot be undone."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "plant_id": {
+                "type": "string",
+                "description": "The UserPlant ID to delete.",
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": (
+                    "Must be true. Set this only after the user has explicitly confirmed "
+                    "they want to permanently delete the plant."
+                ),
+            },
+        },
+        "required": ["plant_id", "confirm"],
+    },
+}
+
+_TOOL_MOVE_PLANT = {
+    "name": "move_plant",
+    "description": (
+        "Move a plant to a different bed in the same garden. "
+        "Its current canvas placement will be removed and it will arrive in the target bed unplaced."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "plant_id": {
+                "type": "string",
+                "description": "The UserPlant ID to move.",
+            },
+            "target_bed_id": {
+                "type": "string",
+                "description": "The bed_id of the destination bed from the context.",
+            },
+        },
+        "required": ["plant_id", "target_bed_id"],
+    },
+}
+
+_BED_TOOLS = [_TOOL_ADD_PLANT, _TOOL_CHANGE_STATUS, _TOOL_LOG_OBSERVATION, _TOOL_DELETE_PLANT, _TOOL_MOVE_PLANT]
+_PLANT_TOOLS = [_TOOL_CHANGE_STATUS, _TOOL_LOG_OBSERVATION, _TOOL_DELETE_PLANT, _TOOL_MOVE_PLANT]
 
 
 def _local_date(user):
@@ -177,12 +255,123 @@ def _exec_change_status(user, args):
     }
 
 
+def _exec_log_observation(user, args):
+    plant_id = args.get("plant_id")
+    obs_type = args.get("type")
+    note = args.get("note", "")
+    observed_date = args.get("observed_date") or None
+
+    try:
+        user_plant = UserPlant.objects.select_related("plant", "bed").get(
+            pk=plant_id, bed__garden__owner=user
+        )
+    except UserPlant.DoesNotExist:
+        return {"message": "Plant not found.", "error": True}
+
+    valid_types = [t for t in Observation.Type.values if t != Observation.Type.STATUS_CHANGE]
+    if obs_type not in valid_types:
+        return {"message": f"Invalid observation type: {obs_type}", "error": True}
+
+    Observation.objects.create(
+        user_plant=user_plant,
+        observed_date=observed_date or _local_date(user),
+        type=obs_type,
+        note=note,
+    )
+
+    return {
+        "message": f"Logged {obs_type} observation for {user_plant.plant.common_name}.",
+        "type": "log_observation",
+        "plantId": str(user_plant.pk),
+        "bedId": str(user_plant.bed.pk),
+        "plantName": user_plant.plant.common_name,
+        "observationType": obs_type,
+    }
+
+
+def _exec_delete_plant(user, args):
+    plant_id = args.get("plant_id")
+    confirm = args.get("confirm", False)
+
+    if not confirm:
+        return {"message": "Deletion not confirmed. Ask the user to confirm before deleting.", "error": True}
+
+    try:
+        user_plant = UserPlant.objects.select_related("plant", "bed").get(
+            pk=plant_id, bed__garden__owner=user
+        )
+    except UserPlant.DoesNotExist:
+        return {"message": "Plant not found.", "error": True}
+
+    plant_name = user_plant.plant.common_name
+    bed_id = str(user_plant.bed.pk)
+    bed_name = user_plant.bed.name
+    user_plant.delete()
+
+    return {
+        "message": f"Deleted {plant_name} from {bed_name}.",
+        "type": "delete_plant",
+        "plantId": plant_id,
+        "bedId": bed_id,
+        "plantName": plant_name,
+        "bedName": bed_name,
+    }
+
+
+def _exec_move_plant(user, args):
+    plant_id = args.get("plant_id")
+    target_bed_id = args.get("target_bed_id")
+
+    try:
+        user_plant = UserPlant.objects.select_related("plant", "bed").get(
+            pk=plant_id, bed__garden__owner=user
+        )
+    except UserPlant.DoesNotExist:
+        return {"message": "Plant not found.", "error": True}
+
+    try:
+        target_bed = GardenBed.objects.get(pk=target_bed_id, garden__owner=user)
+    except GardenBed.DoesNotExist:
+        return {"message": "Target bed not found.", "error": True}
+
+    if user_plant.bed == target_bed:
+        return {"message": f"{user_plant.plant.common_name} is already in {target_bed.name}.", "error": True}
+
+    old_bed = user_plant.bed
+    user_plant.bed = target_bed
+    user_plant.save()
+    PlantPlacement.objects.filter(user_plant=user_plant).delete()
+    Observation.objects.create(
+        user_plant=user_plant,
+        observed_date=_local_date(user),
+        type=Observation.Type.TRANSPLANT,
+        note=f"Moved from {old_bed.name} to {target_bed.name}",
+    )
+
+    return {
+        "message": f"Moved {user_plant.plant.common_name} from {old_bed.name} to {target_bed.name}.",
+        "type": "move_plant",
+        "plantId": str(user_plant.pk),
+        "bedId": str(target_bed.pk),
+        "oldBedId": str(old_bed.pk),
+        "plantName": user_plant.plant.common_name,
+        "oldBedName": old_bed.name,
+        "newBedName": target_bed.name,
+    }
+
+
 def _make_tool_executor(user):
     def executor(tool_name, args):
         if tool_name == "add_plant_to_bed":
             return _exec_add_plant(user, args)
         if tool_name == "change_plant_status":
             return _exec_change_status(user, args)
+        if tool_name == "log_observation":
+            return _exec_log_observation(user, args)
+        if tool_name == "delete_plant":
+            return _exec_delete_plant(user, args)
+        if tool_name == "move_plant":
+            return _exec_move_plant(user, args)
         return {"message": f"Unknown tool: {tool_name}", "error": True}
     return executor
 
