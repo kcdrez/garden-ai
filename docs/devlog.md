@@ -2,6 +2,16 @@
 
 ---
 
+## 2026-06-11 — ~0.75 hours
+
+**Completed:**
+
+- Demo seed data — `seed_demo_data` management command; creates `garden_demo` user with 2 gardens (Backyard Vegetable Garden 20×16 ft north-facing, Side Yard Herb & Fruit Patch 12×10 ft east-facing), 6 beds, 76 plants, and 298 observations spanning 3 seasons (2024–2026); crop rotation visible across Beds A and B; companion planting respected; all beds/plants placed on canvases; perennial lifecycle arcs (dormant → growing) on herbs, lavender, strawberries, raspberries; idempotent by default, `--force` wipes and recreates; `DEMO_SEED_PASSWORD` env var required; wired into `Procfile` deploy chain so prod resets on every deploy
+
+**Next up:** Expand AI agentic tools — add more safe write actions (log observation, delete plant, move plant to another bed)
+
+---
+
 ## 2026-06-09 — ~2 hours
 
 **Completed:**

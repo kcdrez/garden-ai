@@ -49,3 +49,4 @@
 - Canvas undo/redo — `Ctrl+Z/Y` for move and resize on both canvases; 10 unit tests
 - North orientation + item rotation — `Garden.orientation` (0–315°, 45° steps); compass rose on garden canvas; `rotation` field on all three placement types; `[`/`]` shortcuts; sticky navbar; `--spacing-navbar` CSS token
 - Bed orientation — replaced `GardenBed.facing` with `GardenBed.orientation` (numeric 0–315°); compass rose on bed canvas; data migration; AI context builder updated
+- Demo seed data — `seed_demo_data` management command; `garden_demo` account with 2 gardens, 6 beds, 76 plants, 298 observations across 3 seasons; `--force` flag resets on every prod deploy via `Procfile`; `DEMO_SEED_PASSWORD` env var

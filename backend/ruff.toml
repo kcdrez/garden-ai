@@ -5,3 +5,7 @@ exclude = ["migrations"]
 [lint]
 select = ["E", "F", "W", "I", "B", "UP", "RUF", "T20"]
 ignore = ["RUF012"]
+
+[lint.per-file-ignores]
+# Data-heavy seed command — note strings legitimately exceed line limit
+"core/management/commands/seed_demo_data.py" = ["E501"]

@@ -206,8 +206,6 @@ These are explicitly out of scope, at least initially:
 
 ### Demo & Portfolio
 
-- **Demo seed data** — rich multi-season fixture (2–3 years of planting history across multiple beds) to showcase the calendar, crop rotation, and companion planting features; management command so it only runs on demand, never in CI or on a fresh dev DB
-
 ### Bug Fixes (tracked)
 
 ### Deployment & Infrastructure
