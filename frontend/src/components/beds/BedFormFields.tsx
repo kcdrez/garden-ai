@@ -35,7 +35,7 @@ export default function BedFormFields({ control, gardens, showOrientation = fals
       </NativeSelectField>
       <div className="grid grid-cols-2 gap-3">
         {showOrientation && (
-          <NativeSelectField control={control} name="orientation" label="Top of bed faces">
+          <NativeSelectField control={control} name="orientation" label="Top of Bed Faces">
             {NORTH_FACINGS.map((f) => (
               <option key={f.value} value={String(f.value)}>{f.label}</option>
             ))}
