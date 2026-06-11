@@ -4,6 +4,22 @@ Things that would need to be addressed before this app moves beyond a portfolio 
 
 ---
 
+## Railway: Set Environment Variables via CLI, Not UI
+
+**The problem:** Railway's web UI has a persistent bug where variables added or edited through the dashboard appear in the list but silently fail to inject into the running container. `env | grep VAR_NAME` returns nothing despite the variable showing in the UI. Happens on redeploy too.
+
+**The fix:** Always set variables via the CLI:
+
+```bash
+railway variables set KEY=value
+```
+
+This writes directly to Railway's API and reliably propagates on next deploy. The UI is fine for reading/confirming what's set, but not for writing.
+
+**Debugging a missing variable:** Open the Railway console for the service and run `env` — if the variable isn't in the output, it didn't inject regardless of what the UI shows.
+
+---
+
 ## Rate Limiting (AI chat)
 
 **Current approach:** Daily message cap enforced by a DB count query in the view before each request (`AIMessage.objects.filter(conversation__user=..., role=USER, created_at__date=today).count()`). Hardcoded at 20 messages/user/day. Resets on calendar day in UTC.
