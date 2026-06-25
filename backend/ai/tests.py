@@ -36,7 +36,7 @@ class AIRateLimitTests(APITestCase):
                 ts = datetime(on_date.year, on_date.month, on_date.day, tzinfo=UTC)
                 AIMessage.objects.filter(pk=msg.pk).update(created_at=ts)
 
-    @patch("ai.views.send_message", return_value=("AI response", 10, 20))
+    @patch("ai.views.send_message_with_tools", return_value=("AI response", 10, 20, None))
     def test_message_accepted_under_limit(self, _mock):
         self._create_user_messages(19)
         res = self.client.post(self.url, {"content": "hello"})
@@ -53,14 +53,14 @@ class AIRateLimitTests(APITestCase):
         res = self.client.post(self.url, {"content": "hello"})
         self.assertEqual(res.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-    @patch("ai.views.send_message", return_value=("AI response", 10, 20))
+    @patch("ai.views.send_message_with_tools", return_value=("AI response", 10, 20, None))
     def test_limit_resets_next_day(self, _mock):
         yesterday = date.today() - timedelta(days=1)
         self._create_user_messages(20, on_date=yesterday)
         res = self.client.post(self.url, {"content": "new message today"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    @patch("ai.views.send_message", return_value=("AI response", 10, 20))
+    @patch("ai.views.send_message_with_tools", return_value=("AI response", 10, 20, None))
     def test_limit_is_per_user(self, _mock):
         other = User.objects.create_user(username="bob", password="testpass123")
         other_garden = Garden.objects.create(name="Bob's Garden", owner=other)
@@ -79,7 +79,7 @@ class AIRateLimitTests(APITestCase):
         res = self.client.post(self.url, {"content": "alice's 20th"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    @patch("ai.views.send_message", return_value=("AI response", 10, 20))
+    @patch("ai.views.send_message_with_tools", return_value=("AI response", 10, 20, None))
     def test_assistant_messages_do_not_count_toward_limit(self, _mock):
         for _ in range(20):
             AIMessage.objects.create(
@@ -293,9 +293,18 @@ class AIToolViewTests(APITestCase):
         self.assertIn("action", res.data)
         self.assertEqual(res.data["action"]["type"], "add_plant")
 
-    @patch("ai.views.send_message", return_value=("reply", 10, 20))
-    def test_garden_scope_uses_send_message_not_tools(self, mock_send):
+    @patch("ai.views.send_message_with_tools", return_value=("reply", 10, 20, None))
+    def test_garden_scope_uses_tools_no_action_in_response(self, _mock):
         res = self.client.post(self._url(self.garden_conversation), {"content": "hello"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        mock_send.assert_called_once()
         self.assertNotIn("action", res.data)
+
+    @patch("ai.views.send_message_with_tools", return_value=(
+        "Added it!", 10, 20,
+        {"type": "add_plant", "plantId": "abc", "bedId": "def", "plantName": "Tomato", "bedName": "Bed 1"},
+    ))
+    def test_garden_scope_includes_action_in_response_when_tool_fires(self, _mock):
+        res = self.client.post(self._url(self.garden_conversation), {"content": "add a tomato to Bed 1"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("action", res.data)
+        self.assertEqual(res.data["action"]["type"], "add_plant")

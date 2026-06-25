@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from gardens.models import GardenBed
 from plants.models import Observation, Plant, PlantPlacement, UserPlant
 
-from .ai_service import send_message, send_message_with_tools
+from .ai_service import send_message_with_tools
 from .context_builder import build_context
 from .models import AIConversation, AIMessage
 from .serializers import (
@@ -160,8 +160,44 @@ _TOOL_MOVE_PLANT = {
     },
 }
 
+_TOOL_ADD_PLANT_GARDEN = {
+    "name": "add_plant_to_bed",
+    "description": (
+        "Add a plant from the catalog to a bed in this garden. "
+        "Use this when the user asks to add, plant, or grow a specific plant and names a target bed."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "catalog_id": {
+                "type": "string",
+                "description": "The catalog plant ID from the Plant Catalog section in the context.",
+            },
+            "bed_id": {
+                "type": "string",
+                "description": "The bed_id of the target bed from the Beds section in the context.",
+            },
+            "status": {
+                "type": "string",
+                "enum": ["planned", "planted", "growing", "fruiting", "dormant", "removed"],
+                "description": "Initial status. Defaults to 'planned' if the user does not specify.",
+            },
+            "variety": {
+                "type": "string",
+                "description": "Optional variety or cultivar name.",
+            },
+            "start_date": {
+                "type": "string",
+                "description": "Optional planting date in YYYY-MM-DD format.",
+            },
+        },
+        "required": ["catalog_id", "bed_id"],
+    },
+}
+
 _BED_TOOLS = [_TOOL_ADD_PLANT, _TOOL_CHANGE_STATUS, _TOOL_LOG_OBSERVATION, _TOOL_DELETE_PLANT, _TOOL_MOVE_PLANT]
 _PLANT_TOOLS = [_TOOL_CHANGE_STATUS, _TOOL_LOG_OBSERVATION, _TOOL_DELETE_PLANT, _TOOL_MOVE_PLANT]
+_GARDEN_TOOLS = [_TOOL_ADD_PLANT_GARDEN]
 
 
 def _local_date(user):
@@ -459,8 +495,9 @@ class AIConversationViewSet(
                     system, history, _PLANT_TOOLS, _make_tool_executor(request.user)
                 )
             else:
-                content, input_tokens, output_tokens = send_message(system, history)
-                action_result = None
+                content, input_tokens, output_tokens, action_result = send_message_with_tools(
+                    system, history, _GARDEN_TOOLS, _make_tool_executor(request.user)
+                )
         except OpenAIError:
             return Response(
                 {"detail": "AI service unavailable. Please try again."},

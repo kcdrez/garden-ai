@@ -89,6 +89,10 @@ def _build_garden_context(garden: Garden) -> str:
         else:
             lines.append("Plants: none")
 
+    catalog = Plant.objects.all().order_by("category", "common_name")
+    lines += ["", "## Plant Catalog (available to add to beds):"]
+    lines.extend(f"- {p.common_name} [catalog_id: {p.pk}] ({p.category})" for p in catalog)
+
     return "\n".join(lines)
 
 
